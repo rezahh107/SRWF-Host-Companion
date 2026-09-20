@@ -9,7 +9,7 @@ This file is the operating contract for coding agents and automated contributors
 - **Primary consumer:** SRWF
 - **Primary operator:** non-technical Owner / WordPress administrator
 - **Canonical architecture:** `docs/architecture/MOTHER_ARCHITECTURE.md`
-- **V0 status:** architecture approved and frozen; functional implementation pending
+- **V0 status:** architecture approved and frozen; WU-01 prerequisite complete; WU-02 minimal runtime core implemented on `main`; WU-03/WU-04 not implemented; WU-05 Full Width geometry `NOT_PROVEN`; WU-06/WU-07 qualification and browser/E2E `NOT_RUN`; production qualification `NOT_PROVEN`
 
 The plugin exists to make SRWF host configuration deterministic, understandable, explicit, and verifiable.
 
