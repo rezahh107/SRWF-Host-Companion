@@ -1,0 +1,31 @@
+# OS / editors
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Local environment
+.env
+.env.*
+!.env.example
+
+# Dependencies / build output
+/vendor/
+/node_modules/
+/dist/
+/build/
+/coverage/
+
+# Test / analysis caches
+.phpunit.result.cache
+.phpunit.cache/
+.phpstan.cache/
+.phpcs-cache
+.eslintcache
+
+# Local artifacts
+*.log
+*.zip
+/tmp/

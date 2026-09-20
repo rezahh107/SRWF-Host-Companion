@@ -1,0 +1,28 @@
+# Development / governance files are not part of a future production plugin package.
+.git/
+.github/
+.gitignore
+.gitattributes
+.editorconfig
+
+docs/
+tests/
+CHANGELOG.md
+AGENTS.md
+README.md
+SECURITY.md
+
+# Dependency/build metadata should be admitted deliberately when release tooling exists.
+composer.json
+composer.lock
+package.json
+package-lock.json
+phpcs.xml
+phpcs.xml.dist
+phpunit.xml
+phpunit.xml.dist
+
+# Local output
+dist/
+build/
+coverage/
