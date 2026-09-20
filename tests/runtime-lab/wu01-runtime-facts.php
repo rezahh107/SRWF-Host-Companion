@@ -185,7 +185,6 @@ if ( 'active' === $phase ) {
 	$evidence['claims']['registration_runtime_proven'] = (bool) $matched && null !== $assignment_key;
 	$evidence['claims']['assignment_runtime_proven']   = ! is_wp_error( $update_result ) && (int) $update_result === $page_id && '' !== $stored_meta;
 	$evidence['claims']['active_render_runtime_proven']= false;
-	$evidence['claims']['deactivation_runtime_proven'] = false;
 
 	srwf_wu01_write_evidence( $evidence_path, $evidence );
 	fwrite( STDOUT, (string) $page_id . "\n" );
