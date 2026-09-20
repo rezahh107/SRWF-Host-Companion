@@ -123,8 +123,10 @@ jobs:
           php "$SRWF_WP_CLI" server --host=127.0.0.1 --port=8080 --path="$SRWF_WP_PATH" >"$SRWF_ARTIFACT_DIR/server-active.log" 2>&1 &
           server_pid=$!
           trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          active_status=''
           for _ in {1..30}; do
-            if curl --silent --fail "http://127.0.0.1:8080/?page_id=$SRWF_WU01_PAGE_ID" -o "$SRWF_ARTIFACT_DIR/active.html"; then
+            active_status="$(curl --silent --output "$SRWF_ARTIFACT_DIR/active.html" --write-out '%{http_code}' "http://127.0.0.1:8080/?page_id=$SRWF_WU01_PAGE_ID" || true)"
+            if [[ "$active_status" != '000' ]]; then
               break
             fi
             sleep 1
@@ -134,17 +136,19 @@ jobs:
           ACTIVE_PAGE_MARKER=false
           grep -q 'SRWF_WU01_TEMPLATE_MARKER' "$SRWF_ARTIFACT_DIR/active.html" && ACTIVE_TEMPLATE_MARKER=true
           grep -q 'SRWF_WU01_PAGE_CONTENT_MARKER' "$SRWF_ARTIFACT_DIR/active.html" && ACTIVE_PAGE_MARKER=true
-          python3 - "$SRWF_WU01_EVIDENCE_PATH" "$ACTIVE_TEMPLATE_MARKER" "$ACTIVE_PAGE_MARKER" <<'PY'
+          python3 - "$SRWF_WU01_EVIDENCE_PATH" "$active_status" "$ACTIVE_TEMPLATE_MARKER" "$ACTIVE_PAGE_MARKER" <<'PY'
           import json, sys
-          path, template_marker, page_marker = sys.argv[1:]
+          path, status, template_marker, page_marker = sys.argv[1:]
           with open(path, encoding='utf-8') as f:
               data = json.load(f)
           data['active_frontend'] = {
-              'http_status': 200,
+              'http_status': int(status) if status.isdigit() else status,
               'template_marker_present': template_marker == 'true',
               'page_content_marker_present': page_marker == 'true',
           }
-          data['claims']['active_render_runtime_proven'] = template_marker == 'true' and page_marker == 'true'
+          data['claims']['active_render_runtime_proven'] = (
+              status == '200' and template_marker == 'true' and page_marker == 'true'
+          )
           with open(path, 'w', encoding='utf-8') as f:
               json.dump(data, f, ensure_ascii=False, indent=2)
               f.write('\n')
@@ -256,6 +260,7 @@ jobs:
           a = d.get('assignment', {})
           print(f"- observed page-template map key: `{d.get('page', {}).get('page_template_map_key')}`")
           print(f"- observed `_wp_page_template`: `{a.get('raw_wp_page_template_meta')}`")
+          print(f"- active frontend HTTP status: `{d.get('active_frontend', {}).get('http_status')}`")
           print(f"- active frontend template marker: `{d.get('active_frontend', {}).get('template_marker_present')}`")
           print('- production/staging versions and production qualification remain NOT_PROVEN.')
           PY
