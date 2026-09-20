@@ -151,6 +151,7 @@ jobs:
           PY
           kill "$server_pid" 2>/dev/null || true
           wait "$server_pid" 2>/dev/null || true
+          pkill -f '[p]hp -S 127.0.0.1:8080' 2>/dev/null || true
           trap - EXIT
 
       - name: Deactivate probe and capture fresh-process persistence facts
@@ -166,6 +167,7 @@ jobs:
         shell: bash
         run: |
           set -Eeuo pipefail
+          pkill -f '[p]hp -S 127.0.0.1:8080' 2>/dev/null || true
           php "$SRWF_WP_CLI" server --host=127.0.0.1 --port=8080 --path="$SRWF_WP_PATH" >"$SRWF_ARTIFACT_DIR/server-inactive.log" 2>&1 &
           server_pid=$!
           trap 'kill "$server_pid" 2>/dev/null || true' EXIT
@@ -178,6 +180,7 @@ jobs:
             sleep 1
           done
           test -s "$SRWF_ARTIFACT_DIR/inactive.html"
+          ! grep -q 'Failed to listen' "$SRWF_ARTIFACT_DIR/server-inactive.log"
           INACTIVE_TEMPLATE_MARKER=false
           INACTIVE_PAGE_MARKER=false
           grep -q 'SRWF_WU01_TEMPLATE_MARKER' "$SRWF_ARTIFACT_DIR/inactive.html" && INACTIVE_TEMPLATE_MARKER=true
@@ -201,6 +204,7 @@ jobs:
           PY
           kill "$server_pid" 2>/dev/null || true
           wait "$server_pid" 2>/dev/null || true
+          pkill -f '[p]hp -S 127.0.0.1:8080' 2>/dev/null || true
           trap - EXIT
           php "$SRWF_WP_CLI" post delete "$SRWF_WU01_PAGE_ID" --force --path="$SRWF_WP_PATH" >/dev/null
 
@@ -223,12 +227,15 @@ jobs:
               data.get('after_deactivation', {}).get('plugin_active') is False
               and data.get('after_deactivation', {}).get('raw_wp_page_template_meta') == data.get('assignment', {}).get('raw_wp_page_template_meta')
           )
+          claims['deactivation_runtime_proven'] = (
+              claims.get('deactivation_persistence_runtime_proven')
+              and claims.get('deactivation_fallback_runtime_proven')
+          )
           data['capture_status'] = 'COMPLETE' if all([
               claims.get('registration_runtime_proven'),
               claims.get('assignment_runtime_proven'),
               claims.get('active_render_runtime_proven'),
-              claims.get('deactivation_persistence_runtime_proven'),
-              claims.get('deactivation_fallback_runtime_proven'),
+              claims.get('deactivation_runtime_proven'),
           ]) else 'PARTIAL'
           with open(path, 'w', encoding='utf-8') as f:
               json.dump(data, f, ensure_ascii=False, indent=2)
@@ -248,7 +255,6 @@ jobs:
           print(f"- observed page-template map key: `{d.get('page', {}).get('page_template_map_key')}`")
           print(f"- observed `_wp_page_template`: `{a.get('raw_wp_page_template_meta')}`")
           print(f"- active frontend template marker: `{d.get('active_frontend', {}).get('template_marker_present')}`")
-          print(f"- deactivated frontend fallback marker absent: `{not d.get('inactive_frontend', {}).get('template_marker_present', True)}`")
           print('- production/staging versions and production qualification remain NOT_PROVEN.')
           PY
 
