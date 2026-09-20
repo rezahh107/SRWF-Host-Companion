@@ -35,9 +35,9 @@ jobs:
       SRWF_WP_PATH: /tmp/srwf-host-companion-wordpress
       SRWF_ARTIFACT_DIR: /tmp/srwf-host-companion-artifacts
       SRWF_WU01_EVIDENCE_PATH: /tmp/srwf-host-companion-artifacts/wu01-runtime-facts.json
-      SRWF_WP_VERSION: '6.8.3'
-      SRWF_PHP_VERSION: '8.2.33'
-      SRWF_TT25_VERSION: '1.3'
+      SRWF_WP_VERSION: '7.1.1'
+      SRWF_PHP_VERSION: '8.3.33'
+      SRWF_TT25_VERSION: '1.5'
       SRWF_WP_CLI: /tmp/wp-cli.phar
       SRWF_WP_CLI_VERSION: '2.12.0'
       SRWF_WP_CLI_SHA256: ce34ddd838f7351d6759068d09793f26755463b4a4610a5a5c0a97b68220d85c
@@ -62,7 +62,7 @@ jobs:
       - name: Set up exact PHP runtime
         uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240
         with:
-          php-version: '8.2.33'
+          php-version: '8.3.33'
           coverage: none
           extensions: mysqli
 
@@ -92,6 +92,7 @@ jobs:
             --admin_email='runtime@example.invalid' --skip-email
           unset admin_password
           test "$(php "$SRWF_WP_CLI" core version --path="$SRWF_WP_PATH")" = "$SRWF_WP_VERSION"
+          php "$SRWF_WP_CLI" theme install twentytwentyfive --version="$SRWF_TT25_VERSION" --force --path="$SRWF_WP_PATH"
           test "$(php "$SRWF_WP_CLI" theme get twentytwentyfive --field=version --path="$SRWF_WP_PATH")" = "$SRWF_TT25_VERSION"
           php "$SRWF_WP_CLI" theme activate twentytwentyfive --path="$SRWF_WP_PATH"
           test "$(php "$SRWF_WP_CLI" theme get twentytwentyfive --field=status --path="$SRWF_WP_PATH")" = 'active'
@@ -256,13 +257,13 @@ jobs:
               d = json.load(f)
           print(f"- capture status: `{d['capture_status']}`")
           env = d['environment']
-          print(f"- lab target: WordPress `{env['wordpress_version']}`, PHP `{env['php_version']}`, `{env['theme_name']}` `{env['theme_version']}`")
+          print(f"- pinned disposable lab: WordPress `{env['wordpress_version']}`, PHP `{env['php_version']}`, `{env['theme_name']}` `{env['theme_version']}`")
           a = d.get('assignment', {})
           print(f"- observed page-template map key: `{d.get('page', {}).get('page_template_map_key')}`")
           print(f"- observed `_wp_page_template`: `{a.get('raw_wp_page_template_meta')}`")
           print(f"- active frontend HTTP status: `{d.get('active_frontend', {}).get('http_status')}`")
           print(f"- active frontend template marker: `{d.get('active_frontend', {}).get('template_marker_present')}`")
-          print('- production/staging versions and production qualification remain NOT_PROVEN.')
+          print('- direct production-host behavior and production qualification remain NOT_PROVEN.')
           PY
 
       - name: Upload machine-readable WU-01 evidence
