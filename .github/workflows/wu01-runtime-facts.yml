@@ -151,7 +151,6 @@ jobs:
           PY
           kill "$server_pid" 2>/dev/null || true
           wait "$server_pid" 2>/dev/null || true
-          pkill -f '[p]hp -S 127.0.0.1:8080' 2>/dev/null || true
           trap - EXIT
 
       - name: Deactivate probe and capture fresh-process persistence facts
@@ -167,20 +166,24 @@ jobs:
         shell: bash
         run: |
           set -Eeuo pipefail
-          pkill -f '[p]hp -S 127.0.0.1:8080' 2>/dev/null || true
-          php "$SRWF_WP_CLI" server --host=127.0.0.1 --port=8080 --path="$SRWF_WP_PATH" >"$SRWF_ARTIFACT_DIR/server-inactive.log" 2>&1 &
+          php "$SRWF_WP_CLI" option update home 'http://127.0.0.1:8081' --path="$SRWF_WP_PATH" >/dev/null
+          php "$SRWF_WP_CLI" option update siteurl 'http://127.0.0.1:8081' --path="$SRWF_WP_PATH" >/dev/null
+          php "$SRWF_WP_CLI" server --host=127.0.0.1 --port=8081 --path="$SRWF_WP_PATH" >"$SRWF_ARTIFACT_DIR/server-inactive.log" 2>&1 &
           server_pid=$!
           trap 'kill "$server_pid" 2>/dev/null || true' EXIT
           inactive_status=''
           for _ in {1..30}; do
-            inactive_status="$(curl --silent --output "$SRWF_ARTIFACT_DIR/inactive.html" --write-out '%{http_code}' "http://127.0.0.1:8080/?page_id=$SRWF_WU01_PAGE_ID" || true)"
+            inactive_status="$(curl --silent --output "$SRWF_ARTIFACT_DIR/inactive.html" --write-out '%{http_code}' "http://127.0.0.1:8081/?page_id=$SRWF_WU01_PAGE_ID" || true)"
             if [[ "$inactive_status" != '000' ]]; then
               break
             fi
             sleep 1
           done
           test -s "$SRWF_ARTIFACT_DIR/inactive.html"
-          ! grep -q 'Failed to listen' "$SRWF_ARTIFACT_DIR/server-inactive.log"
+          if grep -q 'Failed to listen' "$SRWF_ARTIFACT_DIR/server-inactive.log"; then
+            cat "$SRWF_ARTIFACT_DIR/server-inactive.log" >&2
+            exit 1
+          fi
           INACTIVE_TEMPLATE_MARKER=false
           INACTIVE_PAGE_MARKER=false
           grep -q 'SRWF_WU01_TEMPLATE_MARKER' "$SRWF_ARTIFACT_DIR/inactive.html" && INACTIVE_TEMPLATE_MARKER=true
@@ -204,7 +207,6 @@ jobs:
           PY
           kill "$server_pid" 2>/dev/null || true
           wait "$server_pid" 2>/dev/null || true
-          pkill -f '[p]hp -S 127.0.0.1:8080' 2>/dev/null || true
           trap - EXIT
           php "$SRWF_WP_CLI" post delete "$SRWF_WU01_PAGE_ID" --force --path="$SRWF_WP_PATH" >/dev/null
 
