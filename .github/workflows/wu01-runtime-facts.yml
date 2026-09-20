@@ -1,0 +1,262 @@
+name: WU-01 Runtime Facts
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/wu01-runtime-facts.yml'
+      - 'tests/runtime-lab/**'
+      - 'docs/implementation/WU01_RUNTIME_FACTS.md'
+
+permissions:
+  contents: read
+
+jobs:
+  runtime-facts:
+    name: WordPress page-template facts
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    services:
+      database:
+        image: mariadb:11.4.8@sha256:bc474f00629f0123c10f9e1bca193a45d18af15a274cf0656acda64f1086c3b6
+        env:
+          MARIADB_ALLOW_EMPTY_ROOT_PASSWORD: '1'
+          MARIADB_DATABASE: wordpress
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mariadb-admin ping -h 127.0.0.1 -uroot --silent"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+
+    env:
+      SRWF_WP_PATH: /tmp/srwf-host-companion-wordpress
+      SRWF_ARTIFACT_DIR: /tmp/srwf-host-companion-artifacts
+      SRWF_WU01_EVIDENCE_PATH: /tmp/srwf-host-companion-artifacts/wu01-runtime-facts.json
+      SRWF_WP_VERSION: '6.8.3'
+      SRWF_PHP_VERSION: '8.2.33'
+      SRWF_TT25_VERSION: '1.3'
+      SRWF_WP_CLI: /tmp/wp-cli.phar
+      SRWF_WP_CLI_VERSION: '2.12.0'
+      SRWF_WP_CLI_SHA256: ce34ddd838f7351d6759068d09793f26755463b4a4610a5a5c0a97b68220d85c
+
+    steps:
+      - name: Checkout exact target
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 1
+
+      - name: Assert repository and checkout identity
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$GITHUB_REPOSITORY" = 'rezahh107/SRWF-Host-Companion'
+          observed="$(git rev-parse HEAD)"
+          expected="${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}"
+          test "$observed" = "$expected"
+          mkdir -p "$SRWF_ARTIFACT_DIR" "$SRWF_WP_PATH"
+
+      - name: Set up exact PHP runtime
+        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240
+        with:
+          php-version: '8.2.33'
+          coverage: none
+          extensions: mysqli
+
+      - name: Validate probe syntax and exact PHP
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$(php -r 'echo PHP_VERSION;')" = "$SRWF_PHP_VERSION"
+          php -l tests/runtime-lab/wu01-runtime-facts.php
+          php -l tests/runtime-lab/fixture-plugin/srwf-host-companion-wu01-probe.php
+
+      - name: Install exact WP-CLI and WordPress
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          curl -L --fail --retry 3 \
+            -o "$SRWF_WP_CLI" \
+            "https://github.com/wp-cli/wp-cli/releases/download/v${SRWF_WP_CLI_VERSION}/wp-cli-${SRWF_WP_CLI_VERSION}.phar"
+          printf '%s  %s\n' "$SRWF_WP_CLI_SHA256" "$SRWF_WP_CLI" | sha256sum -c -
+          php "$SRWF_WP_CLI" core download --path="$SRWF_WP_PATH" --version="$SRWF_WP_VERSION" --force
+          php "$SRWF_WP_CLI" config create --path="$SRWF_WP_PATH" \
+            --dbname=wordpress --dbuser=root --dbpass='' --dbhost=127.0.0.1:3306 --skip-check
+          admin_password="$(openssl rand -hex 24)"
+          php "$SRWF_WP_CLI" core install --path="$SRWF_WP_PATH" \
+            --url=http://127.0.0.1:8080 --title='SRWF Host Companion WU-01 Lab' \
+            --admin_user=runtime_admin --admin_password="$admin_password" \
+            --admin_email='runtime@example.invalid' --skip-email
+          unset admin_password
+          test "$(php "$SRWF_WP_CLI" core version --path="$SRWF_WP_PATH")" = "$SRWF_WP_VERSION"
+          test "$(php "$SRWF_WP_CLI" theme get twentytwentyfive --field=version --path="$SRWF_WP_PATH")" = "$SRWF_TT25_VERSION"
+          php "$SRWF_WP_CLI" theme activate twentytwentyfive --path="$SRWF_WP_PATH"
+          test "$(php "$SRWF_WP_CLI" theme get twentytwentyfive --field=status --path="$SRWF_WP_PATH")" = 'active'
+
+      - name: Install and activate disposable WU-01 probe plugin
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          probe_dir="$SRWF_WP_PATH/wp-content/plugins/srwf-host-companion-wu01-probe"
+          mkdir -p "$probe_dir"
+          cp tests/runtime-lab/fixture-plugin/srwf-host-companion-wu01-probe.php "$probe_dir/"
+          php "$SRWF_WP_CLI" plugin activate srwf-host-companion-wu01-probe --path="$SRWF_WP_PATH"
+          test "$(php "$SRWF_WP_CLI" plugin get srwf-host-companion-wu01-probe --field=status --path="$SRWF_WP_PATH")" = 'active'
+
+      - name: Capture registration and assignment facts
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          export SRWF_WU01_PHASE=active
+          page_id="$(php "$SRWF_WP_CLI" --path="$SRWF_WP_PATH" eval-file "$GITHUB_WORKSPACE/tests/runtime-lab/wu01-runtime-facts.php" | tail -n 1)"
+          [[ "$page_id" =~ ^[0-9]+$ ]]
+          echo "SRWF_WU01_PAGE_ID=$page_id" >> "$GITHUB_ENV"
+          test -s "$SRWF_WU01_EVIDENCE_PATH"
+
+      - name: Observe active frontend resolution
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          php "$SRWF_WP_CLI" server --host=127.0.0.1 --port=8080 --path="$SRWF_WP_PATH" >"$SRWF_ARTIFACT_DIR/server-active.log" 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          for _ in {1..30}; do
+            if curl --silent --fail "http://127.0.0.1:8080/?page_id=$SRWF_WU01_PAGE_ID" -o "$SRWF_ARTIFACT_DIR/active.html"; then
+              break
+            fi
+            sleep 1
+          done
+          test -s "$SRWF_ARTIFACT_DIR/active.html"
+          ACTIVE_TEMPLATE_MARKER=false
+          ACTIVE_PAGE_MARKER=false
+          grep -q 'SRWF_WU01_TEMPLATE_MARKER' "$SRWF_ARTIFACT_DIR/active.html" && ACTIVE_TEMPLATE_MARKER=true
+          grep -q 'SRWF_WU01_PAGE_CONTENT_MARKER' "$SRWF_ARTIFACT_DIR/active.html" && ACTIVE_PAGE_MARKER=true
+          python3 - "$SRWF_WU01_EVIDENCE_PATH" "$ACTIVE_TEMPLATE_MARKER" "$ACTIVE_PAGE_MARKER" <<'PY'
+          import json, sys
+          path, template_marker, page_marker = sys.argv[1:]
+          with open(path, encoding='utf-8') as f:
+              data = json.load(f)
+          data['active_frontend'] = {
+              'http_status': 200,
+              'template_marker_present': template_marker == 'true',
+              'page_content_marker_present': page_marker == 'true',
+          }
+          data['claims']['active_render_runtime_proven'] = template_marker == 'true' and page_marker == 'true'
+          with open(path, 'w', encoding='utf-8') as f:
+              json.dump(data, f, ensure_ascii=False, indent=2)
+              f.write('\n')
+          PY
+          kill "$server_pid" 2>/dev/null || true
+          wait "$server_pid" 2>/dev/null || true
+          trap - EXIT
+
+      - name: Deactivate probe and capture fresh-process persistence facts
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          php "$SRWF_WP_CLI" plugin deactivate srwf-host-companion-wu01-probe --path="$SRWF_WP_PATH"
+          test "$(php "$SRWF_WP_CLI" plugin get srwf-host-companion-wu01-probe --field=status --path="$SRWF_WP_PATH")" = 'inactive'
+          export SRWF_WU01_PHASE=inactive
+          php "$SRWF_WP_CLI" --path="$SRWF_WP_PATH" eval-file "$GITHUB_WORKSPACE/tests/runtime-lab/wu01-runtime-facts.php"
+
+      - name: Observe frontend fallback after deactivation
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          php "$SRWF_WP_CLI" server --host=127.0.0.1 --port=8080 --path="$SRWF_WP_PATH" >"$SRWF_ARTIFACT_DIR/server-inactive.log" 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          inactive_status=''
+          for _ in {1..30}; do
+            inactive_status="$(curl --silent --output "$SRWF_ARTIFACT_DIR/inactive.html" --write-out '%{http_code}' "http://127.0.0.1:8080/?page_id=$SRWF_WU01_PAGE_ID" || true)"
+            if [[ "$inactive_status" != '000' ]]; then
+              break
+            fi
+            sleep 1
+          done
+          test -s "$SRWF_ARTIFACT_DIR/inactive.html"
+          INACTIVE_TEMPLATE_MARKER=false
+          INACTIVE_PAGE_MARKER=false
+          grep -q 'SRWF_WU01_TEMPLATE_MARKER' "$SRWF_ARTIFACT_DIR/inactive.html" && INACTIVE_TEMPLATE_MARKER=true
+          grep -q 'SRWF_WU01_PAGE_CONTENT_MARKER' "$SRWF_ARTIFACT_DIR/inactive.html" && INACTIVE_PAGE_MARKER=true
+          python3 - "$SRWF_WU01_EVIDENCE_PATH" "$inactive_status" "$INACTIVE_TEMPLATE_MARKER" "$INACTIVE_PAGE_MARKER" <<'PY'
+          import json, sys
+          path, status, template_marker, page_marker = sys.argv[1:]
+          with open(path, encoding='utf-8') as f:
+              data = json.load(f)
+          data['inactive_frontend'] = {
+              'http_status': int(status) if status.isdigit() else status,
+              'template_marker_present': template_marker == 'true',
+              'page_content_marker_present': page_marker == 'true',
+          }
+          data['claims']['deactivation_fallback_runtime_proven'] = (
+              status == '200' and template_marker == 'false' and page_marker == 'true'
+          )
+          with open(path, 'w', encoding='utf-8') as f:
+              json.dump(data, f, ensure_ascii=False, indent=2)
+              f.write('\n')
+          PY
+          kill "$server_pid" 2>/dev/null || true
+          wait "$server_pid" 2>/dev/null || true
+          trap - EXIT
+          php "$SRWF_WP_CLI" post delete "$SRWF_WU01_PAGE_ID" --force --path="$SRWF_WP_PATH" >/dev/null
+
+      - name: Validate evidence schema and publish summary
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          python3 - "$SRWF_WU01_EVIDENCE_PATH" "$SRWF_WP_VERSION" "$SRWF_PHP_VERSION" "$SRWF_TT25_VERSION" <<'PY'
+          import json, sys
+          path, wp, php, theme = sys.argv[1:]
+          with open(path, encoding='utf-8') as f:
+              data = json.load(f)
+          assert data['schema'] == 'srwf-host-companion-wu01-runtime-facts-v1'
+          assert data['environment']['wordpress_version'] == wp
+          assert data['environment']['php_version'] == php
+          assert data['environment']['theme_stylesheet'] == 'twentytwentyfive'
+          assert data['environment']['theme_version'] == theme
+          claims = data.setdefault('claims', {})
+          claims['deactivation_persistence_runtime_proven'] = (
+              data.get('after_deactivation', {}).get('plugin_active') is False
+              and data.get('after_deactivation', {}).get('raw_wp_page_template_meta') == data.get('assignment', {}).get('raw_wp_page_template_meta')
+          )
+          data['capture_status'] = 'COMPLETE' if all([
+              claims.get('registration_runtime_proven'),
+              claims.get('assignment_runtime_proven'),
+              claims.get('active_render_runtime_proven'),
+              claims.get('deactivation_persistence_runtime_proven'),
+              claims.get('deactivation_fallback_runtime_proven'),
+          ]) else 'PARTIAL'
+          with open(path, 'w', encoding='utf-8') as f:
+              json.dump(data, f, ensure_ascii=False, indent=2)
+              f.write('\n')
+          print('WU-01 capture status:', data['capture_status'])
+          print('claims:', json.dumps(claims, sort_keys=True))
+          PY
+          echo '### WU-01 Runtime Fact Capture' >> "$GITHUB_STEP_SUMMARY"
+          python3 - "$SRWF_WU01_EVIDENCE_PATH" <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import json, sys
+          with open(sys.argv[1], encoding='utf-8') as f:
+              d = json.load(f)
+          print(f"- capture status: `{d['capture_status']}`")
+          env = d['environment']
+          print(f"- lab target: WordPress `{env['wordpress_version']}`, PHP `{env['php_version']}`, `{env['theme_name']}` `{env['theme_version']}`")
+          a = d.get('assignment', {})
+          print(f"- observed page-template map key: `{d.get('page', {}).get('page_template_map_key')}`")
+          print(f"- observed `_wp_page_template`: `{a.get('raw_wp_page_template_meta')}`")
+          print(f"- active frontend template marker: `{d.get('active_frontend', {}).get('template_marker_present')}`")
+          print(f"- deactivated frontend fallback marker absent: `{not d.get('inactive_frontend', {}).get('template_marker_present', True)}`")
+          print('- production/staging versions and production qualification remain NOT_PROVEN.')
+          PY
+
+      - name: Upload machine-readable WU-01 evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: wu01-runtime-facts-${{ github.run_id }}-${{ github.run_attempt }}
+          path: /tmp/srwf-host-companion-artifacts/
+          if-no-files-found: error
+          retention-days: 30
