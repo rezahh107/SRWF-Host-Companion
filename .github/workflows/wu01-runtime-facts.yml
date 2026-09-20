@@ -257,7 +257,7 @@ jobs:
               d = json.load(f)
           print(f"- capture status: `{d['capture_status']}`")
           env = d['environment']
-          print(f"- target-matched disposable lab: WordPress `{env['wordpress_version']}`, PHP `{env['php_version']}`, `{env['theme_name']}` `{env['theme_version']}`")
+          print(f"- pinned disposable lab: WordPress `{env['wordpress_version']}`, PHP `{env['php_version']}`, `{env['theme_name']}` `{env['theme_version']}`")
           a = d.get('assignment', {})
           print(f"- observed page-template map key: `{d.get('page', {}).get('page_template_map_key')}`")
           print(f"- observed `_wp_page_template`: `{a.get('raw_wp_page_template_meta')}`")
