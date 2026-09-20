@@ -1,6 +1,6 @@
 # WU-01 — Target Runtime Fact Capture
 
-Status: `IN_PROGRESS / LAB_PROBE_ADDED / PRODUCTION_TARGET_NOT_PROVEN`
+Status: `IN_PROGRESS / TARGET_IDENTITY_CAPTURED / EXACT_TARGET_LAB_PENDING`
 
 Governing authority:
 
@@ -14,11 +14,13 @@ WU-01 exists to replace assumptions about WordPress page-template behavior with 
 
 This document separates three different things that must not be collapsed:
 
-1. **Current SRWF operational evidence** — existing SRWF/GTB evidence currently proves a GeneratePress Full Width host configuration for the Registration surface. That is current project evidence, not proof that SRWF Host Companion has qualified Twenty Twenty-Five.
-2. **Disposable CI lab target** — the WU-01 probe uses WordPress `6.8.3`, PHP `8.2.33`, and Twenty Twenty-Five `1.3`. WordPress/PHP reuse the already-evidenced SRWF CI runtime baseline; TT25 `1.3` is the version bundled with WordPress `6.8.3`.
-3. **Production/staging target** — exact production WordPress, PHP, and TT25 versions remain `NOT_PROVEN` until captured from the intended target runtime. The lab tuple must not be promoted into a production support claim.
+1. **Current production target identity** — Owner-supplied WordPress Site Health evidence captured from the intended production host reports WordPress `7.1.1`, PHP `8.3.33`, environment type `production`, and active theme Twenty Twenty-Five (`twentytwentyfive`) `1.5`. This proves the current target identity, not SRWF Host Companion product qualification.
+2. **Historical disposable CI lab evidence** — the accepted WU-01 run on PR #1 used WordPress `6.8.3`, PHP `8.2.33`, and Twenty Twenty-Five `1.3`. That run established the page-template assignment/persistence/fallback behavior on that older pinned tuple and remains valid historical evidence for that tuple.
+3. **Exact-target disposable CI lab** — the WU-01 workflow is now repinned to WordPress `7.1.1`, PHP `8.3.33`, and Twenty Twenty-Five `1.5` so the same runtime facts can be falsified or reproduced against the exact current production version tuple without mutating the production host.
 
-## Facts already documented from WordPress 6.8.3 source
+The production host previously had GeneratePress-related SRWF operational evidence, but the current Site Health evidence now reports TT25 `1.5` as the active production theme. Historical GeneratePress evidence must not be treated as the current host identity.
+
+## Facts already documented from WordPress source
 
 These are source-level facts, not substitutes for runtime proof:
 
@@ -29,7 +31,7 @@ These are source-level facts, not substitutes for runtime proof:
 - block-template resolution can fall back from a theme-qualified template ID to the registered-template registry by slug;
 - theme/user templates can outrank a matching plugin-registered template.
 
-The architecture deliberately does not freeze the exact stored assignment value from these source observations alone.
+The architecture deliberately does not freeze the exact stored assignment value from source observations alone. Runtime evidence remains authoritative for that behavior.
 
 ## Disposable lab probe
 
@@ -52,16 +54,19 @@ The fixture plugin and synthetic page exist only inside the disposable CI runtim
 
 ## Claim ceiling
 
-A green WU-01 workflow means the **fact-capture harness executed successfully on the pinned disposable lab tuple**. It does not mean:
+A green exact-target WU-01 workflow would mean the **fact-capture harness executed successfully on a disposable runtime matching the current production WordPress/PHP/TT25 version tuple**. It would not mean:
 
-- the production host runs those versions;
-- TT25 is already the active production theme;
+- SRWF Host Companion product code has been run on production;
 - browser/E2E qualification is complete;
-- the final SRWF Host Companion assignment adapter has been selected;
+- Full Width geometry is qualified;
+- RTL/accessibility is qualified;
+- production release gates have passed;
 - WU-02 product implementation is production-qualified.
 
-Production/staging facts remain `NOT_PROVEN` until the intended runtime is directly inspected.
+Direct production-host mutation is not required for this pre-implementation fact capture. Production qualification remains a later release-gate concern.
 
 ## Current gate to WU-02
 
-WU-02 must not guess the assignment adapter or freeze a minimum PHP requirement from preference. After the lab evidence is reviewed, the project still needs the exact intended target runtime identity before WU-01 can be truthfully closed under the frozen V0 architecture.
+The exact current target identity is now captured. The remaining WU-01 gate is to rerun the existing page-template registration/assignment/render/deactivation probe on the matching tuple `WordPress 7.1.1 / PHP 8.3.33 / Twenty Twenty-Five 1.5`.
+
+If that exact-target run reproduces the required facts with `capture_status=COMPLETE`, WU-01 can close as an implementation prerequisite for WU-02 while production qualification remains explicitly `NOT_PROVEN`.
