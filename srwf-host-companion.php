@@ -13,10 +13,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-/*
- * Repository-foundation bootstrap only.
- *
- * Runtime features are intentionally not loaded yet. The first functional
- * implementation must follow docs/architecture/MOTHER_ARCHITECTURE.md and
- * the bounded work sequence in docs/implementation/V0_IMPLEMENTATION_PLAN.md.
- */
+require_once __DIR__ . '/src/Configuration.php';
+require_once __DIR__ . '/src/TemplateRegistrar.php';
+require_once __DIR__ . '/src/PageTemplateAssignment.php';
+
+\SRWF\HostCompanion\TemplateRegistrar::boot();
