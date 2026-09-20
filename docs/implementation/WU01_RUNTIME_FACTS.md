@@ -1,6 +1,6 @@
 # WU-01 — Target Runtime Fact Capture
 
-Status: `TARGET_IDENTITY_NOT_PROVEN / PRODUCTION_QUALIFICATION_NOT_PROVEN`
+Status: `COMPLETE_FOR_WU02 / PRODUCTION_QUALIFICATION_NOT_PROVEN`
 
 Governing authority:
 
@@ -12,15 +12,34 @@ Governing authority:
 
 WU-01 exists to replace assumptions about WordPress page-template behavior with observed facts before product feature code depends on them.
 
-This document separates three different things that must not be collapsed:
+This document separates three different evidence classes that must not be collapsed:
 
-1. **Production target identity provenance** — the intended production host's exact WordPress, PHP, active-theme, and environment identity must be backed by independently reviewable production-host evidence preserved or referenced in the PR evidence surfaces. No such reviewable production Site Health artifact/reference is currently present, so production target identity is `NOT_PROVEN`.
+1. **Production target identity provenance** — the Owner supplied a WordPress Site Health → Info runtime export from the production environment. The minimum WU-01 identity subset is preserved in `docs/evidence/PRODUCTION_SITE_HEALTH_IDENTITY.md`, making the production-host identity claim reviewable inside the repository evidence surface.
 2. **Historical disposable CI lab evidence** — the accepted WU-01 run on PR #1 used WordPress `6.8.3`, PHP `8.2.33`, and Twenty Twenty-Five `1.3`. That run established the page-template assignment/persistence/fallback behavior on that older pinned tuple and remains valid historical evidence for that tuple.
-3. **Current disposable CI lab evidence** — the same WU-01 probe successfully reproduced the required runtime facts on the pinned disposable tuple WordPress `7.1.1`, PHP `8.3.33`, and Twenty Twenty-Five `1.5`. This is `RUNTIME_PROVEN` for that CI tuple only; without preserved production-host identity provenance, it does not prove that the tuple is the current production host tuple.
+3. **Current disposable CI lab evidence** — the same WU-01 probe successfully reproduced the required runtime facts on the pinned disposable tuple WordPress `7.1.1`, PHP `8.3.33`, and Twenty Twenty-Five `1.5`. This is `RUNTIME_PROVEN` for that CI tuple.
 
-An Owner-supplied production Site Health assertion was previously described as establishing the current production target identity, but the corresponding production Site Health artifact/reference is not preserved in the reviewable PR evidence surfaces. The asserted values are therefore not treated as false; their production-host provenance remains `NOT_PROVEN` until independently reviewable evidence is supplied.
+The repository-preserved production Site Health identity and the current disposable CI tuple match on the WU-01 version dimensions that matter here: WordPress `7.1.1`, PHP `8.3.33`, and active Twenty Twenty-Five `1.5`.
 
-Historical GeneratePress-related SRWF operational evidence also must not be used to infer current production host identity.
+This closes the pre-implementation target-identity prerequisite without claiming direct SRWF Host Companion execution on the production host.
+
+Historical GeneratePress-related SRWF operational evidence must not be used to infer current production host identity; the current preserved Site Health evidence identifies Twenty Twenty-Five `1.5` as active for the reported production snapshot.
+
+## Production target identity — `DOCUMENTED`
+
+Reviewable basis:
+
+- `docs/evidence/PRODUCTION_SITE_HEALTH_IDENTITY.md`
+
+Preserved Owner-supplied Site Health facts:
+
+- WordPress `7.1.1`;
+- PHP `8.3.33` 64-bit;
+- active theme Twenty Twenty-Five `1.5`;
+- stylesheet/theme slug `twentytwentyfive`;
+- WordPress environment type `production`;
+- Site Health report current timestamp `2026-09-20T20:42:57+00:00`.
+
+The source is an Owner-supplied runtime report preserved in-repository. It is not a cryptographically signed or independently collected host attestation. Unrelated Site Health details are intentionally excluded for privacy/minimization.
 
 ## Facts already documented from WordPress source
 
@@ -44,14 +63,13 @@ The disposable WU-01 probe completed with `capture_status=COMPLETE` on:
 - Twenty Twenty-Five `1.5`;
 - stylesheet `twentytwentyfive`.
 
-Accepted exact-head evidence:
+Accepted final PR #2 exact-head evidence:
 
-- PR Head: `f247164cc29d10b206b0abac01b6a09d89e46d64`;
-- workflow run: `35536662522`;
-- job: `106146804303`;
+- PR Head: `cda79a0e5eea848e8a05f8bf50c48e61800682a3`;
+- workflow run: `35537484523`;
 - workflow conclusion: `success`;
-- artifact id: `10613172501`;
-- artifact digest: `sha256:9511ca86e583a8107f0d4516e5d0818368d5149e6fc615152da818387a26845f`;
+- artifact id: `10612777971`;
+- artifact digest: `sha256:2fe40dad58489e34d6fec092e1894a5331c113aa97575bc72ae698838fd810b0`;
 - artifact capture status: `COMPLETE`.
 
 Observed behavior in that disposable lab:
@@ -63,11 +81,11 @@ Observed behavior in that disposable lab:
 - `_wp_page_template` persists `registration-full-width`;
 - `get_page_template_slug()` reads back `registration-full-width`;
 - while the probe plugin is active, WordPress resolves the template as `twentytwentyfive//registration-full-width` with plugin origin/source;
-- the active frontend returns HTTP `200` and renders both the template marker and page-content marker;
+- the active frontend returns measured HTTP `200` and renders both the template marker and page-content marker;
 - after deactivation, the persisted assignment remains `registration-full-width` while the plugin template no longer resolves;
-- the fallback frontend still returns HTTP `200`, no longer renders the plugin template marker, and preserves the page-content marker.
+- the fallback frontend still returns measured HTTP `200`, no longer renders the plugin template marker, and preserves the page-content marker.
 
-These observations reproduce the same assignment/persistence/fallback contract previously seen on the older lab tuple. They remove version-coupling uncertainty **inside the pinned disposable tuple**, but they do not establish the identity of the production host.
+These observations reproduce the same assignment/persistence/fallback contract previously seen on the older lab tuple and remove the version-coupling uncertainty relevant to WU-02's assignment adapter.
 
 ## Disposable lab probe
 
@@ -92,17 +110,19 @@ The fixture plugin and synthetic page exist only inside the disposable CI runtim
 
 | Claim | State | Reviewable basis |
 | --- | --- | --- |
-| WordPress `7.1.1` / PHP `8.3.33` / TT25 `1.5` disposable runtime behavior | `RUNTIME_PROVEN` | successful run `35536662522` and artifact `10613172501` |
-| Registration / assignment / active render / deactivation persistence / fallback behavior on that disposable tuple | `RUNTIME_PROVEN` | machine-readable artifact from the successful run |
-| Those version values identify the current production host | `NOT_PROVEN` | no preserved/reviewable production Site Health artifact/reference is currently present |
-| Direct SRWF Host Companion behavior on the production host | `NOT_PROVEN` | disposable lab only |
-| Production qualification | `NOT_PROVEN` | later release gates not completed |
+| Current reported production host identity: WordPress `7.1.1` / PHP `8.3.33` / active TT25 `1.5` | `DOCUMENTED` | repository-preserved Owner-supplied Site Health identity evidence |
+| WordPress `7.1.1` / PHP `8.3.33` / TT25 `1.5` disposable runtime behavior | `RUNTIME_PROVEN` | successful run `35537484523` and artifact `10612777971` |
+| Registration / assignment / active render / deactivation persistence / fallback behavior on that disposable tuple | `RUNTIME_PROVEN` | machine-readable artifact from the successful final PR #2 run |
+| Direct SRWF Host Companion behavior on the production host | `NOT_PROVEN` | product feature code has not been run there |
+| Browser/E2E, Full Width, RTL/accessibility and release-gate qualification | `NOT_PROVEN` | later work units/release gates not completed |
+| Production qualification | `NOT_PROVEN` | release gates not completed |
 
 ## Claim ceiling
 
-A green WU-01 workflow means the **fact-capture harness executed successfully on its pinned disposable runtime**. It does not mean:
+Closing WU-01 means the project now has enough reviewable target identity and exact-version runtime behavior evidence to implement WU-02 without guessing the page-template assignment contract.
 
-- the disposable tuple has been proven to be the current production host tuple;
+It does **not** mean:
+
 - SRWF Host Companion product code has been run on production;
 - browser/E2E qualification is complete;
 - Full Width geometry is qualified;
@@ -110,19 +130,20 @@ A green WU-01 workflow means the **fact-capture harness executed successfully on
 - production release gates have passed;
 - WU-02 product implementation is production-qualified.
 
-Direct production-host mutation is not required for this pre-implementation fact capture. However, WU-01's production-target identity prerequisite cannot be closed from a disposable lab alone.
+Direct production-host mutation is not required for this pre-implementation fact capture.
 
 ## WU-02 readiness
 
-WU-01 is **not complete for WU-02** while production-target identity provenance is absent.
+WU-01 is **complete as the runtime-fact prerequisite for WU-02**.
 
-The runtime behavior probe itself is not the blocker: the pinned WordPress `7.1.1` / PHP `8.3.33` / Twenty Twenty-Five `1.5` disposable tuple is successfully `RUNTIME_PROVEN`. The only remaining WU-02 gate represented here is independently reviewable evidence that establishes the intended production host identity and allows the project to determine whether that production tuple is the same tuple already exercised by the lab.
+The implementation-relevant facts are now established without guessing:
 
-Until that provenance is supplied and reviewed:
+- the production Site Health identity report is preserved and reviewable in-repository;
+- its WordPress/PHP/TT25 tuple matches the pinned disposable lab tuple;
+- the exact page-template selectable/persisted value is `registration-full-width` in the proven disposable runtime;
+- active resolution uses `twentytwentyfive//registration-full-width` for the registered plugin template;
+- deactivation preserves the assignment value and falls back without losing page content.
 
-- production target identity remains `NOT_PROVEN`;
-- WU-01 remains `TARGET_IDENTITY_NOT_PROVEN`;
-- WU-02 must not be entered on the premise that the current production tuple has already been proven;
-- the valid disposable-lab behavior evidence remains preserved and may be reused once target identity is established.
+WU-02 may use these facts to implement the minimal runtime core and exact assignment adapter described by the frozen architecture.
 
-This evidence-state correction does not invalidate the successful runtime probe and does not change any runtime workflow behavior. `PRODUCTION_QUALIFIED_FOR_SRWF` also remains `NOT_PROVEN` until the later release gates are completed.
+`PRODUCTION_QUALIFIED_FOR_SRWF` remains `NOT_PROVEN` until the later release gates are completed.
