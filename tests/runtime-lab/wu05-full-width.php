@@ -67,7 +67,7 @@ $navigation_id = wp_insert_post(
 		'post_type'    => 'page',
 		'post_status'  => 'publish',
 		'post_title'   => 'SRWF WU-05 Navigation Target',
-		'post_content' => '<!-- wp:paragraph --><p>SRWF_WU05_NAVIGATION_TARGET</p><!-- /wp:paragraph -->',
+		'post_content' => '<!-- wp:paragraph --><p>SRWF WU-05 navigation target</p><!-- /wp:paragraph -->',
 	),
 	true
 );
@@ -80,7 +80,7 @@ $registration_content = <<<'HTML'
 	<h1 class="wp-block-heading">SRWF WU-05 Synthetic Registration</h1>
 	<!-- /wp:heading -->
 	<!-- wp:paragraph -->
-	<p>SRWF_WU05_APPLICATION_MARKER</p>
+	<p data-srwf-wu05-application-marker="true">Synthetic application content for geometry qualification.</p>
 	<!-- /wp:paragraph -->
 </div>
 <!-- /wp:group -->
@@ -126,15 +126,15 @@ $evidence = array(
 		'synthetic_data_only'  => true,
 	),
 	'canonical_template' => array(
-		'api_identity'       => \SRWF\HostCompanion\TemplateRegistrar::TEMPLATE_NAME,
-		'assignment_slug'    => \SRWF\HostCompanion\TemplateRegistrar::TEMPLATE_SLUG,
-		'provider_id'        => $canonical->id,
-		'provider_source'    => $canonical->source,
-		'provider_origin'    => $canonical->origin,
-		'provider_plugin'    => $canonical->plugin,
-		'registered'         => true,
-		'assigned_readback'  => \SRWF\HostCompanion\PageTemplateAssignment::read( $page_id ),
-		'render_marker'      => 'srwf-host-companion-registration-shell',
+		'api_identity'      => \SRWF\HostCompanion\TemplateRegistrar::TEMPLATE_NAME,
+		'assignment_slug'   => \SRWF\HostCompanion\TemplateRegistrar::TEMPLATE_SLUG,
+		'provider_id'       => $canonical->id,
+		'provider_source'   => $canonical->source,
+		'provider_origin'   => $canonical->origin,
+		'provider_plugin'   => $canonical->plugin,
+		'registered'        => true,
+		'assigned_readback' => \SRWF\HostCompanion\PageTemplateAssignment::read( $page_id ),
+		'render_marker'     => 'srwf-host-companion-registration-shell',
 	),
 	'layout_hypothesis' => array(
 		'name'        => 'H1',
