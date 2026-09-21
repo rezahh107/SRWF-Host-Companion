@@ -1,0 +1,183 @@
+name: Publish GitHub Release
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/publish-github-release.yml'
+      - '.github/release-manifest.json'
+      - 'docs/releases/**'
+      - '.distignore'
+      - 'srwf-host-companion.php'
+      - 'src/**'
+      - 'templates/**'
+      - 'LICENSE'
+      - 'tests/release/verify-release-contract.py'
+      - 'tests/release/build-release-package.sh'
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/publish-github-release.yml'
+      - '.github/release-manifest.json'
+      - 'docs/releases/**'
+      - 'tests/release/build-release-package.sh'
+  workflow_dispatch:
+
+concurrency:
+  group: srwf-host-companion-github-release
+  cancel-in-progress: false
+
+jobs:
+  validate-package:
+    name: Validate release contract and installable package
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    outputs:
+      version: ${{ steps.manifest.outputs.version }}
+      plugin_version: ${{ steps.manifest.outputs.plugin_version }}
+      release_name: ${{ steps.manifest.outputs.release_name }}
+      notes_file: ${{ steps.manifest.outputs.notes_file }}
+      asset_name: ${{ steps.manifest.outputs.asset_name }}
+    env:
+      SRWF_TESTED_COMMIT_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+
+    steps:
+      - name: Checkout exact target
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ env.SRWF_TESTED_COMMIT_SHA }}
+          fetch-depth: 1
+
+      - name: Assert exact checkout identity
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$(git rev-parse HEAD)" = "$SRWF_TESTED_COMMIT_SHA"
+
+      - name: Read and validate release manifest
+        id: manifest
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          python3 - <<'PY'
+          import json
+          import os
+          import re
+          from pathlib import Path
+
+          data = json.loads(Path('.github/release-manifest.json').read_text(encoding='utf-8'))
+          required = ('version', 'plugin_version', 'release_name', 'notes_file', 'asset_name')
+          missing = [key for key in required if not isinstance(data.get(key), str) or not data[key].strip()]
+          if missing:
+              raise SystemExit('release manifest missing non-empty string fields: ' + ', '.join(missing))
+          if not re.fullmatch(r'v\d+\.\d+\.\d+', data['version']):
+              raise SystemExit(f"unsupported release version format: {data['version']!r}")
+          if data['version'] != 'v' + data['plugin_version']:
+              raise SystemExit('manifest version and plugin_version disagree')
+          if data['asset_name'] != f"srwf-host-companion-{data['plugin_version']}.zip":
+              raise SystemExit('manifest asset_name does not match plugin version')
+          if not Path(data['notes_file']).is_file():
+              raise SystemExit(f"release notes file missing: {data['notes_file']}")
+          with open(os.environ['GITHUB_OUTPUT'], 'a', encoding='utf-8') as handle:
+              for key in required:
+                  handle.write(f"{key}={data[key]}\n")
+          PY
+
+      - name: Build and validate installable release package
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          bash tests/release/build-release-package.sh \
+            . \
+            .github/release-manifest.json \
+            "$RUNNER_TEMP/release-artifacts"
+
+      - name: Upload validated package evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: srwf-release-package-${{ steps.manifest.outputs.plugin_version }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/release-artifacts/
+          if-no-files-found: error
+          retention-days: 14
+
+  publish:
+    name: Publish GitHub Release
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    needs: validate-package
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      VERSION: ${{ needs.validate-package.outputs.version }}
+      PLUGIN_VERSION: ${{ needs.validate-package.outputs.plugin_version }}
+      RELEASE_NAME: ${{ needs.validate-package.outputs.release_name }}
+      NOTES_FILE: ${{ needs.validate-package.outputs.notes_file }}
+      ASSET_NAME: ${{ needs.validate-package.outputs.asset_name }}
+
+    steps:
+      - name: Checkout exact publication target
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+
+      - name: Refuse duplicate release publication
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          if gh release view "$VERSION" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "Release $VERSION already exists; refusing to overwrite it." >&2
+            exit 1
+          fi
+
+      - name: Rebuild exact validated package from publication commit
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          bash tests/release/build-release-package.sh \
+            . \
+            .github/release-manifest.json \
+            "$RUNNER_TEMP/release-artifacts"
+
+      - name: Publish tag, release notes, ZIP, and checksum
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          gh release create "$VERSION" \
+            "$RUNNER_TEMP/release-artifacts/$ASSET_NAME" \
+            "$RUNNER_TEMP/release-artifacts/SHA256SUMS.txt" \
+            --repo "$GITHUB_REPOSITORY" \
+            --target "$GITHUB_SHA" \
+            --title "$RELEASE_NAME" \
+            --notes-file "$NOTES_FILE"
+
+      - name: Verify published release identity and assets
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          release_json="$(gh release view "$VERSION" --repo "$GITHUB_REPOSITORY" --json tagName,name,isDraft,isPrerelease,targetCommitish,assets,url)"
+          python3 - "$VERSION" "$RELEASE_NAME" "$ASSET_NAME" "$GITHUB_SHA" "$release_json" <<'PY'
+          import json
+          import sys
+
+          version, expected_name, asset_name, expected_target, payload = sys.argv[1:]
+          data = json.loads(payload)
+          if data['tagName'] != version:
+              raise SystemExit('published tag mismatch')
+          if data['name'] != expected_name:
+              raise SystemExit('published release name mismatch')
+          if data['isDraft'] or data['isPrerelease']:
+              raise SystemExit('release unexpectedly published as draft/prerelease')
+          if data['targetCommitish'] != expected_target:
+              raise SystemExit(f"release target mismatch: {data['targetCommitish']} != {expected_target}")
+          names = {asset['name'] for asset in data.get('assets', [])}
+          required = {asset_name, 'SHA256SUMS.txt'}
+          missing = required - names
+          if missing:
+              raise SystemExit('published release missing assets: ' + ', '.join(sorted(missing)))
+          print(f"GITHUB_RELEASE_PUBLISHED tag={version} url={data['url']}")
+          PY
