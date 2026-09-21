@@ -3,15 +3,15 @@
 namespace SRWF\HostCompanion;
 
 final class TemplateDiagnostics {
-	const PAGE_UNCONFIGURED = 'PAGE_UNCONFIGURED';
-	const PAGE_VALID        = 'PAGE_VALID';
+	const PAGE_UNCONFIGURED  = 'PAGE_UNCONFIGURED';
+	const PAGE_VALID         = 'PAGE_VALID';
 	const PAGE_NOT_PUBLISHED = 'PAGE_NOT_PUBLISHED';
-	const PAGE_MISSING      = 'PAGE_MISSING';
-	const PAGE_TRASHED      = 'PAGE_TRASHED';
-	const PAGE_TYPE_INVALID = 'PAGE_TYPE_INVALID';
+	const PAGE_MISSING       = 'PAGE_MISSING';
+	const PAGE_TRASHED       = 'PAGE_TRASHED';
+	const PAGE_TYPE_INVALID  = 'PAGE_TYPE_INVALID';
 
-	const ASSIGNMENT_EXPECTED = 'ASSIGNMENT_EXPECTED';
-	const WRONG_PAGE_ASSIGNMENT = 'WRONG_PAGE_ASSIGNMENT';
+	const ASSIGNMENT_EXPECTED    = 'ASSIGNMENT_EXPECTED';
+	const WRONG_PAGE_ASSIGNMENT  = 'WRONG_PAGE_ASSIGNMENT';
 	const ASSIGNMENT_UNAVAILABLE = 'ASSIGNMENT_UNAVAILABLE';
 
 	const CANONICAL              = 'CANONICAL';
@@ -26,8 +26,8 @@ final class TemplateDiagnostics {
 	 * @return array<string,mixed>
 	 */
 	public static function inspect() {
-		$page_id = Configuration::get_registration_page_id();
-		$page    = 0 === $page_id ? self::unconfigured_page() : self::classify_page( $page_id );
+		$page_id    = Configuration::get_registration_page_id();
+		$page       = 0 === $page_id ? self::unconfigured_page() : self::classify_page( $page_id );
 		$assignment = self::inspect_assignment( $page_id, $page );
 		$resolution = self::inspect_resolution();
 
@@ -35,11 +35,11 @@ final class TemplateDiagnostics {
 		$status        = self::overall_status( $primary_state );
 
 		return array(
-			'status'           => $status,
-			'primary_state'    => $primary_state,
-			'page'             => $page,
-			'assignment'       => $assignment,
-			'resolution'       => $resolution,
+			'status'             => $status,
+			'primary_state'      => $primary_state,
+			'page'               => $page,
+			'assignment'         => $assignment,
+			'resolution'         => $resolution,
 			'recommended_action' => self::recommended_action( $page, $assignment, $resolution ),
 		);
 	}
@@ -204,8 +204,10 @@ final class TemplateDiagnostics {
 	 * Inspect the provider WordPress resolves for the canonical slug.
 	 *
 	 * WordPress 7.1.1 resolves DB templates before theme files and theme files
-	 * before a registered plugin template. We classify only the provenance that
-	 * the resolved WP_Block_Template object actually exposes.
+	 * before a registered plugin template. Registered plugin templates are then
+	 * passed through the native Block Hooks pipeline before WordPress returns the
+	 * resolved object, so canonical comparison must use that same resolved form.
+	 * We classify only provenance that the resolved WP_Block_Template exposes.
 	 *
 	 * @return array<string,mixed>
 	 */
@@ -224,6 +226,9 @@ final class TemplateDiagnostics {
 			);
 		}
 
+		$canonical_fingerprint = false === $canonical ? '' : self::canonical_comparison_fingerprint( $canonical, $resolved );
+		$resolved_fingerprint  = self::fingerprint_content( (string) $resolved->content );
+
 		$evidence = array(
 			'lookup_id'             => $resolved_id,
 			'found'                 => true,
@@ -235,11 +240,11 @@ final class TemplateDiagnostics {
 			'wp_id'                 => isset( $resolved->wp_id ) ? (int) $resolved->wp_id : 0,
 			'has_theme_file'        => isset( $resolved->has_theme_file ) ? (bool) $resolved->has_theme_file : false,
 			'is_custom'             => isset( $resolved->is_custom ) ? (bool) $resolved->is_custom : null,
-			'canonical_fingerprint' => false === $canonical ? '' : self::fingerprint_content( $canonical ),
-			'resolved_fingerprint'  => self::fingerprint_content( (string) $resolved->content ),
+			'canonical_fingerprint' => $canonical_fingerprint,
+			'resolved_fingerprint'  => $resolved_fingerprint,
 		);
 
-		$evidence['content_matches_canonical'] = '' !== $evidence['canonical_fingerprint'] && hash_equals( $evidence['canonical_fingerprint'], $evidence['resolved_fingerprint'] );
+		$evidence['content_matches_canonical'] = '' !== $canonical_fingerprint && hash_equals( $canonical_fingerprint, $resolved_fingerprint );
 
 		if ( 'custom' === $resolved->source && ! empty( $resolved->wp_id ) ) {
 			return array( 'state' => self::CUSTOMIZED_DB_OVERRIDE, 'evidence' => $evidence );
@@ -259,6 +264,36 @@ final class TemplateDiagnostics {
 		}
 
 		return array( 'state' => self::UNKNOWN, 'evidence' => $evidence );
+	}
+
+	/**
+	 * WordPress 7.1.1 applies Block Hooks to registered plugin templates during
+	 * resolution, including injecting the active theme into Template Part blocks.
+	 * Compare against that native resolved form for the canonical plugin provider;
+	 * DB/theme override content remains compared as stored/file-backed markup.
+	 *
+	 * @param string             $canonical Canonical source markup.
+	 * @param \WP_Block_Template $resolved Resolved WordPress template.
+	 * @return string
+	 */
+	private static function canonical_comparison_fingerprint( $canonical, $resolved ) {
+		$comparison_content = $canonical;
+
+		if (
+			'plugin' === (string) $resolved->source &&
+			'srwf-host-companion' === (string) $resolved->plugin &&
+			function_exists( 'apply_block_hooks_to_content' )
+		) {
+			$context          = clone $resolved;
+			$context->content = $canonical;
+			$comparison_content = apply_block_hooks_to_content(
+				$canonical,
+				$context,
+				'insert_hooked_blocks_and_set_ignored_hooked_blocks_metadata'
+			);
+		}
+
+		return self::fingerprint_content( $comparison_content );
 	}
 
 	/**
