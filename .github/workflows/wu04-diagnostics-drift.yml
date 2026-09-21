@@ -139,6 +139,8 @@ jobs:
           assert data['runtime_contract']['canonical_provider']['source'] == 'plugin'
           assert data['runtime_contract']['canonical_provider']['origin'] == 'plugin'
           assert data['runtime_contract']['canonical_provider']['plugin'] == 'srwf-host-companion'
+          assert data['runtime_contract']['canonical_provider']['content_comparison'] == 'NATIVE_PLUGIN_RESOLUTION_NOT_DIRECTLY_COMPARABLE'
+          assert data['limitations']['registered_plugin_direct_content_equivalence'] == 'NOT_PROVEN_NATIVE_BLOCK_HOOKS_TRANSFORM'
 
           required = {
               'canonical': 'CANONICAL',
@@ -159,10 +161,14 @@ jobs:
               assert fixture['non_mutation'] == 'PASS'
               assert fixture['check_again_exercised'] is True
 
+          assert data['states']['canonical']['resolution_evidence']['content_matches_canonical'] is None
+          assert data['states']['canonical']['resolution_evidence']['content_comparison'] == 'NATIVE_PLUGIN_RESOLUTION_NOT_DIRECTLY_COMPARABLE'
           assert data['states']['customized_db_override']['resolution_evidence']['source'] == 'custom'
           assert data['states']['customized_db_override']['resolution_evidence']['origin'] == 'plugin'
+          assert data['states']['customized_db_override']['resolution_evidence']['content_comparison'] == 'NORMALIZED_SOURCE_COMPARISON'
           assert data['states']['customized_db_override']['resolution_evidence']['content_matches_canonical'] is False
           assert data['states']['theme_override']['resolution_evidence']['source'] == 'theme'
+          assert data['states']['theme_override']['resolution_evidence']['content_comparison'] == 'NORMALIZED_SOURCE_COMPARISON'
           assert data['states']['theme_override']['resolution_evidence']['content_matches_canonical'] is False
           assert data['states']['unknown']['resolution_evidence']['source'] == 'external-fixture'
           assert data['unsupported_states'] == []
@@ -195,9 +201,10 @@ jobs:
           print(f"- capture status: `{d['capture_status']}`")
           print(f"- exact tested head: `{d['tested_commit_sha']}`")
           print(f"- exact disposable tuple: WordPress `{env['wordpress_version']}`, PHP `{env['php_version']}`, `{env['theme_name']}` `{env['theme_version']}`")
-          print('- runtime-proven WU-04 fixtures: canonical, wrong assignment, non-published, missing, trashed, wrong type, DB override, theme override, missing template, UNKNOWN fallback')
+          print('- runtime-proven WU-04 fixtures: canonical provider, wrong assignment, non-published, missing, trashed, wrong type, DB override, theme override, missing template, UNKNOWN fallback')
           print('- diagnostics/render/Check Again non-mutation and no hidden repair: `PASS`')
-          print('- block normalization + material drift fingerprint distinction: `PASS`')
+          print('- normalized directly-comparable DB/theme drift distinction: `PASS`')
+          print('- registered plugin raw-source/resolved content equivalence: `NOT_PROVEN` (native Block Hooks transform)')
           print('- evidence level: `WORDPRESS_INTEGRATION / AUTOMATED_QUALIFICATION_LAB_WU04_SLICE`')
           print('- WU-05: `NOT_PROVEN`; WU-06: `NOT_RUN`; WU-07: `NOT_RUN`; Production Qualification: `NOT_PROVEN`')
           PY
