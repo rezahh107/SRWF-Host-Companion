@@ -389,11 +389,11 @@ switch ( $state ) {
 		break;
 	case 'theme_override':
 		srwf_wu06_assert( \SRWF\HostCompanion\Configuration::set_registration_page_id( (int) $pages['healthy'] ), 'Could not configure theme-override page.' );
-		srwf_wu06_assign_canonical( (int) $pages['healthy'] );
 		$theme_file = srwf_wu06_theme_template_path();
 		srwf_wu06_assert( is_dir( dirname( $theme_file ) ) && is_writable( dirname( $theme_file ) ), 'Qualified theme template directory is not writable.' );
 		srwf_wu06_assert( false !== file_put_contents( $theme_file, $material_drift ), 'Could not create theme override fixture.' );
 		clearstatcache( true, $theme_file );
+		srwf_wu06_assign_canonical( (int) $pages['healthy'] );
 		break;
 	case 'missing_template':
 		srwf_wu06_assert( \SRWF\HostCompanion\Configuration::set_registration_page_id( (int) $pages['healthy'] ), 'Could not configure missing-template page.' );
