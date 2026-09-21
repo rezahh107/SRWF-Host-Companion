@@ -2,7 +2,7 @@
 
 Project-specific WordPress host integration layer for SRWF: deterministic block templates, full-width shells, runtime/template governance, diagnostics, and future bounded host-level integrations.
 
-> **Current status:** V0 architecture is frozen and approved. WU-01 target-runtime facts, WU-02 minimal runtime core, WU-03 Owner settings workflow, and WU-04 read-only diagnostics/drift are implemented on `main`. WU-05 Full Width host geometry is implemented in PR #9 and real-browser automated-qualified on the pinned WordPress `7.1.1` / PHP `8.3.33` / Twenty Twenty-Five `1.5` tuple. WU-06 admin/browser qualification, WU-07 browser E2E/comprehension/release gate, real unavailable dependency regressions, and production qualification remain open.
+> **Current status:** V0 architecture is frozen and approved. WU-01 target-runtime facts, WU-02 minimal runtime core, WU-03 Owner settings workflow, WU-04 read-only diagnostics/drift, and WU-05 Full Width host geometry are implemented on `main`. WU-06 admin/browser RTL/security/accessibility qualification is implemented in PR #10 and automated-qualified on the pinned WordPress `7.1.1` / PHP `8.3.33` / Twenty Twenty-Five `1.5` tuple. WU-07 browser E2E/comprehension/release gate, real unavailable dependency regressions, and production qualification remain open.
 
 ## Purpose
 
@@ -74,16 +74,16 @@ Current evidence baseline:
 ```text
 Minimum WordPress: 6.7
 Observed production WordPress: 7.1.1
-WU-01/WU-02/WU-03/WU-04/WU-05 pinned qualified lab WordPress: 7.1.1
+WU-01/WU-02/WU-03/WU-04/WU-05/WU-06 pinned qualified lab WordPress: 7.1.1
 
 Preferred engineering PHP floor: 8.2+
 Observed production PHP: 8.3.33
-WU-01/WU-02/WU-03/WU-04/WU-05 pinned qualified lab PHP: 8.3.33
+WU-01/WU-02/WU-03/WU-04/WU-05/WU-06 pinned qualified lab PHP: 8.3.33
 Minimum production PHP support policy: NOT_YET_FROZEN
 
 Initial host theme: Twenty Twenty-Five
 Observed production TT25: 1.5
-WU-01/WU-02/WU-03/WU-04/WU-05 pinned qualified lab TT25: 1.5
+WU-01/WU-02/WU-03/WU-04/WU-05/WU-06 pinned qualified lab TT25: 1.5
 ```
 
 Observed production identity provenance and disposable runtime behavior are distinct evidence classes. They do not by themselves establish production qualification.
@@ -99,10 +99,10 @@ Registration template registration: IMPLEMENTED
 Exact page-template assignment adapter: IMPLEMENTED
 WU-03 Owner settings workflow: IMPLEMENTED_ON_MAIN / WORDPRESS_INTEGRATION_PROVEN
 WU-04 runtime diagnostics/drift: IMPLEMENTED_ON_MAIN / WORDPRESS_INTEGRATION_QUALIFIED_ON_PINNED_TUPLE
-WU-05 Full Width geometry: IMPLEMENTED_IN_PR_9 / FULL_WIDTH_GEOMETRY_AUTOMATED_QUALIFIED_ON_PINNED_TARGET_TUPLE
-WU-06 admin UX/security/RTL/accessibility qualification: NOT_RUN
+WU-05 Full Width geometry: IMPLEMENTED_ON_MAIN / FULL_WIDTH_GEOMETRY_AUTOMATED_QUALIFIED_ON_PINNED_TARGET_TUPLE
+WU-06 admin UX/security/RTL/accessibility qualification: IMPLEMENTED_IN_PR_10 / ADMIN_BROWSER_QUALIFICATION_PASS_ON_PINNED_TARGET_TUPLE
 WU-07 browser/E2E release gate: NOT_RUN
-Automated Qualification Lab: WU04_INTEGRATION + WU05_REAL_BROWSER_FOUNDATION
+Automated Qualification Lab: WU04_INTEGRATION + WU05_FRONTEND_BROWSER + WU06_ADMIN_BROWSER
 Production qualification: NOT_PROVEN
 Production release: NOT_PUBLISHED
 ```
@@ -125,9 +125,15 @@ WU-05 keeps Full Width ownership at the WordPress host-template layer. The canon
 
 The WU-05 real-browser lab runs Chromium through Playwright against the exact disposable target tuple in Persian RTL at `320`, `390`, `430`, and `1440` CSS px. It records shell/content bounds, physical and inline gutters, rendered width, document/client overflow evidence, header/footer/navigation integrity, canonical template assignment/rendering, and dependency claim state in a machine-readable artifact. H1 is supported on the pinned tuple by measured browser geometry; screenshots remain diagnostic-only evidence.
 
-The successful synthetic host-geometry evidence does **not** prove unavailable real Gravity Forms, Orbital, GTB, or approved Vazir/Vazirmatn integration. Those dependency-backed claims remain `ENVIRONMENT_UNAVAILABLE / NOT_PROVEN`. WU-06 browser admin RTL/accessibility/security qualification, WU-07 Owner browser E2E/comprehension, production-host confirmation, complete WCAG 2.2 AA conformance, and production qualification also remain outside the WU-05 claim ceiling.
+The successful synthetic host-geometry evidence does **not** prove unavailable real Gravity Forms, Orbital, GTB, or approved Vazir/Vazirmatn integration. Those dependency-backed claims remain `ENVIRONMENT_UNAVAILABLE / NOT_PROVEN`.
 
-Exact-head workflow/run/artifact identity for the open WU-05 PR is recorded in PR evidence rather than embedded as a self-referential commit identifier here.
+WU-06 reuses the existing WU-05 Playwright/Chromium foundation for real wp-admin qualification rather than introducing a second browser platform. On the pinned WordPress `7.1.1` / PHP `8.3.33` / Twenty Twenty-Five `1.5` tuple in Persian RTL, the lab exercises first-run, valid published/non-published pages, missing/trashed/wrong-type pages, wrong assignment, canonical state, published DB override, theme override, missing template and `UNKNOWN`. Each state must present truthful Owner-facing text, preserve read-only sentinels during rendering/accessibility scanning, keep the admin surface RTL while technical identifiers/report remain LTR, and expose native semantic controls.
+
+The WU-06 browser qualification also exercises real keyboard traversal/focus, native `<details>/<summary>` disclosure, the `390×900` narrow-admin layout, real HTTP/browser authorization boundaries, target-page edit denial, invalid/missing nonce rejection, successful keyboard-driven save/apply, read-only `بررسی دوباره`, and diagnostic privacy. The accessibility scan is pinned `@axe-core/playwright` evidence scoped to the plugin `.wrap`; zero plugin-scope machine-detectable violations on the exercised states is a bounded automated check, **not** complete WCAG 2.2 AA conformance.
+
+WU-06 preserves the same claim ceiling: human comprehension, WU-07 Owner E2E/release-gate evidence, direct production-host confirmation, complete WCAG 2.2 AA conformance, unavailable Gravity Forms/Orbital/GTB/Vazir dependency regressions, and `PRODUCTION_QUALIFIED_FOR_SRWF` remain `NOT_RUN`, `ENVIRONMENT_UNAVAILABLE`, or `NOT_PROVEN` as applicable.
+
+Exact-head workflow/run/artifact identity for focused qualification PRs is recorded in PR evidence rather than embedded as a self-referential commit identifier here.
 
 The approved Automated Qualification Lab extends the existing disposable runtime-lab for WU-04 through WU-07 where behavior can be reproduced honestly. It favors deterministic fixtures, real-browser assertions when needed, machine-readable evidence and useful failure artifacts. Human comprehension and irreducibly production-specific confirmation remain separate evidence requirements, and unavailable real dependencies must not be represented by synthetic PASS claims.
 
@@ -141,7 +147,8 @@ The approved Automated Qualification Lab extends the existing disposable runtime
 │   │   ├── wu02-runtime-core.yml
 │   │   ├── wu03-owner-settings.yml
 │   │   ├── wu04-diagnostics-drift.yml
-│   │   └── wu05-full-width-geometry.yml
+│   │   ├── wu05-full-width-geometry.yml
+│   │   └── wu06-admin-qualification.yml
 │   └── PULL_REQUEST_TEMPLATE.md
 ├── docs/
 │   ├── architecture/
@@ -163,9 +170,13 @@ The approved Automated Qualification Lab extends the existing disposable runtime
 │   └── registration-full-width.html
 ├── tests/
 │   ├── browser/
-│   │   └── wu05-full-width.mjs
+│   │   ├── wu05-full-width.mjs
+│   │   └── wu06-admin-qualification.mjs
 │   └── runtime-lab/
-│       └── wu05-full-width.php
+│       ├── fixture-plugin/
+│       │   └── srwf-host-companion-wu06-fixture.php
+│       ├── wu05-full-width.php
+│       └── wu06-admin-fixtures.php
 ├── AGENTS.md
 ├── CHANGELOG.md
 ├── SECURITY.md
