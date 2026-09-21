@@ -97,7 +97,7 @@ final class TemplateDiagnostics {
 	}
 
 	/**
-	 * Normalize block markup through WordPress's parser/serializer.
+	 * Normalize block markup through WordPress's public parser/serializer APIs.
 	 *
 	 * @param string $content Block template content.
 	 * @return string
@@ -156,6 +156,7 @@ final class TemplateDiagnostics {
 			'resolved_wp_id=' . (string) ( $evidence['wp_id'] ?? '' ),
 			'canonical_fingerprint=' . (string) ( $evidence['canonical_fingerprint'] ?? '' ),
 			'resolved_fingerprint=' . (string) ( $evidence['resolved_fingerprint'] ?? '' ),
+			'content_comparison=' . (string) ( $evidence['content_comparison'] ?? 'NOT_AVAILABLE' ),
 			'content_matches_canonical=' . self::bool_text( $evidence['content_matches_canonical'] ?? null ),
 			'recommended_action=' . (string) ( $diagnostics['recommended_action'] ?? 'CHECK_AGAIN' ),
 		);
@@ -204,10 +205,11 @@ final class TemplateDiagnostics {
 	 * Inspect the provider WordPress resolves for the canonical slug.
 	 *
 	 * WordPress 7.1.1 resolves DB templates before theme files and theme files
-	 * before a registered plugin template. Registered plugin templates are then
-	 * passed through the native Block Hooks pipeline before WordPress returns the
-	 * resolved object, so canonical comparison must use that same resolved form.
-	 * We classify only provenance that the resolved WP_Block_Template exposes.
+	 * before a registered plugin template. Registered plugin-template content is
+	 * then transformed by Core's Block Hooks resolution path before it is exposed.
+	 * Provider identity is therefore classified from WordPress provenance. Direct
+	 * normalized source-vs-resolved comparison is used only where the markup is
+	 * directly comparable (for example database/theme overrides).
 	 *
 	 * @return array<string,mixed>
 	 */
@@ -226,25 +228,38 @@ final class TemplateDiagnostics {
 			);
 		}
 
-		$canonical_fingerprint = false === $canonical ? '' : self::canonical_comparison_fingerprint( $canonical, $resolved );
+		$canonical_fingerprint = false === $canonical ? '' : self::fingerprint_content( $canonical );
 		$resolved_fingerprint  = self::fingerprint_content( (string) $resolved->content );
-
-		$evidence = array(
-			'lookup_id'             => $resolved_id,
-			'found'                 => true,
-			'id'                    => (string) $resolved->id,
-			'slug'                  => (string) $resolved->slug,
-			'source'                => (string) $resolved->source,
-			'origin'                => isset( $resolved->origin ) ? (string) $resolved->origin : '',
-			'plugin'                => isset( $resolved->plugin ) ? (string) $resolved->plugin : '',
-			'wp_id'                 => isset( $resolved->wp_id ) ? (int) $resolved->wp_id : 0,
-			'has_theme_file'        => isset( $resolved->has_theme_file ) ? (bool) $resolved->has_theme_file : false,
-			'is_custom'             => isset( $resolved->is_custom ) ? (bool) $resolved->is_custom : null,
-			'canonical_fingerprint' => $canonical_fingerprint,
-			'resolved_fingerprint'  => $resolved_fingerprint,
+		$is_canonical_provider = (
+			'plugin' === (string) $resolved->source &&
+			'srwf-host-companion' === (string) $resolved->plugin &&
+			'plugin' === (string) $resolved->origin
 		);
 
-		$evidence['content_matches_canonical'] = '' !== $canonical_fingerprint && hash_equals( $canonical_fingerprint, $resolved_fingerprint );
+		$content_comparison = $is_canonical_provider
+			? 'NATIVE_PLUGIN_RESOLUTION_NOT_DIRECTLY_COMPARABLE'
+			: 'NORMALIZED_SOURCE_COMPARISON';
+		$content_matches = null;
+		if ( ! $is_canonical_provider && '' !== $canonical_fingerprint ) {
+			$content_matches = hash_equals( $canonical_fingerprint, $resolved_fingerprint );
+		}
+
+		$evidence = array(
+			'lookup_id'                 => $resolved_id,
+			'found'                     => true,
+			'id'                        => (string) $resolved->id,
+			'slug'                      => (string) $resolved->slug,
+			'source'                    => (string) $resolved->source,
+			'origin'                    => isset( $resolved->origin ) ? (string) $resolved->origin : '',
+			'plugin'                    => isset( $resolved->plugin ) ? (string) $resolved->plugin : '',
+			'wp_id'                     => isset( $resolved->wp_id ) ? (int) $resolved->wp_id : 0,
+			'has_theme_file'            => isset( $resolved->has_theme_file ) ? (bool) $resolved->has_theme_file : false,
+			'is_custom'                 => isset( $resolved->is_custom ) ? (bool) $resolved->is_custom : null,
+			'canonical_fingerprint'     => $canonical_fingerprint,
+			'resolved_fingerprint'      => $resolved_fingerprint,
+			'content_comparison'        => $content_comparison,
+			'content_matches_canonical' => $content_matches,
+		);
 
 		if ( 'custom' === $resolved->source && ! empty( $resolved->wp_id ) ) {
 			return array( 'state' => self::CUSTOMIZED_DB_OVERRIDE, 'evidence' => $evidence );
@@ -254,46 +269,11 @@ final class TemplateDiagnostics {
 			return array( 'state' => self::THEME_OVERRIDE, 'evidence' => $evidence );
 		}
 
-		if (
-			'plugin' === $resolved->source &&
-			'srwf-host-companion' === (string) $resolved->plugin &&
-			'plugin' === (string) $resolved->origin &&
-			true === $evidence['content_matches_canonical']
-		) {
+		if ( $is_canonical_provider ) {
 			return array( 'state' => self::CANONICAL, 'evidence' => $evidence );
 		}
 
 		return array( 'state' => self::UNKNOWN, 'evidence' => $evidence );
-	}
-
-	/**
-	 * WordPress 7.1.1 applies Block Hooks to registered plugin templates during
-	 * resolution, including injecting the active theme into Template Part blocks.
-	 * Compare against that native resolved form for the canonical plugin provider;
-	 * DB/theme override content remains compared as stored/file-backed markup.
-	 *
-	 * @param string             $canonical Canonical source markup.
-	 * @param \WP_Block_Template $resolved Resolved WordPress template.
-	 * @return string
-	 */
-	private static function canonical_comparison_fingerprint( $canonical, $resolved ) {
-		$comparison_content = $canonical;
-
-		if (
-			'plugin' === (string) $resolved->source &&
-			'srwf-host-companion' === (string) $resolved->plugin &&
-			function_exists( 'apply_block_hooks_to_content' )
-		) {
-			$context          = clone $resolved;
-			$context->content = $canonical;
-			$comparison_content = apply_block_hooks_to_content(
-				$canonical,
-				$context,
-				'insert_hooked_blocks_and_set_ignored_hooked_blocks_metadata'
-			);
-		}
-
-		return self::fingerprint_content( $comparison_content );
 	}
 
 	/**
