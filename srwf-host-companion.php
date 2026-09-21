@@ -13,9 +13,14 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+if ( ! defined( 'SRWF_HOST_COMPANION_VERSION' ) ) {
+	define( 'SRWF_HOST_COMPANION_VERSION', '0.0.0-dev' );
+}
+
 require_once __DIR__ . '/src/Configuration.php';
 require_once __DIR__ . '/src/TemplateRegistrar.php';
 require_once __DIR__ . '/src/PageTemplateAssignment.php';
+require_once __DIR__ . '/src/TemplateDiagnostics.php';
 require_once __DIR__ . '/src/AdminSettings.php';
 
 \SRWF\HostCompanion\TemplateRegistrar::boot();

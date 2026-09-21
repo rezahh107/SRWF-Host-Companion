@@ -17,6 +17,15 @@ final class TemplateRegistrar {
 	}
 
 	/**
+	 * Return the repository-owned canonical Registration template markup.
+	 *
+	 * @return string|false
+	 */
+	public static function get_canonical_content() {
+		return file_get_contents( dirname( __DIR__ ) . '/templates/registration-full-width.html' );
+	}
+
+	/**
 	 * Register the canonical Registration template.
 	 *
 	 * @return \WP_Block_Template|\WP_Error|null
@@ -26,7 +35,7 @@ final class TemplateRegistrar {
 			return null;
 		}
 
-		$content = file_get_contents( dirname( __DIR__ ) . '/templates/registration-full-width.html' );
+		$content = self::get_canonical_content();
 
 		if ( false === $content ) {
 			return new \WP_Error(
