@@ -169,7 +169,7 @@ On WordPress `7.1.1`, PHP `8.3.33`, and Twenty Twenty-Five `1.5`, the dedicated 
 
 WordPress 7.1.1 source and runtime evidence establish the relevant resolution order as database template → active-theme file → registered plugin template. The detector classifies only provenance exposed by the resolved `WP_Block_Template`; it does not infer undocumented source semantics.
 
-Canonical-vs-resolved content comparison normalizes block markup with `parse_blocks()` → `serialize_blocks()` before SHA-256 fingerprinting. The qualification fixture proves harmless block-comment serialization trivia compares equal while an added material block compares different.
+Where source and resolved markup are directly comparable, such as database or theme overrides, drift comparison normalizes block markup with `parse_blocks()` → `serialize_blocks()` before SHA-256 fingerprinting. The qualification fixture proves valid serialization whitespace compares equal while an added material block compares different. Registered plugin-template content is transformed by WordPress's native Block Hooks resolution path before it is returned, so WU-04 classifies the canonical plugin provider from proven `source` / `origin` / `plugin` provenance and deliberately leaves raw-source-versus-resolved content equivalence `NOT_PROVEN` instead of depending on private Core APIs or reporting a false mismatch.
 
 For every WU-04 fixture, the lab snapshots relevant persistent state before/after inspection and real settings-page rendering / `Check Again`. PASS requires configuration, page-template assignment, page content, and any DB/theme override fixture to remain unchanged. Missing-template diagnostics also prove that inspection does not silently re-register the removed fixture template.
 
