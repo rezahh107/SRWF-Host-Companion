@@ -2,7 +2,7 @@
 
 Project-specific WordPress host integration layer for SRWF: deterministic block templates, full-width shells, runtime/template governance, diagnostics, and future bounded host-level integrations.
 
-> **Current status:** repository foundation established; V0 architecture is frozen and approved. Functional template registration, settings UI, diagnostics, and production qualification have **not** been implemented yet.
+> **Current status:** V0 architecture is frozen and approved. WU-01 target-runtime facts and WU-02 minimal runtime core are complete on `main`; Owner settings UI, diagnostics/drift, Full Width geometry qualification, browser/E2E, accessibility qualification, and production qualification are still pending.
 
 ## Purpose
 
@@ -61,55 +61,78 @@ Read these before implementation or technical review:
 1. [`docs/architecture/MOTHER_ARCHITECTURE.md`](docs/architecture/MOTHER_ARCHITECTURE.md) — canonical V0 architecture and invariants.
 2. [`AGENTS.md`](AGENTS.md) — operating contract for coding agents and automated contributors.
 3. [`docs/architecture/PPDM_ADOPTION.md`](docs/architecture/PPDM_ADOPTION.md) — selectively adopted WordPress/self-guided UX guidance.
-4. [`docs/implementation/V0_IMPLEMENTATION_PLAN.md`](docs/implementation/V0_IMPLEMENTATION_PLAN.md) — bounded execution sequence.
+4. [`docs/implementation/V0_IMPLEMENTATION_PLAN.md`](docs/implementation/V0_IMPLEMENTATION_PLAN.md) — bounded execution sequence and current work-unit status.
+5. [`docs/implementation/WU01_RUNTIME_FACTS.md`](docs/implementation/WU01_RUNTIME_FACTS.md) — target-runtime evidence and page-template contract.
 
 The Mother Architecture is frozen for V0. Implementation may change low-level mechanisms only when the approved contracts and invariants remain intact.
 
 ## Platform policy
 
-Current architectural baseline:
+Current evidence baseline:
 
 ```text
 Minimum WordPress: 6.7
-Qualified WordPress: TO_BE_RECORDED from the exact SRWF runtime
+Observed production WordPress: 7.1.1
+WU-01/WU-02 pinned qualified lab WordPress: 7.1.1
 
 Preferred engineering PHP floor: 8.2+
-Minimum PHP: TO_BE_QUALIFIED from the real production host
-Qualified PHP: TO_BE_RECORDED
+Observed production PHP: 8.3.33
+WU-01/WU-02 pinned qualified lab PHP: 8.3.33
+Minimum production PHP support policy: NOT_YET_FROZEN
 
 Initial host theme: Twenty Twenty-Five
-Qualified TT25 version: TO_BE_RECORDED
+Observed production TT25: 1.5
+WU-01/WU-02 pinned qualified lab TT25: 1.5
 ```
 
-Do not convert these open values into guessed support claims.
+Observed production identity provenance and disposable runtime behavior are distinct evidence classes. They do not by themselves establish production qualification.
 
 ## Repository status
 
-The repository currently contains only foundation/scaffolding. The plugin bootstrap is intentionally inert.
-
 ```text
 Architecture: APPROVED / FROZEN FOR V0
-Repository foundation: ESTABLISHED
-Template implementation: NOT_IMPLEMENTED
-Admin settings UI: NOT_IMPLEMENTED
-Runtime diagnostics: NOT_IMPLEMENTED
-Browser/E2E qualification: NOT_RUN
+WU-01 runtime-fact prerequisite: COMPLETE_FOR_WU02
+WU-02 minimal runtime core: IMPLEMENTED_ON_MAIN
+Configuration schema v1: IMPLEMENTED
+Registration template registration: IMPLEMENTED
+Exact page-template assignment adapter: IMPLEMENTED
+Admin settings UI (WU-03): NOT_IMPLEMENTED
+Runtime diagnostics/drift (WU-04): NOT_IMPLEMENTED
+Full Width geometry qualification (WU-05): NOT_PROVEN
+Admin UX/security/RTL/accessibility qualification (WU-06): NOT_RUN
+Browser/E2E release gate (WU-07): NOT_RUN
 Production qualification: NOT_PROVEN
 Production release: NOT_PUBLISHED
 ```
+
+WU-02 currently provides the real plugin bootstrap, canonical schema-v1 storage primitive, canonical Registration Block Template registration, and bounded exact page-template assignment/readback adapter. It does **not** automatically assign pages during plugin load or configuration reads.
 
 ## Repository layout
 
 ```text
 .
 ├── .github/
+│   ├── workflows/
+│   │   ├── wu01-runtime-facts.yml
+│   │   └── wu02-runtime-core.yml
 │   └── PULL_REQUEST_TEMPLATE.md
 ├── docs/
 │   ├── architecture/
 │   │   ├── MOTHER_ARCHITECTURE.md
 │   │   └── PPDM_ADOPTION.md
+│   ├── evidence/
+│   │   └── PRODUCTION_SITE_HEALTH_IDENTITY.md
 │   └── implementation/
-│       └── V0_IMPLEMENTATION_PLAN.md
+│       ├── V0_IMPLEMENTATION_PLAN.md
+│       └── WU01_RUNTIME_FACTS.md
+├── src/
+│   ├── Configuration.php
+│   ├── PageTemplateAssignment.php
+│   └── TemplateRegistrar.php
+├── templates/
+│   └── registration-full-width.html
+├── tests/
+│   └── runtime-lab/
 ├── AGENTS.md
 ├── CHANGELOG.md
 ├── SECURITY.md
@@ -117,7 +140,7 @@ Production release: NOT_PUBLISHED
 └── srwf-host-companion.php
 ```
 
-Implementation directories such as `src/`, `templates/`, and `tests/` should be created when their first real contents are introduced. Do not add empty architecture for appearance.
+Do not add placeholder abstractions or empty directories. Add structure only when it contains real behavior.
 
 ## Development workflow
 

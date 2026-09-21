@@ -4,7 +4,7 @@ SRWF Host Companion is a project-specific WordPress host-integration plugin.
 
 ## Current status
 
-The repository is in foundation stage. Functional V0 behavior is not yet implemented and no production-qualified release has been published.
+V0 architecture remains approved and frozen. WU-01 is complete as the prerequisite for WU-02, and the WU-02 minimal runtime core is implemented on `main`. WU-03 and later work remain incomplete as applicable; Full Width geometry is `NOT_PROVEN`; browser/E2E and later qualification remain `NOT_RUN` / `NOT_PROVEN`. No production-qualified or production-supported release has been published.
 
 ## Security baseline
 

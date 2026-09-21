@@ -1,6 +1,6 @@
 # V0 Implementation Plan
 
-**Status:** `APPROVED_SEQUENCE / NOT_YET_EXECUTED`  
+**Status:** `APPROVED_SEQUENCE / EXECUTION_IN_PROGRESS`  
 **Governing authority:** `docs/architecture/MOTHER_ARCHITECTURE.md`  
 **Purpose:** break the frozen V0 architecture into bounded implementation work without reopening architecture selection.
 
@@ -52,6 +52,15 @@ NOT_PROVEN
 
 Do not freeze minimum PHP until the production host is inspected.
 
+Current status on `main` after PR #3:
+
+```text
+COMPLETE_FOR_WU02
+PRODUCTION_QUALIFICATION_NOT_PROVEN
+```
+
+The preserved production-host identity is WordPress `7.1.1`, PHP `8.3.33`, and active Twenty Twenty-Five `1.5`. Matching disposable-runtime page-template behavior is `RUNTIME_PROVEN`.
+
 ## WU-02 — Minimal runtime core
 
 Implement only:
@@ -64,6 +73,16 @@ Implement only:
 Do not add admin UI complexity beyond what WU-03 owns.
 
 Do not add Operational template support.
+
+Current status on `main` after PR #4:
+
+```text
+IMPLEMENTED_AND_INTEGRATION_PROVEN_ON_PINNED_TARGET_TUPLE
+WU03_NOT_STARTED
+PRODUCTION_QUALIFICATION_NOT_PROVEN
+```
+
+Exact-head WU-02 CI on PR #4 exercised WordPress `7.1.1`, PHP `8.3.33`, and Twenty Twenty-Five `1.5`, and passed bootstrap/load, schema-v1 configuration, canonical template registration, exact assignment/readback, no-hidden-mutation, active render composition, and deactivation/fallback checks. Full Width geometry, Owner workflow, browser/E2E, accessibility, diagnostics/drift, and production qualification remain outside the WU-02 claim ceiling.
 
 ## WU-03 — Owner settings workflow
 
