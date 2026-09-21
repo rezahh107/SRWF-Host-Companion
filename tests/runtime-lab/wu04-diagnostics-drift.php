@@ -126,6 +126,7 @@ function srwf_wu04_exercise_fixture( &$evidence, $name, $expected_primary, $expe
 			'has_theme_file'            => $resolution_evidence['has_theme_file'] ?? false,
 			'canonical_fingerprint'     => $resolution_evidence['canonical_fingerprint'] ?? '',
 			'resolved_fingerprint'      => $resolution_evidence['resolved_fingerprint'] ?? '',
+			'content_comparison'        => $resolution_evidence['content_comparison'] ?? 'NOT_AVAILABLE',
 			'content_matches_canonical' => $resolution_evidence['content_matches_canonical'] ?? null,
 		),
 		'non_mutation'          => 'PASS',
@@ -205,11 +206,11 @@ srwf_wu04_assert(
 
 $theme = wp_get_theme();
 $evidence = array(
-	'schema'           => 'srwf-host-companion-wu04-diagnostics-drift-v1',
-	'evidence_class'   => 'DISPOSABLE_CI_WORDPRESS_INTEGRATION',
-	'tested_commit_sha'=> $tested_sha,
-	'observed_at_utc'  => gmdate( 'c' ),
-	'environment'      => array(
+	'schema'            => 'srwf-host-companion-wu04-diagnostics-drift-v1',
+	'evidence_class'    => 'DISPOSABLE_CI_WORDPRESS_INTEGRATION',
+	'tested_commit_sha' => $tested_sha,
+	'observed_at_utc'   => gmdate( 'c' ),
+	'environment'       => array(
 		'wordpress_version' => get_bloginfo( 'version' ),
 		'php_version'       => PHP_VERSION,
 		'theme_stylesheet'  => get_stylesheet(),
@@ -225,6 +226,9 @@ $evidence = array(
 			'material_block_drift_detected' => true,
 			'status'                        => 'PASS',
 		),
+	),
+	'limitations' => array(
+		'registered_plugin_direct_content_equivalence' => 'NOT_PROVEN_NATIVE_BLOCK_HOOKS_TRANSFORM',
 	),
 	'states'             => array(),
 	'unsupported_states' => array(),
@@ -256,13 +260,15 @@ $canonical_runtime = $canonical_diag['resolution']['evidence'];
 srwf_wu04_assert( 'plugin' === $canonical_runtime['source'], 'Canonical runtime source is not plugin.' );
 srwf_wu04_assert( 'plugin' === $canonical_runtime['origin'], 'Canonical runtime origin is not plugin.' );
 srwf_wu04_assert( 'srwf-host-companion' === $canonical_runtime['plugin'], 'Canonical runtime plugin provenance mismatch.' );
-srwf_wu04_assert( true === $canonical_runtime['content_matches_canonical'], 'Canonical resolved content fingerprint mismatch.' );
+srwf_wu04_assert( null === $canonical_runtime['content_matches_canonical'], 'Native plugin resolution was falsely promoted to direct content equivalence.' );
+srwf_wu04_assert( 'NATIVE_PLUGIN_RESOLUTION_NOT_DIRECTLY_COMPARABLE' === $canonical_runtime['content_comparison'], 'Canonical provider comparison uncertainty was not preserved.' );
 $evidence['runtime_contract']['canonical_provider'] = array(
-	'id'     => $canonical_runtime['id'],
-	'source' => $canonical_runtime['source'],
-	'origin' => $canonical_runtime['origin'],
-	'plugin' => $canonical_runtime['plugin'],
-	'status' => 'PASS',
+	'id'                 => $canonical_runtime['id'],
+	'source'             => $canonical_runtime['source'],
+	'origin'             => $canonical_runtime['origin'],
+	'plugin'             => $canonical_runtime['plugin'],
+	'content_comparison' => $canonical_runtime['content_comparison'],
+	'status'             => 'PASS',
 );
 
 update_post_meta( $healthy_id, '_wp_page_template', 'legacy-wrong-template' );
@@ -368,6 +374,7 @@ $db_diag = srwf_wu04_exercise_fixture(
 );
 srwf_wu04_assert( 'custom' === $db_diag['resolution']['evidence']['source'], 'DB override diagnostic source mismatch.' );
 srwf_wu04_assert( 'plugin' === $db_diag['resolution']['evidence']['origin'], 'DB override origin did not preserve plugin provenance.' );
+srwf_wu04_assert( 'NORMALIZED_SOURCE_COMPARISON' === $db_diag['resolution']['evidence']['content_comparison'], 'DB override was not compared through normalized source markup.' );
 srwf_wu04_assert( false === $db_diag['resolution']['evidence']['content_matches_canonical'], 'Material DB override was normalized into a false canonical match.' );
 wp_delete_post( $db_template_id, true );
 clean_post_cache( $db_template_id );
@@ -394,6 +401,7 @@ $theme_diag = srwf_wu04_exercise_fixture(
 	$theme_file,
 	'پوسته فعال نسخه‌ای با همین نام قالب دارد'
 );
+srwf_wu04_assert( 'NORMALIZED_SOURCE_COMPARISON' === $theme_diag['resolution']['evidence']['content_comparison'], 'Theme override was not compared through normalized source markup.' );
 srwf_wu04_assert( false === $theme_diag['resolution']['evidence']['content_matches_canonical'], 'Material theme override was normalized into a false canonical match.' );
 unlink( $theme_file );
 clearstatcache( true, $theme_file );
@@ -442,6 +450,7 @@ remove_filter( 'pre_get_block_template', 'srwf_wu04_unknown_resolver', 10 );
 $report = \SRWF\HostCompanion\TemplateDiagnostics::build_report( $canonical_diag );
 srwf_wu04_assert( false !== strpos( $report, 'wordpress_version=' ), 'Diagnostic report omits WordPress version.' );
 srwf_wu04_assert( false !== strpos( $report, 'expected_template_slug=registration-full-width' ), 'Diagnostic report omits expected template slug.' );
+srwf_wu04_assert( false !== strpos( $report, 'content_comparison=NATIVE_PLUGIN_RESOLUTION_NOT_DIRECTLY_COMPARABLE' ), 'Diagnostic report omitted canonical comparison uncertainty.' );
 srwf_wu04_assert( false === strpos( $report, 'SRWF_WU04_PAGE_CONTENT_' ), 'Diagnostic report leaked synthetic page content.' );
 srwf_wu04_assert( false === stripos( $report, 'nonce=' ), 'Diagnostic report contains nonce data.' );
 srwf_wu04_assert( false === stripos( $report, 'cookie=' ), 'Diagnostic report contains cookie data.' );
