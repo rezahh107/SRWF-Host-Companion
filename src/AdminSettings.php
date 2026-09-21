@@ -186,7 +186,7 @@ final class AdminSettings {
 				<p><?php esc_html_e( 'قالب موجود «SRWF — Registration Full Width» بدون ایجاد قالب Inbox یا Operational جداگانه reuse می‌شود. محتوای برگه تغییر نمی‌کند.', 'srwf-host-companion' ); ?></p>
 				<p class="description"><?php esc_html_e( 'اگر صفحه اینباکس را عوض کنید، صفحه جدید مرجع تنظیمات می‌شود و قالب به همان صفحه اعمال می‌شود. قالب صفحه اینباکس قبلی به‌صورت خودکار بازنویسی یا بازیابی نمی‌شود.', 'srwf-host-companion' ); ?></p>
 
-				<?php submit_button( __( 'ذخیره و اعمال قالب تمام‌عرض به اینباکس', 'srwf-host-companion' ), 'secondary', 'submit', false ); ?>
+				<?php submit_button( __( 'اعمال میزبان تمام‌عرض به صفحه اینباکس', 'srwf-host-companion' ), 'secondary', 'submit', false ); ?>
 			</form>
 		</div>
 		<?php
