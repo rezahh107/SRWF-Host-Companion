@@ -6,7 +6,25 @@ GitHub Release `v0.1.0` was published on 2026-09-21.
 
 ## [Unreleased]
 
-No unreleased changes yet.
+### Added
+
+- Owner-approved post-`v0.1.0` Inbox Full Width Host Canvas architecture amendment: one independently selected Inbox Page may reuse the exact existing SRWF Full Width host canvas; no separate Inbox/Operational template or Gravity Flow/GPP ownership is authorized;
+- schema-v2 support for exactly `roles.registration.page_id` and `roles.inbox.page_id`, with valid schema-v1 Registration state normalized read-only in memory and explicit Inbox persistence as the v1→v2 storage-upgrade boundary;
+- independent `صفحه اینباکس` selector and explicit Inbox save/apply operation on the existing `Settings → SRWF Host` screen, reusing the existing canonical template assignment/readback adapter;
+- WU-03 integration coverage for Inbox selector presence, authorization/nonce/target validation, schema-v2 migration, content preservation, previous-Inbox no-rewrite behavior, and two-way Registration/Inbox independence;
+- WU-05 real-browser host-canvas qualification for a synthetic Inbox page on the existing pinned Playwright/Chromium lab at `320`, `390`, `430`, and `1440` CSS px in RTL, while preserving real Gravity Flow Inbox and GPP integration as `NOT_PROVEN`.
+
+### Changed
+
+- Registration-only legacy persistence may remain schema v1 until Inbox is explicitly configured; once schema v2 exists, either role setter preserves the other role;
+- Owner-facing diagnostics wording now makes explicit that the existing diagnostic surface remains Registration-focused and does not diagnose or auto-repair Inbox;
+- repository guidance/current-state documentation now routes the bounded Inbox capability through the explicit amendment without rewriting the frozen Mother Architecture.
+
+### Release boundary
+
+- no release/tag/publication is performed by these unreleased changes;
+- `.github/release-manifest.json` and the already-published `v0.1.0` release remain unchanged;
+- real Gravity Flow Inbox integration, GPP integration, human comprehension, production-host confirmation, and `PRODUCTION_QUALIFIED_FOR_SRWF` remain `NOT_PROVEN`.
 
 ## [0.1.0] - 2026-09-21
 
