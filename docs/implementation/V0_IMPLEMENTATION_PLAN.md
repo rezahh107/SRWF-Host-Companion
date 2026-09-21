@@ -129,7 +129,7 @@ Key execution rules:
 - do not let automated qualification alone imply `PRODUCTION_QUALIFIED_FOR_SRWF`;
 - use focused checks on ordinary PRs and broader/full automated qualification at a justified regression or release boundary rather than forcing every expensive test on every trivial change.
 
-The first real functional slice of this direction is WU-04: deterministic exact-target fixtures, state-specific non-mutation sentinels and a machine-readable evidence artifact are implemented without adding browser infrastructure before WU-05.
+WU-04 established the first deterministic integration slice. WU-05 adds the first reusable real-browser slice without coupling the product runtime to the browser framework.
 
 ## WU-04 — Read-only diagnostics and drift
 
@@ -147,16 +147,16 @@ No automatic repair in V0.
 
 Qualification should use deterministic CI fixtures for the supported page/drift states and assert truthful evidence/interpretation/guidance plus no hidden mutation or repair.
 
-Current WU-04 implementation/qualification state in PR #8:
+Current WU-04 implementation/qualification state on `main` after merged PR #8:
 
 ```text
 IMPLEMENTED_AND_WORDPRESS_INTEGRATION_QUALIFIED_ON_PINNED_TARGET_TUPLE
 AUTOMATED_QUALIFICATION_LAB_FIRST_FUNCTIONAL_SLICE
-BROWSER_EVIDENCE_NOT_RUN
+BROWSER_EVIDENCE_NOT_RUN_FOR_WU04
 PRODUCTION_QUALIFICATION_NOT_PROVEN
 ```
 
-Exact-head workflow/run/artifact identity is recorded in the focused PR evidence rather than embedded as a self-referential commit identifier in this plan.
+Exact-head workflow/run/artifact identity is recorded in focused PR evidence rather than embedded as a self-referential commit identifier in this plan.
 
 On WordPress `7.1.1`, PHP `8.3.33`, and Twenty Twenty-Five `1.5`, the dedicated WU-04 lab exercises deterministic fixtures for:
 
@@ -214,6 +214,65 @@ Prefer real browser measurements for geometry/overflow assertions, with screensh
 If a required real dependency is unavailable in CI, preserve that regression claim as `NOT_PROVEN` or `ENVIRONMENT_UNAVAILABLE` until stronger evidence exists.
 
 If H1 fails, replace the implementation mechanism without reopening the architecture contract.
+
+Current WU-05 implementation/qualification state in PR #9:
+
+```text
+IMPLEMENTED_NATIVE_H1
+FULL_WIDTH_GEOMETRY_AUTOMATED_QUALIFIED_ON_PINNED_TARGET_TUPLE
+REAL_BROWSER_RTL_MATRIX_PASS
+GRAVITY_FORMS_ORBITAL_GTB_TYPOGRAPHY_ENVIRONMENT_UNAVAILABLE_NOT_PROVEN
+WU06_NOT_RUN
+WU07_NOT_RUN
+PRODUCTION_QUALIFICATION_NOT_PROVEN
+```
+
+The actual narrow constraint was confirmed at the host block-layout layer. Twenty Twenty-Five exposes a global article `contentSize` of `645px`; the canonical Registration template previously supplied a plain Group + Post Content composition with no local width override. WU-05 keeps the fix at the host-template boundary rather than moving responsibility into GTB/GPP or mutating TT25 globally.
+
+The selected product mechanism is the native H1 route:
+
+```text
+Registration shell
+→ alignfull
+→ template-local constrained layout
+→ contentSize = 100%
+→ wideSize = 100%
+→ TT25 spacing-token horizontal gutter
+
+Post Content
+→ alignfull
+→ local contentSize = 100%
+→ local wideSize = 100%
+```
+
+No product frontend CSS or JavaScript is required. No `100vw`, negative-margin breakout, Page Builder dependency, generic form-control styling, or global `theme.json` layout mutation is introduced.
+
+The WU-05 lab reuses the exact disposable WordPress provisioning direction and adds pinned Playwright/Chromium only to the test boundary. Synthetic fixture setup persists schema-v1 Registration configuration and performs canonical template assignment/readback through the real product adapter before the browser opens the frontend.
+
+For each required RTL viewport, the browser records viewport width, shell/Post Content/application bounds, physical and logical inline gutters, client/document/body widths, overflow state, header/footer/navigation integrity, and canonical template render evidence. The successful measured application widths are:
+
+```text
+320px viewport  → 260px application, 30px / 30px inline gutters
+390px viewport  → 330px application, 30px / 30px inline gutters
+430px viewport  → 370px application, 30px / 30px inline gutters
+1440px viewport → 1340px application, 50px / 50px inline gutters
+```
+
+At all four widths, `scrollWidth == clientWidth`, direction is RTL, and header/footer/navigation are present. At `1440px`, the application region measures `1340px` while the global TT25 article `contentSize` remains `645px`, establishing the bounded Full Width host-geometry claim without global theme mutation.
+
+H1 falsification was explicit rather than assumed. The first browser attempt exposed a 320px overflow, but the retained failure screenshot/JSON showed the shell, `30px` gutters, and host chrome were already correct; the overflow came from an unbreakable synthetic marker string in the fixture. After removing that fixture artifact, the same native H1 product mechanism passed all four required viewports. Therefore a scoped CSS fallback was not admitted.
+
+The bounded machine-readable artifact records dependency availability separately. Gravity Forms, Orbital, GTB, and approved Vazir/Vazirmatn were unavailable in the exercised CI environment and remain `ENVIRONMENT_UNAVAILABLE / NOT_PROVEN`; synthetic equivalents are not used to manufacture regression PASS claims.
+
+WU-05 establishes:
+
+```text
+FULL_WIDTH_GEOMETRY_AUTOMATED_QUALIFIED_ON_PINNED_TARGET_TUPLE
+```
+
+It does not establish WU-06, WU-07, Owner comprehension, production-host qualification, complete WCAG 2.2 AA conformance, or `PRODUCTION_QUALIFIED_FOR_SRWF`.
+
+Exact final-head workflow/run/artifact identity is recorded in PR evidence rather than embedded as a self-referential identifier in this plan.
 
 ## WU-06 — Admin UX and security qualification
 
