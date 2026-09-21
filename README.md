@@ -2,7 +2,7 @@
 
 Project-specific WordPress host integration layer for SRWF: deterministic block templates, full-width shells, runtime/template governance, diagnostics, and future bounded host-level integrations.
 
-> **Current status:** V0 architecture is frozen and approved. WU-01 target-runtime facts, WU-02 minimal runtime core, WU-03 Owner settings workflow, and WU-04 read-only diagnostics/drift are implemented. WU-04 is qualified at WordPress-integration level on the pinned disposable tuple through the first real Automated Qualification Lab fixture matrix. WU-05 Full Width browser geometry, WU-06 admin/browser qualification, WU-07 browser E2E/comprehension/release gate, and production qualification remain open.
+> **Current status:** V0 architecture is frozen and approved. WU-01 target-runtime facts, WU-02 minimal runtime core, and WU-03 Owner settings workflow are implemented on `main`. WU-04 read-only diagnostics/drift is implemented and exact-target qualified in open PR #8 through the first real Automated Qualification Lab fixture matrix. WU-05 Full Width browser geometry, WU-06 admin/browser qualification, WU-07 browser E2E/comprehension/release gate, and production qualification remain open.
 
 ## Purpose
 
@@ -98,18 +98,18 @@ Configuration schema v1: IMPLEMENTED
 Registration template registration: IMPLEMENTED
 Exact page-template assignment adapter: IMPLEMENTED
 WU-03 Owner settings workflow: IMPLEMENTED_ON_MAIN / WORDPRESS_INTEGRATION_PROVEN
-WU-04 runtime diagnostics/drift: IMPLEMENTED / WORDPRESS_INTEGRATION_QUALIFIED_ON_PINNED_TUPLE
+WU-04 runtime diagnostics/drift: IMPLEMENTED_IN_PR_8 / WORDPRESS_INTEGRATION_QUALIFIED_ON_PINNED_TUPLE
 WU-05 Full Width geometry qualification: NOT_PROVEN
 WU-06 admin UX/security/RTL/accessibility qualification: NOT_RUN
 WU-07 browser/E2E release gate: NOT_RUN
-Automated Qualification Lab: FIRST_FUNCTIONAL_SLICE_WU04_IMPLEMENTED
+Automated Qualification Lab: FIRST_FUNCTIONAL_SLICE_WU04_IMPLEMENTED_IN_PR_8
 Production qualification: NOT_PROVEN
 Production release: NOT_PUBLISHED
 ```
 
 WU-03 provides the real Owner-facing mutation workflow under `Settings → SRWF Host`: Persian-first first-run guidance, one WordPress-page selector backed only by schema-v1 `roles.registration.page_id`, the explicit `ذخیره و اعمال قالب تمام‌عرض` action, page-state classification, capability/nonce guards, canonical assignment/readback, page-change safety, and truthful bounded result messages. It introduces no admin or frontend JavaScript/CSS.
 
-WU-04 extends that same single screen with read-only current-state diagnostics and `بررسی دوباره`. Diagnostics reuse the existing page-validity model and separately record page evidence, page-template assignment, the template provider WordPress resolves, interpretation, and the practical next action. Opening/rendering the screen and `بررسی دوباره` do not save configuration, assign a template, rewrite page content, delete a `wp_template`, rewrite a theme file, or repair drift.
+WU-04 in PR #8 extends that same single screen with read-only current-state diagnostics and `بررسی دوباره`. Diagnostics reuse the existing page-validity model and separately record page evidence, page-template assignment, the template provider WordPress resolves, interpretation, and the practical next action. Opening/rendering the screen and `بررسی دوباره` do not save configuration, assign a template, rewrite page content, delete a `wp_template`, rewrite a theme file, or repair drift.
 
 On the pinned WordPress `7.1.1` runtime, WU-04 distinguishes the proven resolution states `CANONICAL`, `CUSTOMIZED_DB_OVERRIDE`, `THEME_OVERRIDE`, `MISSING_TEMPLATE`, and `UNKNOWN`, plus `WRONG_PAGE_ASSIGNMENT`, `PAGE_NOT_PUBLISHED`, and the existing invalid-page refinements. Database and theme overrides are detected from the `WP_Block_Template` provenance that WordPress itself exposes; unsupported provenance remains `UNKNOWN` rather than being guessed. Directly comparable DB/theme override markup is normalized with WordPress `parse_blocks()` → `serialize_blocks()` before SHA-256 fingerprinting, so valid serialization whitespace does not create false drift while material block differences remain detectable. Registered plugin-template content is transformed by WordPress's native Block Hooks resolution path, so `CANONICAL` is established from proven plugin provenance and raw-source-versus-resolved content equivalence remains explicitly `NOT_PROVEN` rather than relying on private Core APIs.
 
