@@ -129,6 +129,8 @@ Key execution rules:
 - do not let automated qualification alone imply `PRODUCTION_QUALIFIED_FOR_SRWF`;
 - use focused checks on ordinary PRs and broader/full automated qualification at a justified regression or release boundary rather than forcing every expensive test on every trivial change.
 
+The first real functional slice of this direction is WU-04: deterministic exact-target fixtures, state-specific non-mutation sentinels and a machine-readable evidence artifact are implemented without adding browser infrastructure before WU-05.
+
 ## WU-04 — Read-only diagnostics and drift
 
 Implement:
@@ -144,6 +146,36 @@ Implement:
 No automatic repair in V0.
 
 Qualification should use deterministic CI fixtures for the supported page/drift states and assert truthful evidence/interpretation/guidance plus no hidden mutation or repair.
+
+Current WU-04 implementation/qualification state:
+
+```text
+IMPLEMENTED_AND_WORDPRESS_INTEGRATION_QUALIFIED_ON_PINNED_TARGET_TUPLE
+AUTOMATED_QUALIFICATION_LAB_FIRST_FUNCTIONAL_SLICE
+BROWSER_EVIDENCE_NOT_RUN
+PRODUCTION_QUALIFICATION_NOT_PROVEN
+```
+
+On WordPress `7.1.1`, PHP `8.3.33`, and Twenty Twenty-Five `1.5`, the dedicated WU-04 lab exercises deterministic fixtures for:
+
+- `CANONICAL`;
+- `WRONG_PAGE_ASSIGNMENT`;
+- `PAGE_NOT_PUBLISHED`;
+- missing/trashed/wrong-post-type forms of `PAGE_INVALID`;
+- `CUSTOMIZED_DB_OVERRIDE`;
+- `THEME_OVERRIDE`;
+- `MISSING_TEMPLATE`;
+- `UNKNOWN` fallback for a resolver result whose provenance does not match the proven plugin/theme/database contracts.
+
+WordPress 7.1.1 source and runtime evidence establish the relevant resolution order as database template → active-theme file → registered plugin template. The detector classifies only provenance exposed by the resolved `WP_Block_Template`; it does not infer undocumented source semantics.
+
+Canonical-vs-resolved content comparison normalizes block markup with `parse_blocks()` → `serialize_blocks()` before SHA-256 fingerprinting. The qualification fixture proves harmless block-comment serialization trivia compares equal while an added material block compares different.
+
+For every WU-04 fixture, the lab snapshots relevant persistent state before/after inspection and real settings-page rendering / `Check Again`. PASS requires configuration, page-template assignment, page content, and any DB/theme override fixture to remain unchanged. Missing-template diagnostics also prove that inspection does not silently re-register the removed fixture template.
+
+The same settings screen presents Persian-first practical status and next action, with optional technical details and a privacy-minimized read-only report. No CSS, JavaScript, automatic repair, browser automation, or persistent diagnostic cache is introduced by WU-04.
+
+WU-04 evidence proves WordPress/runtime-state diagnostics on the disposable exact-version tuple. It does not prove Full Width browser geometry, browser RTL/accessibility/security behavior, Owner browser E2E/comprehension, direct production-host behavior, or production qualification.
 
 ## WU-05 — Full Width geometry proof
 

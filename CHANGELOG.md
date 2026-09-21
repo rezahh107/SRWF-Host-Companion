@@ -22,6 +22,9 @@ The project has not published a production release.
 - WU-02 exact-target integration workflow covering bootstrap, configuration, template registration, assignment, no-hidden-mutation, active host composition, and deactivation/fallback;
 - WU-03 native `Settings → SRWF Host` Owner workflow with Persian-first first-run guidance, one Registration Page selector, explicit save/apply, page validity classification, authorization/nonce guards, page-change safety, and truthful bounded result handling;
 - WU-03 exact-target WordPress integration workflow covering side-effect-free render, authorization failures, invalid/missing/trashed/wrong-type targets, non-published pages, schema-v1 persistence, canonical assignment/readback, and previous-page no-rewrite behavior;
+- WU-04 read-only diagnostics on the existing settings screen, including `بررسی دوباره`, page/assignment/template-provider evidence, practical Persian guidance, progressive technical details, normalized fingerprints, and a privacy-minimized read-only support report;
+- first functional Automated Qualification Lab slice: deterministic WU-04 fixtures for canonical, wrong-assignment, non-published, missing/trashed/wrong-type page, database override, theme override, missing template, and `UNKNOWN` fallback with per-fixture no-hidden-repair assertions and machine-readable evidence;
+- dedicated WU-04 exact-target workflow on WordPress `7.1.1`, PHP `8.3.33`, and Twenty Twenty-Five `1.5`;
 - repository hygiene and pull-request foundation.
 
 ### Status
@@ -31,15 +34,17 @@ Architecture: APPROVED / FROZEN FOR V0 + OWNER-APPROVED QUALIFICATION-LAB AMENDM
 WU-01: COMPLETE_FOR_WU02
 WU-02: IMPLEMENTED_ON_MAIN
 WU-03 Owner settings workflow: IMPLEMENTED_ON_MAIN / WORDPRESS_INTEGRATION_PROVEN
-WU-04 diagnostics/drift: NOT_IMPLEMENTED
+WU-04 diagnostics/drift: IMPLEMENTED / WORDPRESS_INTEGRATION_QUALIFIED_ON_PINNED_TUPLE
 WU-05 Full Width geometry: NOT_PROVEN
 WU-06 admin UX/security/RTL/accessibility qualification: NOT_RUN
 WU-07 browser/E2E/release gate: NOT_RUN
-Automated Qualification Lab: APPROVED_DIRECTION / NOT_YET_FULLY_IMPLEMENTED
+Automated Qualification Lab: FIRST_FUNCTIONAL_SLICE_WU04_IMPLEMENTED
 Production qualification: NOT_PROVEN
 Production release: NOT_PUBLISHED
 ```
 
-PR #6 merged WU-03 to `main` as `18fd0b3959301d2bd1066d255a9eb3f1897c199e`. WU-03 evidence on the pinned disposable tuple (WordPress `7.1.1`, PHP `8.3.33`, Twenty Twenty-Five `1.5`) is integration-level only. Browser/E2E behavior, admin RTL/accessibility/comprehension, WU-04 diagnostics/drift, WU-05 geometry, and production qualification remain outside the proven claim.
+WU-04 reads current state only. Opening diagnostics or using `بررسی دوباره` does not save configuration, assign/repair templates, alter page content, rewrite customized `wp_template` content, or modify theme files. On the pinned disposable WordPress 7.1.1 tuple, DB, theme-file, registered-plugin and missing/unknown resolution behavior is exercised through deterministic fixtures rather than inferred from naming conventions.
 
-The approved Automated Qualification Lab is an evidence strategy, not a production-simulator claim. It should extend/reuse the existing runtime-lab for deterministic fixtures, browser assertions where required, machine-readable evidence, and useful failure artifacts. Human comprehension and production-specific confirmation remain separate requirements, and unavailable real dependencies must remain `NOT_PROVEN` or `ENVIRONMENT_UNAVAILABLE` rather than synthetic PASS.
+The WU-04 normalization contract uses `serialize_blocks(parse_blocks(content))` before SHA-256 comparison; the qualification fixture proves harmless block-comment serialization trivia normalizes equivalently while an added material block remains different.
+
+WU-04 evidence is integration-level Automated Qualification Lab evidence only. WU-05 browser geometry, WU-06 browser/admin RTL/accessibility/security qualification, WU-07 mechanical Owner browser E2E plus human comprehension, production-host confirmation, and Production Qualification remain outside this claim.

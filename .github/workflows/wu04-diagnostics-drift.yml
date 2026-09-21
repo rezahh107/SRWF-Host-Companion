@@ -1,0 +1,212 @@
+name: WU-04 Diagnostics and Drift
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'srwf-host-companion.php'
+      - 'src/**'
+      - 'templates/**'
+      - 'tests/runtime-lab/wu04-diagnostics-drift.php'
+      - '.github/workflows/wu04-diagnostics-drift.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  diagnostics-drift:
+    name: WordPress diagnostics/drift qualification
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    services:
+      database:
+        image: mariadb:11.4.8@sha256:bc474f00629f0123c10f9e1bca193a45d18af15a274cf0656acda64f1086c3b6
+        env:
+          MARIADB_ALLOW_EMPTY_ROOT_PASSWORD: '1'
+          MARIADB_DATABASE: wordpress
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mariadb-admin ping -h 127.0.0.1 -uroot --silent"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+
+    env:
+      SRWF_WP_PATH: /tmp/srwf-host-companion-wordpress
+      SRWF_ARTIFACT_DIR: /tmp/srwf-host-companion-artifacts
+      SRWF_WU04_EVIDENCE_PATH: /tmp/srwf-host-companion-artifacts/wu04-diagnostics-drift.json
+      SRWF_WP_VERSION: '7.1.1'
+      SRWF_PHP_VERSION: '8.3.33'
+      SRWF_TT25_VERSION: '1.5'
+      SRWF_WP_CLI: /tmp/wp-cli.phar
+      SRWF_WP_CLI_VERSION: '2.12.0'
+      SRWF_WP_CLI_SHA256: ce34ddd838f7351d6759068d09793f26755463b4a4610a5a5c0a97b68220d85c
+      SRWF_TESTED_COMMIT_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+
+    steps:
+      - name: Checkout exact target
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ env.SRWF_TESTED_COMMIT_SHA }}
+          fetch-depth: 1
+
+      - name: Assert repository and checkout identity
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$GITHUB_REPOSITORY" = 'rezahh107/SRWF-Host-Companion'
+          test "$(git rev-parse HEAD)" = "$SRWF_TESTED_COMMIT_SHA"
+          mkdir -p "$SRWF_ARTIFACT_DIR" "$SRWF_WP_PATH"
+
+      - name: Set up exact PHP runtime
+        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240
+        with:
+          php-version: '8.3.33'
+          coverage: none
+          extensions: mysqli
+
+      - name: Validate PHP syntax and exact PHP
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$(php -r 'echo PHP_VERSION;')" = "$SRWF_PHP_VERSION"
+          while IFS= read -r -d '' file; do
+            php -l "$file"
+          done < <(find . -type f -name '*.php' -not -path './.git/*' -print0 | sort -z)
+
+      - name: Install exact WP-CLI and WordPress
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          curl -L --fail --retry 3 \
+            -o "$SRWF_WP_CLI" \
+            "https://github.com/wp-cli/wp-cli/releases/download/v${SRWF_WP_CLI_VERSION}/wp-cli-${SRWF_WP_CLI_VERSION}.phar"
+          printf '%s  %s\n' "$SRWF_WP_CLI_SHA256" "$SRWF_WP_CLI" | sha256sum -c -
+          php "$SRWF_WP_CLI" core download --path="$SRWF_WP_PATH" --version="$SRWF_WP_VERSION" --force
+          php "$SRWF_WP_CLI" config create --path="$SRWF_WP_PATH" \
+            --dbname=wordpress --dbuser=root --dbpass='' --dbhost=127.0.0.1:3306 --skip-check
+          admin_password="$(openssl rand -hex 24)"
+          php "$SRWF_WP_CLI" core install --path="$SRWF_WP_PATH" \
+            --url=http://127.0.0.1:8080 --title='SRWF Host Companion WU-04 Lab' \
+            --admin_user=runtime_admin --admin_password="$admin_password" \
+            --admin_email='runtime@example.invalid' --skip-email
+          unset admin_password
+          test "$(php "$SRWF_WP_CLI" core version --path="$SRWF_WP_PATH")" = "$SRWF_WP_VERSION"
+          php "$SRWF_WP_CLI" theme install twentytwentyfive --version="$SRWF_TT25_VERSION" --force --path="$SRWF_WP_PATH"
+          test "$(php "$SRWF_WP_CLI" theme get twentytwentyfive --field=version --path="$SRWF_WP_PATH")" = "$SRWF_TT25_VERSION"
+          php "$SRWF_WP_CLI" theme activate twentytwentyfive --path="$SRWF_WP_PATH"
+          test "$(php "$SRWF_WP_CLI" theme get twentytwentyfive --field=status --path="$SRWF_WP_PATH")" = 'active'
+
+      - name: Install and activate product plugin
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          plugin_dir="$SRWF_WP_PATH/wp-content/plugins/srwf-host-companion"
+          mkdir -p "$plugin_dir"
+          cp srwf-host-companion.php "$plugin_dir/"
+          cp -R src templates "$plugin_dir/"
+          php "$SRWF_WP_CLI" plugin activate srwf-host-companion --path="$SRWF_WP_PATH"
+          test "$(php "$SRWF_WP_CLI" plugin get srwf-host-companion --field=status --path="$SRWF_WP_PATH")" = 'active'
+          php "$SRWF_WP_CLI" --path="$SRWF_WP_PATH" eval 'exit( class_exists("SRWF\\HostCompanion\\TemplateDiagnostics", false) && class_exists("SRWF\\HostCompanion\\AdminSettings", false) ? 0 : 1 );'
+
+      - name: Exercise WU-04 deterministic qualification fixtures
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          php "$SRWF_WP_CLI" --path="$SRWF_WP_PATH" eval-file "$GITHUB_WORKSPACE/tests/runtime-lab/wu04-diagnostics-drift.php"
+          test -s "$SRWF_WU04_EVIDENCE_PATH"
+
+      - name: Validate evidence and publish summary
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          python3 - "$SRWF_WU04_EVIDENCE_PATH" "$SRWF_TESTED_COMMIT_SHA" "$SRWF_WP_VERSION" "$SRWF_PHP_VERSION" "$SRWF_TT25_VERSION" <<'PY'
+          import json, sys
+          path, sha, wp, php, theme = sys.argv[1:]
+          with open(path, encoding='utf-8') as f:
+              data = json.load(f)
+
+          assert data['schema'] == 'srwf-host-companion-wu04-diagnostics-drift-v1'
+          assert data['tested_commit_sha'] == sha
+          assert data['capture_status'] == 'PASS'
+          assert data['environment']['wordpress_version'] == wp
+          assert data['environment']['php_version'] == php
+          assert data['environment']['theme_stylesheet'] == 'twentytwentyfive'
+          assert data['environment']['theme_version'] == theme
+          assert data['runtime_contract']['normalization']['status'] == 'PASS'
+          assert data['runtime_contract']['canonical_provider']['source'] == 'plugin'
+          assert data['runtime_contract']['canonical_provider']['origin'] == 'plugin'
+          assert data['runtime_contract']['canonical_provider']['plugin'] == 'srwf-host-companion'
+
+          required = {
+              'canonical': 'CANONICAL',
+              'wrong_page_assignment': 'WRONG_PAGE_ASSIGNMENT',
+              'page_not_published': 'PAGE_NOT_PUBLISHED',
+              'page_missing': 'PAGE_INVALID',
+              'page_trashed': 'PAGE_INVALID',
+              'page_type_invalid': 'PAGE_INVALID',
+              'customized_db_override': 'CUSTOMIZED_DB_OVERRIDE',
+              'theme_override': 'THEME_OVERRIDE',
+              'missing_template': 'MISSING_TEMPLATE',
+              'unknown': 'UNKNOWN',
+          }
+          for name, expected_primary in required.items():
+              fixture = data['states'][name]
+              assert fixture['status'] == 'PASS'
+              assert fixture['actual_primary'] == expected_primary
+              assert fixture['non_mutation'] == 'PASS'
+              assert fixture['check_again_exercised'] is True
+
+          assert data['states']['customized_db_override']['resolution_evidence']['source'] == 'custom'
+          assert data['states']['customized_db_override']['resolution_evidence']['origin'] == 'plugin'
+          assert data['states']['customized_db_override']['resolution_evidence']['content_matches_canonical'] is False
+          assert data['states']['theme_override']['resolution_evidence']['source'] == 'theme'
+          assert data['states']['theme_override']['resolution_evidence']['content_matches_canonical'] is False
+          assert data['states']['unknown']['resolution_evidence']['source'] == 'external-fixture'
+          assert data['unsupported_states'] == []
+          assert data['diagnostic_report']['status'] == 'PASS'
+
+          for claim in [
+              'diagnostics_runtime_proven',
+              'check_again_read_only',
+              'no_hidden_repair',
+              'page_validity_reused',
+              'normalized_drift_comparison',
+              'privacy_safe_report',
+              'qualification_lab_wu04_slice',
+          ]:
+              assert data['claims'][claim] == 'PASS'
+
+          assert data['claim_ceiling']['wu05_full_width_geometry'] == 'NOT_PROVEN'
+          assert data['claim_ceiling']['wu06_browser_admin_qualification'] == 'NOT_RUN'
+          assert data['claim_ceiling']['wu07_browser_e2e_comprehension'] == 'NOT_RUN'
+          assert data['claim_ceiling']['production_qualification'] == 'NOT_PROVEN'
+          print('WU-04 capture status: PASS')
+          PY
+
+          echo '### WU-04 Read-only Diagnostics and Drift' >> "$GITHUB_STEP_SUMMARY"
+          python3 - "$SRWF_WU04_EVIDENCE_PATH" <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import json, sys
+          with open(sys.argv[1], encoding='utf-8') as f:
+              d = json.load(f)
+          env = d['environment']
+          print(f"- capture status: `{d['capture_status']}`")
+          print(f"- exact tested head: `{d['tested_commit_sha']}`")
+          print(f"- exact disposable tuple: WordPress `{env['wordpress_version']}`, PHP `{env['php_version']}`, `{env['theme_name']}` `{env['theme_version']}`")
+          print('- runtime-proven WU-04 fixtures: canonical, wrong assignment, non-published, missing, trashed, wrong type, DB override, theme override, missing template, UNKNOWN fallback')
+          print('- diagnostics/render/Check Again non-mutation and no hidden repair: `PASS`')
+          print('- block normalization + material drift fingerprint distinction: `PASS`')
+          print('- evidence level: `WORDPRESS_INTEGRATION / AUTOMATED_QUALIFICATION_LAB_WU04_SLICE`')
+          print('- WU-05: `NOT_PROVEN`; WU-06: `NOT_RUN`; WU-07: `NOT_RUN`; Production Qualification: `NOT_PROVEN`')
+          PY
+
+      - name: Upload machine-readable WU-04 evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: wu04-diagnostics-drift-${{ github.run_id }}-${{ github.run_attempt }}
+          path: /tmp/srwf-host-companion-artifacts/
+          if-no-files-found: error
+          retention-days: 30

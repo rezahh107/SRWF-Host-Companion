@@ -81,11 +81,14 @@ final class AdminSettings {
 				$result_code = $candidate_result;
 			}
 		}
+
+		$diagnostics = TemplateDiagnostics::inspect();
 		?>
 		<div class="wrap" dir="rtl">
 			<h1><?php esc_html_e( 'SRWF Host', 'srwf-host-companion' ); ?></h1>
 
 			<?php self::render_result_notice( $result_code ); ?>
+			<?php self::render_diagnostics( $diagnostics ); ?>
 
 			<?php if ( 0 === $current_page_id ) : ?>
 				<div class="notice notice-info inline">
@@ -188,13 +191,13 @@ final class AdminSettings {
 		}
 
 		$page_state = self::classify_page( $page_id );
-		if ( 'PAGE_MISSING' === $page_state['code'] ) {
+		if ( TemplateDiagnostics::PAGE_MISSING === $page_state['code'] ) {
 			return self::result( false, 'page_missing', $page_id, $page_state['code'] );
 		}
-		if ( 'PAGE_TRASHED' === $page_state['code'] ) {
+		if ( TemplateDiagnostics::PAGE_TRASHED === $page_state['code'] ) {
 			return self::result( false, 'page_trashed', $page_id, $page_state['code'] );
 		}
-		if ( 'PAGE_TYPE_INVALID' === $page_state['code'] ) {
+		if ( TemplateDiagnostics::PAGE_TYPE_INVALID === $page_state['code'] ) {
 			return self::result( false, 'page_type_invalid', $page_id, $page_state['code'] );
 		}
 
@@ -235,37 +238,221 @@ final class AdminSettings {
 			);
 		}
 
-		$code = 'PAGE_NOT_PUBLISHED' === $page_state['code'] ? 'success_non_published' : 'success';
+		$code = TemplateDiagnostics::PAGE_NOT_PUBLISHED === $page_state['code'] ? 'success_non_published' : 'success';
 
 		return self::result( true, $code, $page_id, $page_state['code'], true, true, $previous_page_id, 'assigned' );
 	}
 
 	/**
-	 * Classify a candidate target page without changing state.
+	 * Keep the WU-03 public page-classification seam while using the WU-04 model.
 	 *
 	 * @param int $page_id Candidate object ID.
-	 * @return array<string,string>
+	 * @return array<string,mixed>
 	 */
 	public static function classify_page( $page_id ) {
-		$post = get_post( $page_id );
+		return TemplateDiagnostics::classify_page( $page_id );
+	}
 
-		if ( ! $post instanceof \WP_Post ) {
-			return array( 'code' => 'PAGE_MISSING', 'post_status' => '' );
+	/**
+	 * Render a compact practical status followed by optional technical evidence.
+	 *
+	 * @param array<string,mixed> $diagnostics Read-only diagnostic result.
+	 * @return void
+	 */
+	private static function render_diagnostics( $diagnostics ) {
+		$copy       = self::diagnostic_copy( $diagnostics );
+		$page       = is_array( $diagnostics['page'] ?? null ) ? $diagnostics['page'] : array();
+		$assignment = is_array( $diagnostics['assignment'] ?? null ) ? $diagnostics['assignment'] : array();
+		$resolution = is_array( $diagnostics['resolution'] ?? null ) ? $diagnostics['resolution'] : array();
+		$evidence   = is_array( $resolution['evidence'] ?? null ) ? $resolution['evidence'] : array();
+		$check_url  = add_query_arg(
+			array(
+				'page'       => self::PAGE_SLUG,
+				'srwf_check' => '1',
+			),
+			admin_url( 'options-general.php' )
+		);
+		?>
+		<h2><?php esc_html_e( 'وضعیت فعلی SRWF Host', 'srwf-host-companion' ); ?></h2>
+		<div class="notice <?php echo esc_attr( $copy['class'] ); ?> inline" role="status">
+			<p><strong><?php echo esc_html( $copy['title'] ); ?></strong></p>
+			<p><?php echo esc_html( $copy['message'] ); ?></p>
+			<p><strong><?php esc_html_e( 'وضعیت صفحه ثبت‌نام:', 'srwf-host-companion' ); ?></strong> <?php echo esc_html( self::page_summary( $page ) ); ?></p>
+			<p><strong><?php esc_html_e( 'اتصال صفحه به قالب:', 'srwf-host-companion' ); ?></strong> <?php echo esc_html( self::assignment_summary( $assignment ) ); ?></p>
+			<p><strong><?php esc_html_e( 'اقدام بعدی:', 'srwf-host-companion' ); ?></strong> <?php echo esc_html( $copy['action'] ); ?></p>
+		</div>
+		<p>
+			<a class="button button-secondary" href="<?php echo esc_url( $check_url ); ?>"><?php esc_html_e( 'بررسی دوباره', 'srwf-host-companion' ); ?></a>
+			<span class="description"><?php esc_html_e( 'این بررسی فقط وضعیت فعلی را دوباره می‌خواند و هیچ تنظیم، محتوا، اتصال قالب یا سفارشی‌سازی را تغییر نمی‌دهد.', 'srwf-host-companion' ); ?></span>
+		</p>
+		<details>
+			<summary><strong><?php esc_html_e( 'جزئیات فنی', 'srwf-host-companion' ); ?></strong></summary>
+			<table class="widefat striped">
+				<tbody>
+					<?php self::render_technical_row( __( 'وضعیت تشخیصی', 'srwf-host-companion' ), $diagnostics['primary_state'] ?? TemplateDiagnostics::UNKNOWN ); ?>
+					<?php self::render_technical_row( __( 'شناسه صفحه', 'srwf-host-companion' ), $page['page_id'] ?? 0 ); ?>
+					<?php self::render_technical_row( __( 'وضعیت صفحه', 'srwf-host-companion' ), $page['code'] ?? TemplateDiagnostics::UNKNOWN ); ?>
+					<?php self::render_technical_row( __( 'قالب مورد انتظار', 'srwf-host-companion' ), TemplateRegistrar::TEMPLATE_NAME ); ?>
+					<?php self::render_technical_row( __( 'اتصال فعلی صفحه', 'srwf-host-companion' ), $assignment['actual_slug'] ?? '' ); ?>
+					<?php self::render_technical_row( __( 'وضعیت resolve قالب', 'srwf-host-companion' ), $resolution['state'] ?? TemplateDiagnostics::UNKNOWN ); ?>
+					<?php self::render_technical_row( __( 'Source', 'srwf-host-companion' ), $evidence['source'] ?? '' ); ?>
+					<?php self::render_technical_row( __( 'Origin', 'srwf-host-companion' ), $evidence['origin'] ?? '' ); ?>
+					<?php self::render_technical_row( __( 'Plugin', 'srwf-host-companion' ), $evidence['plugin'] ?? '' ); ?>
+					<?php self::render_technical_row( __( 'WP template ID', 'srwf-host-companion' ), $evidence['wp_id'] ?? 0 ); ?>
+					<?php self::render_technical_row( __( 'اثر انگشت نسخه مرجع', 'srwf-host-companion' ), $evidence['canonical_fingerprint'] ?? '' ); ?>
+					<?php self::render_technical_row( __( 'اثر انگشت نسخه resolve‌شده', 'srwf-host-companion' ), $evidence['resolved_fingerprint'] ?? '' ); ?>
+				</tbody>
+			</table>
+			<p><label for="srwf-host-diagnostic-report"><strong><?php esc_html_e( 'گزارش فنی امن برای پشتیبانی', 'srwf-host-companion' ); ?></strong></label></p>
+			<textarea id="srwf-host-diagnostic-report" class="large-text code" rows="15" readonly dir="ltr"><?php echo esc_textarea( TemplateDiagnostics::build_report( $diagnostics ) ); ?></textarea>
+			<p class="description"><?php esc_html_e( 'این گزارش شامل محتوای فرم، داده دانشجو، فایل آپلودشده، nonce، cookie یا اطلاعات ورود نیست.', 'srwf-host-companion' ); ?></p>
+		</details>
+		<?php
+	}
+
+	/**
+	 * @param string $label Row label.
+	 * @param mixed  $value Technical value.
+	 * @return void
+	 */
+	private static function render_technical_row( $label, $value ) {
+		?>
+		<tr>
+			<th scope="row"><?php echo esc_html( $label ); ?></th>
+			<td><code dir="ltr"><?php echo esc_html( (string) $value ); ?></code></td>
+		</tr>
+		<?php
+	}
+
+	/**
+	 * @param array<string,mixed> $page Page evidence.
+	 * @return string
+	 */
+	private static function page_summary( $page ) {
+		$code = (string) ( $page['code'] ?? TemplateDiagnostics::PAGE_MISSING );
+		switch ( $code ) {
+			case TemplateDiagnostics::PAGE_VALID:
+				return __( 'برگه موجود و منتشرشده است.', 'srwf-host-companion' );
+			case TemplateDiagnostics::PAGE_NOT_PUBLISHED:
+				return __( 'برگه معتبر است اما در حال حاضر منتشرشده نیست.', 'srwf-host-companion' );
+			case TemplateDiagnostics::PAGE_TRASHED:
+				return __( 'برگه در زباله‌دان است.', 'srwf-host-companion' );
+			case TemplateDiagnostics::PAGE_TYPE_INVALID:
+				return __( 'شناسه ذخیره‌شده به یک برگه WordPress اشاره نمی‌کند.', 'srwf-host-companion' );
+			case TemplateDiagnostics::PAGE_UNCONFIGURED:
+				return __( 'هنوز برگه‌ای انتخاب نشده است.', 'srwf-host-companion' );
+			case TemplateDiagnostics::PAGE_MISSING:
+			default:
+				return __( 'برگه ذخیره‌شده پیدا نشد.', 'srwf-host-companion' );
 		}
+	}
 
-		if ( 'page' !== $post->post_type ) {
-			return array( 'code' => 'PAGE_TYPE_INVALID', 'post_status' => (string) $post->post_status );
+	/**
+	 * @param array<string,mixed> $assignment Assignment evidence.
+	 * @return string
+	 */
+	private static function assignment_summary( $assignment ) {
+		$state = (string) ( $assignment['state'] ?? TemplateDiagnostics::ASSIGNMENT_UNAVAILABLE );
+		if ( TemplateDiagnostics::ASSIGNMENT_EXPECTED === $state ) {
+			return __( 'صفحه به قالب مورد انتظار SRWF متصل است.', 'srwf-host-companion' );
 		}
-
-		if ( 'trash' === $post->post_status ) {
-			return array( 'code' => 'PAGE_TRASHED', 'post_status' => 'trash' );
+		if ( TemplateDiagnostics::WRONG_PAGE_ASSIGNMENT === $state ) {
+			return __( 'اتصال فعلی صفحه با قالب مورد انتظار SRWF یکسان نیست.', 'srwf-host-companion' );
 		}
+		return __( 'به‌دلیل وضعیت فعلی صفحه، اتصال قالب قابل ارزیابی نیست.', 'srwf-host-companion' );
+	}
 
-		if ( 'publish' === $post->post_status ) {
-			return array( 'code' => 'PAGE_VALID', 'post_status' => 'publish' );
+	/**
+	 * Map machine evidence to practical Persian Owner guidance.
+	 *
+	 * @param array<string,mixed> $diagnostics Diagnostic result.
+	 * @return array<string,string>
+	 */
+	private static function diagnostic_copy( $diagnostics ) {
+		$state = (string) ( $diagnostics['primary_state'] ?? TemplateDiagnostics::UNKNOWN );
+		$page  = is_array( $diagnostics['page'] ?? null ) ? $diagnostics['page'] : array();
+		$res   = is_array( $diagnostics['resolution'] ?? null ) ? $diagnostics['resolution'] : array();
+		$ev    = is_array( $res['evidence'] ?? null ) ? $res['evidence'] : array();
+
+		switch ( $state ) {
+			case TemplateDiagnostics::CANONICAL:
+				return array(
+					'class'   => 'notice-success',
+					'title'   => __( 'اتصال قالب مطابق انتظار است', 'srwf-host-companion' ),
+					'message' => __( 'صفحه ثبت‌نام معتبر است، اتصال صفحه به قالب SRWF درست است و WordPress همان نسخه ثبت‌شده توسط افزونه را resolve می‌کند. این نتیجه هندسه Full Width در مرورگر یا آمادگی Production را تأیید نمی‌کند.', 'srwf-host-companion' ),
+					'action'  => __( 'در این بخش اقدامی لازم نیست. در صورت نیاز «بررسی دوباره» را بزنید.', 'srwf-host-companion' ),
+				);
+			case 'NEEDS_SETUP':
+				return array(
+					'class'   => 'notice-info',
+					'title'   => __( 'هنوز صفحه ثبت‌نام انتخاب نشده است', 'srwf-host-companion' ),
+					'message' => __( 'بدون انتخاب صفحه، افزونه نمی‌تواند اتصال قالب Registration را برای یک صفحه مشخص ارزیابی کند.', 'srwf-host-companion' ),
+					'action'  => __( 'صفحه ثبت‌نام را انتخاب کنید و فقط در صورت قصد تغییر، دکمه «ذخیره و اعمال قالب تمام‌عرض» را بزنید.', 'srwf-host-companion' ),
+				);
+			case 'PAGE_INVALID':
+				if ( TemplateDiagnostics::PAGE_TRASHED === ( $page['code'] ?? '' ) ) {
+					$message = __( 'صفحه ثبت‌نام ذخیره‌شده اکنون در زباله‌دان است؛ بررسی وضعیت قالب روی این هدف قابل اتکا نیست.', 'srwf-host-companion' );
+				} elseif ( TemplateDiagnostics::PAGE_TYPE_INVALID === ( $page['code'] ?? '' ) ) {
+					$message = __( 'شناسه ذخیره‌شده دیگر به یک «برگه» WordPress اشاره نمی‌کند؛ این هدف برای نقش Registration معتبر نیست.', 'srwf-host-companion' );
+				} else {
+					$message = __( 'صفحه ثبت‌نام ذخیره‌شده پیدا نشد؛ تنظیم موجود به‌صورت خودکار تغییر یا جایگزین نشده است.', 'srwf-host-companion' );
+				}
+				return array(
+					'class'   => 'notice-error',
+					'title'   => __( 'صفحه ثبت‌نام نیاز به اصلاح دارد', 'srwf-host-companion' ),
+					'message' => $message,
+					'action'  => __( 'یک برگه معتبر را انتخاب کنید و تغییر را با دکمه اصلی به‌صورت صریح اعمال کنید.', 'srwf-host-companion' ),
+				);
+			case TemplateDiagnostics::WRONG_PAGE_ASSIGNMENT:
+				return array(
+					'class'   => 'notice-warning',
+					'title'   => __( 'قالب مورد انتظار به صفحه ثبت‌نام متصل نیست', 'srwf-host-companion' ),
+					'message' => __( 'تنظیم Registration به این صفحه اشاره می‌کند، اما اتصال قالب صفحه با قالب SRWF یکسان نیست. ممکن است WordPress صفحه را با پوسته دیگری نمایش دهد؛ هندسه واقعی مرورگر در WU-05 بررسی می‌شود.', 'srwf-host-companion' ),
+					'action'  => __( 'اگر می‌خواهید اتصال اصلاح شود، همان صفحه را انتخاب کنید و دکمه «ذخیره و اعمال قالب تمام‌عرض» را بزنید.', 'srwf-host-companion' ),
+				);
+			case TemplateDiagnostics::CUSTOMIZED_DB_OVERRIDE:
+				$match = true === ( $ev['content_matches_canonical'] ?? null );
+				return array(
+					'class'   => 'notice-warning',
+					'title'   => __( 'یک نسخه سفارشی‌شده در پایگاه داده بر قالب مرجع مقدم است', 'srwf-host-companion' ),
+					'message' => $match
+						? __( 'WordPress برای این نام قالب یک نسخه ذخیره‌شده در پایگاه داده را resolve می‌کند. محتوای نرمال‌شده فعلاً با نسخه افزونه برابر است، اما منبع اجرایی همان override پایگاه داده است.', 'srwf-host-companion' )
+						: __( 'WordPress برای این نام قالب یک نسخه ذخیره‌شده در پایگاه داده را resolve می‌کند و محتوای نرمال‌شده آن با نسخه مرجع افزونه تفاوت دارد.', 'srwf-host-companion' ),
+					'action'  => __( 'جزئیات فنی را بررسی کنید. WU-04 این سفارشی‌سازی را حذف یا بازنویسی نمی‌کند و بازیابی خودکار ندارد.', 'srwf-host-companion' ),
+				);
+			case TemplateDiagnostics::THEME_OVERRIDE:
+				$match = true === ( $ev['content_matches_canonical'] ?? null );
+				return array(
+					'class'   => 'notice-warning',
+					'title'   => __( 'پوسته فعال نسخه‌ای با همین نام قالب دارد', 'srwf-host-companion' ),
+					'message' => $match
+						? __( 'WordPress فایل قالب پوسته فعال را مقدم بر نسخه ثبت‌شده افزونه resolve می‌کند. محتوای نرمال‌شده فعلاً برابر است، اما منبع اجرایی پوسته است.', 'srwf-host-companion' )
+						: __( 'WordPress فایل قالب پوسته فعال را مقدم بر نسخه ثبت‌شده افزونه resolve می‌کند و محتوای نرمال‌شده آن با نسخه مرجع افزونه تفاوت دارد.', 'srwf-host-companion' ),
+					'action'  => __( 'جزئیات فنی را بررسی کنید. این افزونه فایل پوسته را تغییر یا حذف نمی‌کند.', 'srwf-host-companion' ),
+				);
+			case TemplateDiagnostics::MISSING_TEMPLATE:
+				return array(
+					'class'   => 'notice-error',
+					'title'   => __( 'قالب مرجع SRWF در حال حاضر resolve نمی‌شود', 'srwf-host-companion' ),
+					'message' => __( 'اتصال صفحه ممکن است نام قالب SRWF را نگه داشته باشد، اما WordPress اکنون هیچ template قابل resolve برای آن پیدا نکرد.', 'srwf-host-companion' ),
+					'action'  => __( 'وضعیت فعال بودن افزونه را بررسی کنید و سپس «بررسی دوباره» را بزنید. این صفحه هیچ تعمیر خودکاری انجام نمی‌دهد.', 'srwf-host-companion' ),
+				);
+			case TemplateDiagnostics::PAGE_NOT_PUBLISHED:
+				return array(
+					'class'   => 'notice-warning',
+					'title'   => __( 'صفحه معتبر است اما منتشرشده نیست', 'srwf-host-companion' ),
+					'message' => __( 'صفحه Registration و اتصال قالب مطابق انتظار هستند، اما وضعیت انتشار صفحه برای دسترسی عمومی آماده نیست.', 'srwf-host-companion' ),
+					'action'  => __( 'اگر کاربران عمومی باید صفحه را ببینند، وضعیت انتشار برگه را در WordPress بررسی کنید.', 'srwf-host-companion' ),
+				);
+			case TemplateDiagnostics::UNKNOWN:
+			default:
+				return array(
+					'class'   => 'notice-warning',
+					'title'   => __( 'منبع قالب با اطمینان قابل طبقه‌بندی نیست', 'srwf-host-companion' ),
+					'message' => __( 'WordPress یک نتیجه برای قالب برگردانده است، اما شواهد منبع آن با قراردادهای اثبات‌شده plugin، theme یا database override منطبق نیست. این وضعیت به‌عنوان خطای قطعی یا موفقیت نمایش داده نمی‌شود.', 'srwf-host-companion' ),
+					'action'  => __( 'جزئیات فنی را بررسی کنید و «بررسی دوباره» را بزنید. اگر وضعیت باقی ماند، بدون شواهد بیشتر علت خاصی فرض نکنید.', 'srwf-host-companion' ),
+				);
 		}
-
-		return array( 'code' => 'PAGE_NOT_PUBLISHED', 'post_status' => (string) $post->post_status );
 	}
 
 	/**

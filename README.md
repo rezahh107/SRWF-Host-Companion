@@ -2,7 +2,7 @@
 
 Project-specific WordPress host integration layer for SRWF: deterministic block templates, full-width shells, runtime/template governance, diagnostics, and future bounded host-level integrations.
 
-> **Current status:** V0 architecture is frozen and approved. WU-01 target-runtime facts, WU-02 minimal runtime core, and WU-03 Owner settings workflow are merged on `main`. WU-04 diagnostics/drift, WU-05 Full Width browser geometry, WU-06 admin qualification, WU-07 browser E2E/comprehension/release gate, and production qualification remain open. The Owner has approved an Automated Qualification Lab direction to move the largest practical share of repeatable WU-04→WU-07 technical qualification into deterministic CI without treating CI as production-equivalent evidence.
+> **Current status:** V0 architecture is frozen and approved. WU-01 target-runtime facts, WU-02 minimal runtime core, WU-03 Owner settings workflow, and WU-04 read-only diagnostics/drift are implemented. WU-04 is qualified at WordPress-integration level on the pinned disposable tuple through the first real Automated Qualification Lab fixture matrix. WU-05 Full Width browser geometry, WU-06 admin/browser qualification, WU-07 browser E2E/comprehension/release gate, and production qualification remain open.
 
 ## Purpose
 
@@ -74,16 +74,16 @@ Current evidence baseline:
 ```text
 Minimum WordPress: 6.7
 Observed production WordPress: 7.1.1
-WU-01/WU-02/WU-03 pinned qualified lab WordPress: 7.1.1
+WU-01/WU-02/WU-03/WU-04 pinned qualified lab WordPress: 7.1.1
 
 Preferred engineering PHP floor: 8.2+
 Observed production PHP: 8.3.33
-WU-01/WU-02/WU-03 pinned qualified lab PHP: 8.3.33
+WU-01/WU-02/WU-03/WU-04 pinned qualified lab PHP: 8.3.33
 Minimum production PHP support policy: NOT_YET_FROZEN
 
 Initial host theme: Twenty Twenty-Five
 Observed production TT25: 1.5
-WU-01/WU-02/WU-03 pinned qualified lab TT25: 1.5
+WU-01/WU-02/WU-03/WU-04 pinned qualified lab TT25: 1.5
 ```
 
 Observed production identity provenance and disposable runtime behavior are distinct evidence classes. They do not by themselves establish production qualification.
@@ -98,20 +98,24 @@ Configuration schema v1: IMPLEMENTED
 Registration template registration: IMPLEMENTED
 Exact page-template assignment adapter: IMPLEMENTED
 WU-03 Owner settings workflow: IMPLEMENTED_ON_MAIN / WORDPRESS_INTEGRATION_PROVEN
-WU-04 runtime diagnostics/drift: NOT_IMPLEMENTED
+WU-04 runtime diagnostics/drift: IMPLEMENTED / WORDPRESS_INTEGRATION_QUALIFIED_ON_PINNED_TUPLE
 WU-05 Full Width geometry qualification: NOT_PROVEN
 WU-06 admin UX/security/RTL/accessibility qualification: NOT_RUN
 WU-07 browser/E2E release gate: NOT_RUN
-Automated Qualification Lab: APPROVED_DIRECTION / NOT_YET_FULLY_IMPLEMENTED
+Automated Qualification Lab: FIRST_FUNCTIONAL_SLICE_WU04_IMPLEMENTED
 Production qualification: NOT_PROVEN
 Production release: NOT_PUBLISHED
 ```
 
-WU-03 adds the real Owner-facing workflow under `Settings → SRWF Host`: Persian-first first-run guidance, one WordPress-page selector backed only by schema-v1 `roles.registration.page_id`, the explicit `ذخیره و اعمال قالب تمام‌عرض` action, page-state classification, capability/nonce guards, canonical assignment/readback, page-change safety, and truthful bounded result messages. It introduces no admin or frontend JavaScript/CSS.
+WU-03 provides the real Owner-facing mutation workflow under `Settings → SRWF Host`: Persian-first first-run guidance, one WordPress-page selector backed only by schema-v1 `roles.registration.page_id`, the explicit `ذخیره و اعمال قالب تمام‌عرض` action, page-state classification, capability/nonce guards, canonical assignment/readback, page-change safety, and truthful bounded result messages. It introduces no admin or frontend JavaScript/CSS.
 
-PR #6 merged WU-03 to `main` as `18fd0b3959301d2bd1066d255a9eb3f1897c199e`. Exact-head WU-03 CI used WordPress `7.1.1`, PHP `8.3.33`, and Twenty Twenty-Five `1.5`; WU-01 and WU-02 regression workflows also passed on the same PR head. The evidence level is WordPress integration. It does **not** prove browser/E2E behavior, Persian RTL visual quality, accessibility/comprehension, WU-04 diagnostics/drift, WU-05 Full Width geometry, or production qualification.
+WU-04 extends that same single screen with read-only current-state diagnostics and `بررسی دوباره`. Diagnostics reuse the existing page-validity model and separately record page evidence, page-template assignment, the template provider WordPress resolves, interpretation, and the practical next action. Opening/rendering the screen and `بررسی دوباره` do not save configuration, assign a template, rewrite page content, delete a `wp_template`, rewrite a theme file, or repair drift.
 
-WU-02 remains the runtime owner of the canonical template registration and exact page-template assignment/readback primitive. WU-03 composes those existing primitives through an explicit authorized Owner action; rendering the settings screen does not assign or repair templates.
+On the pinned WordPress `7.1.1` runtime, WU-04 distinguishes the proven resolution states `CANONICAL`, `CUSTOMIZED_DB_OVERRIDE`, `THEME_OVERRIDE`, `MISSING_TEMPLATE`, and `UNKNOWN`, plus `WRONG_PAGE_ASSIGNMENT`, `PAGE_NOT_PUBLISHED`, and the existing invalid-page refinements. Database and theme overrides are detected from the `WP_Block_Template` provenance that WordPress itself exposes; unsupported provenance remains `UNKNOWN` rather than being guessed. Canonical-vs-resolved content comparison uses WordPress block normalization (`parse_blocks()` → `serialize_blocks()`) before SHA-256 fingerprinting so harmless block-comment serialization trivia does not create false drift while material block differences remain detectable.
+
+The WU-04 Automated Qualification Lab slice creates deterministic synthetic fixtures for canonical state, wrong assignment, valid non-published page, missing/trashed/wrong-type targets, database override, theme override, missing canonical template, and an intentionally unclassifiable resolver result. Every fixture also snapshots relevant persistent state before/after diagnostics and verifies no hidden repair. A privacy-minimized text report is available through native read-only admin markup without JavaScript; it excludes page/form content, student data, uploads, authentication material, nonces, cookies and credentials.
+
+WU-04 evidence is WordPress integration, not browser qualification. It does **not** prove Full Width geometry, browser RTL/accessibility/security behavior, Owner browser E2E/comprehension, the production host, or production qualification.
 
 The approved Automated Qualification Lab extends the existing disposable runtime-lab for WU-04 through WU-07 where behavior can be reproduced honestly. It favors deterministic fixtures, real-browser assertions when needed, machine-readable evidence and useful failure artifacts. Human comprehension and irreducibly production-specific confirmation remain separate evidence requirements, and unavailable real dependencies must not be represented by synthetic PASS claims.
 
@@ -123,7 +127,8 @@ The approved Automated Qualification Lab extends the existing disposable runtime
 │   ├── workflows/
 │   │   ├── wu01-runtime-facts.yml
 │   │   ├── wu02-runtime-core.yml
-│   │   └── wu03-owner-settings.yml
+│   │   ├── wu03-owner-settings.yml
+│   │   └── wu04-diagnostics-drift.yml
 │   └── PULL_REQUEST_TEMPLATE.md
 ├── docs/
 │   ├── architecture/
@@ -139,6 +144,7 @@ The approved Automated Qualification Lab extends the existing disposable runtime
 │   ├── AdminSettings.php
 │   ├── Configuration.php
 │   ├── PageTemplateAssignment.php
+│   ├── TemplateDiagnostics.php
 │   └── TemplateRegistrar.php
 ├── templates/
 │   └── registration-full-width.html
