@@ -92,6 +92,10 @@ function srwf_wu06_reset_registered_template() {
 }
 
 function srwf_wu06_set_default_template( $page_id ) {
+	if ( 'theme_override' === (string) getenv( 'SRWF_WU06_STATE' ) ) {
+		return;
+	}
+
 	$updated = wp_update_post(
 		array(
 			'ID'            => (int) $page_id,
