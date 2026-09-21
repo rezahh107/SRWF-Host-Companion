@@ -2,7 +2,7 @@
 
 Project-specific WordPress host integration layer for SRWF: deterministic block templates, full-width shells, runtime/template governance, diagnostics, and bounded host-level integrations.
 
-> **Current status:** V0 architecture remains frozen and approved. WU-01 through WU-06 are implemented and qualified to their documented claim ceilings. WU-07 mechanical Owner E2E is implemented and real-browser qualified on the pinned WordPress `7.1.1` / PHP `8.3.33` / Twenty Twenty-Five `1.5` tuple. After the published `v0.1.0`, an explicit Owner-approved architecture amendment admits one independently selected Inbox Page for **the same existing Full Width host canvas only**; it does not authorize an Operational template, Inbox presentation ownership, Gravity Flow behavior changes, or GPP changes. The Owner-approved personal GitHub release identity remains `v0.1.0` under `GPL-2.0-or-later`, with release minimums WordPress `7.1` and PHP `8.3`. Human comprehension, production-host confirmation, real Gravity Flow Inbox integration, GPP integration, unavailable real dependency regressions, complete WCAG 2.2 AA conformance, and `PRODUCTION_QUALIFIED_FOR_SRWF` remain unproven. GitHub Release `v0.1.0` was published on 2026-09-21 with the installable ZIP and SHA-256 checksum attached.
+> **Current status:** V0 architecture remains frozen and approved, with the Owner-approved Inbox Full Width amendment implemented and published. WU-01 through WU-07 remain qualified to their documented claim ceilings on the pinned WordPress `7.1.1` / PHP `8.3.33` / Twenty Twenty-Five `1.5` tuple. Personal GitHub Release `v0.2.0` is published under `GPL-2.0-or-later`, with release minimums WordPress `7.1` and PHP `8.3`; it adds one independently selected Inbox Page using the same existing Full Width host canvas and does not add an Operational template, Gravity Flow behavior changes, Inbox presentation ownership, or GPP changes. Human comprehension, production-host confirmation, real Gravity Flow Inbox integration, GPP integration, unavailable real dependency regressions, complete WCAG 2.2 AA conformance, and `PRODUCTION_QUALIFIED_FOR_SRWF` remain unproven.
 
 ## Purpose
 
@@ -82,7 +82,7 @@ The Mother Architecture remains frozen. Explicit Owner-approved amendments may a
 Current release and evidence baseline:
 
 ```text
-Personal GitHub release identity: v0.1.0
+Personal GitHub release identity: v0.2.0
 Release minimum WordPress: 7.1
 Release minimum PHP: 8.3
 Selected license: GPL-2.0-or-later
@@ -96,25 +96,25 @@ WU-01/WU-02/WU-03/WU-04/WU-05/WU-06/WU-07 pinned qualified lab PHP: 8.3.33
 Initial and qualified host theme: Twenty Twenty-Five 1.5
 ```
 
-The release minimums are the Owner-selected metadata floor for the already-published personal GitHub `v0.1.0` release. They do not advertise broad compatibility beyond the exercised pinned tuple. Observed production identity provenance and disposable runtime/browser behavior are distinct evidence classes and do not by themselves establish production-host confirmation.
+The release minimums are the Owner-selected metadata floor for the current personal GitHub `v0.2.0` release. They do not advertise broad compatibility beyond the exercised pinned tuple. Observed production identity provenance and disposable runtime/browser behavior are distinct evidence classes and do not by themselves establish production-host confirmation.
 
 ## Repository status
 
 ```text
 Architecture: APPROVED / FROZEN FOR V0 + OWNER-APPROVED BOUNDED AMENDMENTS
-Inbox Full Width host-canvas amendment: APPROVED / IMPLEMENTATION IN UNRELEASED SOURCE
+Inbox Full Width host-canvas amendment: APPROVED / IMPLEMENTED / PUBLISHED IN v0.2.0
 Personal GitHub release policy: APPROVED / OWNER_LOCKED
-Release identity: v0.1.0
+Release identity: v0.2.0
 License: GPL-2.0-or-later
 Release minimum WordPress/PHP: 7.1 / 8.3
 WU-01 runtime-fact prerequisite: COMPLETE_FOR_WU02
 WU-02 minimal runtime core: IMPLEMENTED / INTEGRATION_PROVEN
-Configuration schema v2: UNRELEASED — registration + inbox; valid v1 remains readable without write-on-read migration
+Configuration schema v2: IMPLEMENTED / PUBLISHED — registration + inbox; valid v1 remains readable without write-on-read migration
 Registration template registration: IMPLEMENTED
 Exact page-template assignment adapter: IMPLEMENTED / REUSED FOR INBOX
-WU-03 Owner settings workflow: IMPLEMENTED / WORDPRESS_INTEGRATION_PROVEN FOR REGISTRATION; INBOX EXTENSION UNDER CURRENT PR QUALIFICATION
+WU-03 Owner settings workflow: IMPLEMENTED / WORDPRESS_INTEGRATION_PROVEN; INBOX EXTENSION QUALIFIED
 WU-04 runtime diagnostics/drift: IMPLEMENTED / REGISTRATION-FOCUSED / WORDPRESS_INTEGRATION_QUALIFIED_ON_PINNED_TUPLE
-WU-05 Full Width geometry: IMPLEMENTED / REGISTRATION QUALIFIED; INBOX REUSE UNDER CURRENT PR QUALIFICATION
+WU-05 Full Width geometry: IMPLEMENTED / REGISTRATION + INBOX HOST-CANVAS REUSE QUALIFIED
 WU-06 admin UX/security/RTL/accessibility qualification: IMPLEMENTED / ADMIN_BROWSER_QUALIFICATION_PASS_ON_PINNED_TARGET_TUPLE
 WU-07 mechanical Owner E2E: IMPLEMENTED / WU07_MECHANICAL_OWNER_E2E_PASS_ON_PINNED_TARGET_TUPLE
 Real Gravity Flow Inbox integration: NOT_PROVEN

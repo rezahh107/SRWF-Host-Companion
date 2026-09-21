@@ -31,7 +31,7 @@ No changes yet.
 ```text
 Architecture: APPROVED / FROZEN FOR V0 + OWNER-APPROVED QUALIFICATION/RELEASE/INBOX AMENDMENTS
 Personal GitHub release policy: APPROVED / OWNER_LOCKED
-Release candidate identity: v0.2.0
+Release identity: v0.2.0
 License: GPL-2.0-or-later
 Release minimum WordPress/PHP: 7.1 / 8.3
 Inbox Full Width host canvas: IMPLEMENTED / QUALIFIED_ON_PINNED_TARGET_TUPLE
@@ -50,12 +50,12 @@ Complete WCAG 2.2 AA conformance: NOT_PROVEN
 Unavailable real dependency regressions: ENVIRONMENT_UNAVAILABLE / NOT_PROVEN
 PRODUCTION_QUALIFIED_FOR_SRWF: NOT_PROVEN
 Personal GitHub release v0.1.0: PUBLISHED
-Personal GitHub release v0.2.0: RELEASE_CANDIDATE_NOT_YET_PUBLISHED
+Personal GitHub release v0.2.0: PUBLISHED
 ```
 
 ### Release boundary
 
-- publication occurs only after this release-candidate PR is merged and the existing GitHub Release workflow validates the exact publication commit;
+- GitHub Release `v0.2.0` was published from main after exact release/package validation;
 - the already-published `v0.1.0` release is not modified;
 - real Gravity Flow Inbox integration, GPP integration, human comprehension, production-host confirmation, complete WCAG conformance, and `PRODUCTION_QUALIFIED_FOR_SRWF` remain `NOT_PROVEN`.
 
