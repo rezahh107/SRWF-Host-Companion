@@ -53,20 +53,24 @@ if ( ! $template instanceof WP_Block_Template ) {
 	throw new RuntimeException( 'Canonical WU-05 template did not resolve from WordPress.' );
 }
 
+$home_url = untrailingslashit( (string) get_option( 'home' ) );
+$page_url = add_query_arg( 'page_id', $page_id, $home_url . '/' );
+
 $evidence = array(
-	'schema'               => 'srwf-host-companion-wu05-fixture-v1',
-	'page_id'              => $page_id,
-	'page_url'             => get_permalink( $page_id ),
-	'configuration'        => Configuration::get(),
-	'assignment'           => $assignment,
-	'assignment_readback'  => PageTemplateAssignment::read( $page_id ),
-	'template'             => array(
+	'schema'              => 'srwf-host-companion-wu05-fixture-v1',
+	'page_id'             => $page_id,
+	'page_url'            => $page_url,
+	'home_url'            => $home_url,
+	'configuration'       => Configuration::get(),
+	'assignment'          => $assignment,
+	'assignment_readback' => PageTemplateAssignment::read( $page_id ),
+	'template'            => array(
 		'name'   => $template->slug,
 		'source' => $template->source,
 		'origin' => $template->origin,
 		'plugin' => $template->plugin,
 	),
-	'environment'          => array(
+	'environment'         => array(
 		'wordpress_version' => get_bloginfo( 'version' ),
 		'php_version'       => PHP_VERSION,
 		'theme_stylesheet'  => get_stylesheet(),
