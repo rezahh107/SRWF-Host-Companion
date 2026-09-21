@@ -78,11 +78,10 @@ Current status on `main` after PR #4:
 
 ```text
 IMPLEMENTED_AND_INTEGRATION_PROVEN_ON_PINNED_TARGET_TUPLE
-WU03_NOT_STARTED
 PRODUCTION_QUALIFICATION_NOT_PROVEN
 ```
 
-Exact-head WU-02 CI on PR #4 exercised WordPress `7.1.1`, PHP `8.3.33`, and Twenty Twenty-Five `1.5`, and passed bootstrap/load, schema-v1 configuration, canonical template registration, exact assignment/readback, no-hidden-mutation, active render composition, and deactivation/fallback checks. Full Width geometry, Owner workflow, browser/E2E, accessibility, diagnostics/drift, and production qualification remain outside the WU-02 claim ceiling.
+Exact-head WU-02 CI on PR #4 exercised WordPress `7.1.1`, PHP `8.3.33`, and Twenty Twenty-Five `1.5`, and passed bootstrap/load, schema-v1 configuration, canonical template registration, exact assignment/readback, no-hidden-mutation, active render composition, and deactivation/fallback checks. Full Width geometry, Owner workflow, browser/E2E, accessibility, diagnostics/drift, and production qualification remained outside the WU-02 claim ceiling.
 
 ## WU-03 — Owner settings workflow
 
@@ -97,6 +96,18 @@ Implement:
 - truthful save/apply result.
 
 Normal use must not require Site Editor or code knowledge.
+
+Current implementation status in PR #6:
+
+```text
+IMPLEMENTED_AND_WORDPRESS_INTEGRATION_PROVEN_ON_PINNED_TARGET_TUPLE
+BROWSER_E2E_NOT_RUN
+PRODUCTION_QUALIFICATION_NOT_PROVEN
+```
+
+Exact-head WU-03 CI exercised WordPress `7.1.1`, PHP `8.3.33`, and Twenty Twenty-Five `1.5`. It passed plugin load, settings-surface registration, unauthorized render blocking, side-effect-free render, published/non-published/missing/trashed/wrong-type classification, nonce failure, target-page `edit_post` denial, schema-v1 persistence, canonical assignment/readback, previous-page no-rewrite behavior, and bounded truthful result handling. Existing WU-01 and WU-02 exact-head regression workflows also passed on the same implementation head.
+
+This is WordPress integration evidence, not a browser/E2E, Persian RTL visual, accessibility/comprehension, Full Width geometry, diagnostics/drift, or production-qualification claim.
 
 ## WU-04 — Read-only diagnostics and drift
 

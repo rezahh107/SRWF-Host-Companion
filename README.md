@@ -2,7 +2,7 @@
 
 Project-specific WordPress host integration layer for SRWF: deterministic block templates, full-width shells, runtime/template governance, diagnostics, and future bounded host-level integrations.
 
-> **Current status:** V0 architecture is frozen and approved. WU-01 target-runtime facts and WU-02 minimal runtime core are complete on `main`; Owner settings UI, diagnostics/drift, Full Width geometry qualification, browser/E2E, accessibility qualification, and production qualification are still pending.
+> **Current status:** V0 architecture is frozen and approved. WU-01 target-runtime facts and WU-02 minimal runtime core are complete. WU-03 Owner settings workflow is implemented in PR #6 with exact-target WordPress integration evidence; diagnostics/drift, Full Width geometry qualification, browser/E2E, accessibility/comprehension qualification, and production qualification are still pending.
 
 ## Purpose
 
@@ -73,16 +73,16 @@ Current evidence baseline:
 ```text
 Minimum WordPress: 6.7
 Observed production WordPress: 7.1.1
-WU-01/WU-02 pinned qualified lab WordPress: 7.1.1
+WU-01/WU-02/WU-03 pinned qualified lab WordPress: 7.1.1
 
 Preferred engineering PHP floor: 8.2+
 Observed production PHP: 8.3.33
-WU-01/WU-02 pinned qualified lab PHP: 8.3.33
+WU-01/WU-02/WU-03 pinned qualified lab PHP: 8.3.33
 Minimum production PHP support policy: NOT_YET_FROZEN
 
 Initial host theme: Twenty Twenty-Five
 Observed production TT25: 1.5
-WU-01/WU-02 pinned qualified lab TT25: 1.5
+WU-01/WU-02/WU-03 pinned qualified lab TT25: 1.5
 ```
 
 Observed production identity provenance and disposable runtime behavior are distinct evidence classes. They do not by themselves establish production qualification.
@@ -96,16 +96,20 @@ WU-02 minimal runtime core: IMPLEMENTED_ON_MAIN
 Configuration schema v1: IMPLEMENTED
 Registration template registration: IMPLEMENTED
 Exact page-template assignment adapter: IMPLEMENTED
-Admin settings UI (WU-03): NOT_IMPLEMENTED
-Runtime diagnostics/drift (WU-04): NOT_IMPLEMENTED
-Full Width geometry qualification (WU-05): NOT_PROVEN
-Admin UX/security/RTL/accessibility qualification (WU-06): NOT_RUN
-Browser/E2E release gate (WU-07): NOT_RUN
+WU-03 Owner settings workflow: IMPLEMENTED / WORDPRESS_INTEGRATION_PROVEN_IN_PR_6
+WU-04 runtime diagnostics/drift: NOT_IMPLEMENTED
+WU-05 Full Width geometry qualification: NOT_PROVEN
+WU-06 admin UX/security/RTL/accessibility qualification: NOT_RUN
+WU-07 browser/E2E release gate: NOT_RUN
 Production qualification: NOT_PROVEN
 Production release: NOT_PUBLISHED
 ```
 
-WU-02 currently provides the real plugin bootstrap, canonical schema-v1 storage primitive, canonical Registration Block Template registration, and bounded exact page-template assignment/readback adapter. It does **not** automatically assign pages during plugin load or configuration reads.
+WU-03 adds the real Owner-facing workflow under `Settings → SRWF Host`: Persian-first first-run guidance, one WordPress-page selector backed only by schema-v1 `roles.registration.page_id`, the explicit `ذخیره و اعمال قالب تمام‌عرض` action, page-state classification, capability/nonce guards, canonical assignment/readback, page-change safety, and truthful bounded result messages. It introduces no admin or frontend JavaScript/CSS.
+
+Exact-target WU-03 CI on PR #6 uses WordPress `7.1.1`, PHP `8.3.33`, and Twenty Twenty-Five `1.5`. The evidence level is WordPress integration. It does **not** prove browser/E2E behavior, Persian RTL visual quality, accessibility/comprehension, WU-04 diagnostics/drift, WU-05 Full Width geometry, or production qualification.
+
+WU-02 remains the runtime owner of the canonical template registration and exact page-template assignment/readback primitive. WU-03 composes those existing primitives through an explicit authorized Owner action; rendering the settings screen does not assign or repair templates.
 
 ## Repository layout
 
@@ -114,7 +118,8 @@ WU-02 currently provides the real plugin bootstrap, canonical schema-v1 storage 
 ├── .github/
 │   ├── workflows/
 │   │   ├── wu01-runtime-facts.yml
-│   │   └── wu02-runtime-core.yml
+│   │   ├── wu02-runtime-core.yml
+│   │   └── wu03-owner-settings.yml
 │   └── PULL_REQUEST_TEMPLATE.md
 ├── docs/
 │   ├── architecture/
@@ -126,6 +131,7 @@ WU-02 currently provides the real plugin bootstrap, canonical schema-v1 storage 
 │       ├── V0_IMPLEMENTATION_PLAN.md
 │       └── WU01_RUNTIME_FACTS.md
 ├── src/
+│   ├── AdminSettings.php
 │   ├── Configuration.php
 │   ├── PageTemplateAssignment.php
 │   └── TemplateRegistrar.php
