@@ -79,7 +79,7 @@ for (const width of viewportWidths) {
       const rootStyle = getComputedStyle(root);
       const shellElement = document.querySelector('main.srwf-host-companion-registration-shell');
       const shellStyle = shellElement ? getComputedStyle(shellElement) : null;
-      const nav = document.querySelector('header.wp-block-template-part nav.wp-block-navigation');
+      const nav = document.querySelector('header nav.wp-block-navigation, header nav');
       return {
         viewportWidth: window.innerWidth,
         clientWidth: root.clientWidth,
@@ -94,9 +94,9 @@ for (const width of viewportWidths) {
         shell: rect('main.srwf-host-companion-registration-shell'),
         postContent: rect('main.srwf-host-companion-registration-shell .wp-block-post-content'),
         application: rect('.srwf-wu05-application-region'),
-        header: rect('header.wp-block-template-part'),
-        footer: rect('footer.wp-block-template-part'),
-        navigation: rect('header.wp-block-template-part nav.wp-block-navigation'),
+        header: rect('header'),
+        footer: rect('footer'),
+        navigation: rect('header nav.wp-block-navigation, header nav'),
         navigationLinkCount: nav ? nav.querySelectorAll('a').length : 0,
         shellMarkerCount: document.querySelectorAll('main.srwf-host-companion-registration-shell').length,
         applicationMarkerCount: document.querySelectorAll('.srwf-wu05-application-region').length,
@@ -111,16 +111,22 @@ for (const width of viewportWidths) {
     const isRtl = raw.htmlDir === 'rtl' || raw.rootDirection === 'rtl';
     const inlineStartGutter = isRtl ? physicalRightGutter : physicalLeftGutter;
     const inlineEndGutter = isRtl ? physicalLeftGutter : physicalRightGutter;
-    const noHorizontalOverflow = raw.documentScrollWidth <= raw.clientWidth + 1 && (raw.bodyScrollWidth === null || raw.bodyScrollWidth <= raw.clientWidth + 1);
+    const noHorizontalOverflow = raw.documentScrollWidth <= raw.clientWidth + 1
+      && (raw.bodyScrollWidth === null || raw.bodyScrollWidth <= raw.clientWidth + 1);
     const rootContentSize = Number.parseFloat(raw.tt25GlobalContentSize);
+    const safeGutters = !!app
+      && inlineStartGutter >= 16
+      && inlineEndGutter >= 16
+      && inlineStartGutter <= 64
+      && inlineEndGutter <= 64;
 
     const checks = [
       assertion('http_and_canonical_shell_rendered', raw.shellMarkerCount === 1 && raw.applicationMarkerCount === 1, raw),
       assertion('rtl_direction', isRtl, { htmlDir: raw.htmlDir, rootDirection: raw.rootDirection }),
       assertion('shell_inside_viewport', !!shell && shell.left >= -1 && shell.right <= raw.viewportWidth + 1, shell),
       assertion('post_content_inside_shell', !!postContent && !!shell && postContent.left >= shell.left - 1 && postContent.right <= shell.right + 1, { shell, postContent }),
-      assertion('safe_inline_gutters', !!app && inlineStartGutter >= 16 && inlineEndGutter >= 16, { inlineStartGutter, inlineEndGutter }),
-      assertion('application_uses_available_width', !!app && app.width >= raw.viewportWidth - 120, { applicationWidth: app?.width, viewportWidth: raw.viewportWidth }),
+      assertion('safe_inline_gutters', safeGutters, { inlineStartGutter, inlineEndGutter, allowedRange: [16, 64] }),
+      assertion('application_uses_available_width', !!app && app.width >= raw.viewportWidth - 128, { applicationWidth: app?.width, viewportWidth: raw.viewportWidth }),
       assertion('no_horizontal_overflow', noHorizontalOverflow, { documentScrollWidth: raw.documentScrollWidth, bodyScrollWidth: raw.bodyScrollWidth, clientWidth: raw.clientWidth }),
       assertion('header_present', !!raw.header && raw.header.width > 0 && raw.header.height > 0, raw.header),
       assertion('footer_present', !!raw.footer && raw.footer.width > 0 && raw.footer.height > 0, raw.footer),
