@@ -76,6 +76,8 @@ WU-06 security evidence exercises real browser/HTTP boundaries: a user without `
 
 WU-07 reuses the established Playwright/Chromium browser foundation for the mechanical Owner journey. On the pinned tuple it passes navigation to the real settings surface, first-run guidance visibility, Registration selection, explicit apply, truthful success, persisted schema-v1 configuration/canonical assignment, frontend Registration opening with the canonical host shell and RTL/basic host integrity, return to settings, and a read-only `Check Again`. This is mechanical browser evidence only and does not establish human comprehension.
 
+At the WU-07 release-qualification boundary, `tests/release/verify-release-contract.py` derives the release version, license, and WordPress/PHP minimums from the Owner-approved Personal GitHub Release Policy, verifies the plugin header and GPLv2 license text, requires README/AGENTS authority routing, rejects stale current-state contradictions, and self-falsifies against temporary mismatches before accepting a release-candidate contract PASS.
+
 The Owner-approved Personal GitHub Release Policy permits the personal/project-specific `v0.1.0` GitHub release to use this bounded automated evidence while keeping human comprehension, direct production-host confirmation, complete WCAG 2.2 AA conformance, and unavailable Gravity Forms/Orbital/GTB/approved Vazir-Vazirmatn regressions explicitly unproven. `PRODUCTION_QUALIFIED_FOR_SRWF` remains `NOT_PROVEN`.
 
 Historical work-unit/PR statements that correctly recorded earlier `NOT_RUN` states remain historical evidence and are not retroactively rewritten into PASS.
