@@ -48,13 +48,19 @@ $templates = get_block_templates(
 
 $canonical = null;
 foreach ( $templates as $template ) {
-	if ( $template instanceof WP_Block_Template && \SRWF\HostCompanion\TemplateRegistrar::TEMPLATE_NAME === $template->id ) {
+	if (
+		$template instanceof WP_Block_Template
+		&& \SRWF\HostCompanion\TemplateRegistrar::TEMPLATE_SLUG === $template->slug
+		&& 'plugin' === $template->source
+		&& 'plugin' === $template->origin
+		&& 'srwf-host-companion' === $template->plugin
+	) {
 		$canonical = $template;
 		break;
 	}
 }
 
-srwf_wu05_assert( $canonical instanceof WP_Block_Template, 'Canonical Registration template is not registered.' );
+srwf_wu05_assert( $canonical instanceof WP_Block_Template, 'Canonical Registration plugin template is not an eligible frontend provider.' );
 
 $navigation_id = wp_insert_post(
 	array(
@@ -105,13 +111,13 @@ $evidence = array(
 	'tested_commit_sha' => $tested_commit,
 	'observed_at_utc'   => gmdate( 'c' ),
 	'environment'       => array(
-		'wordpress_version' => get_bloginfo( 'version' ),
-		'php_version'       => PHP_VERSION,
-		'theme_name'        => $theme->get( 'Name' ),
-		'theme_stylesheet'  => $theme->get_stylesheet(),
-		'theme_version'     => $theme->get( 'Version' ),
-		'locale'            => get_locale(),
-		'expected_direction'=> 'rtl',
+		'wordpress_version'  => get_bloginfo( 'version' ),
+		'php_version'        => PHP_VERSION,
+		'theme_name'         => $theme->get( 'Name' ),
+		'theme_stylesheet'   => $theme->get_stylesheet(),
+		'theme_version'      => $theme->get( 'Version' ),
+		'locale'             => get_locale(),
+		'expected_direction' => 'rtl',
 	),
 	'fixture'           => array(
 		'registration_page_id' => $page_id,
@@ -122,16 +128,20 @@ $evidence = array(
 	'canonical_template' => array(
 		'api_identity'       => \SRWF\HostCompanion\TemplateRegistrar::TEMPLATE_NAME,
 		'assignment_slug'    => \SRWF\HostCompanion\TemplateRegistrar::TEMPLATE_SLUG,
+		'provider_id'        => $canonical->id,
+		'provider_source'    => $canonical->source,
+		'provider_origin'    => $canonical->origin,
+		'provider_plugin'    => $canonical->plugin,
 		'registered'         => true,
 		'assigned_readback'  => \SRWF\HostCompanion\PageTemplateAssignment::read( $page_id ),
 		'render_marker'      => 'srwf-host-companion-registration-shell',
 	),
 	'layout_hypothesis' => array(
-		'name'            => 'H1',
-		'mechanism'       => 'NATIVE_BLOCK_LAYOUT_ALIGNFULL_PLUS_LOCAL_100_PERCENT_LAYOUT',
-		'product_css'     => false,
-		'product_js'      => false,
-		'status'          => 'PENDING_BROWSER_FALSIFICATION',
+		'name'        => 'H1',
+		'mechanism'   => 'NATIVE_BLOCK_LAYOUT_ALIGNFULL_PLUS_LOCAL_100_PERCENT_LAYOUT',
+		'product_css' => false,
+		'product_js'  => false,
+		'status'      => 'PENDING_BROWSER_FALSIFICATION',
 	),
 	'dependencies'      => array(
 		'gravity_forms'   => array( 'availability' => 'ENVIRONMENT_UNAVAILABLE', 'claim' => 'NOT_PROVEN' ),
