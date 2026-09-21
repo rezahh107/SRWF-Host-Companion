@@ -227,17 +227,24 @@ jobs:
           path, wp, php, theme = sys.argv[1:]
           with open(path, encoding='utf-8') as f:
               data = json.load(f)
-          assert data['schema'] == 'srwf-host-companion-wu02-runtime-core-v1'
+          assert data['schema'] == 'srwf-host-companion-wu02-runtime-core-v2'
           assert data['environment']['wordpress_version'] == wp
           assert data['environment']['php_version'] == php
           assert data['environment']['theme_stylesheet'] == 'twentytwentyfive'
           assert data['environment']['theme_version'] == theme
           assert data['template']['registration_identity'] == 'srwf-host-companion//registration-full-width'
           assert data['template']['assignment_slug'] == 'registration-full-width'
+          normalized = data['configuration']['normalized_config']
+          assert normalized['schema_version'] == 2
+          assert set(normalized['roles']) == {'registration', 'inbox'}
           claims = data['claims']
           required = [
               'bootstrap_runtime_proven',
               'config_runtime_proven',
+              'schema_v1_read_without_mutation',
+              'inbox_explicit_schema_v2_upgrade',
+              'role_setters_preserve_other_role',
+              'malformed_config_fails_closed',
               'template_registration_runtime_proven',
               'assignment_runtime_proven',
               'no_hidden_mutation_runtime_proven',
@@ -261,8 +268,9 @@ jobs:
           print(f"- exact disposable tuple: WordPress `{env['wordpress_version']}`, PHP `{env['php_version']}`, `{env['theme_name']}` `{env['theme_version']}`")
           print(f"- registration API identity: `{d['template']['registration_identity']}`")
           print(f"- assignment value: `{d['template']['assignment_slug']}`")
-          print('- configuration schema v1, registration, assignment, no-hidden-mutation, active render, and deactivation fallback: `PASS`')
-          print('- Full Width geometry, Owner settings workflow, browser E2E, and production qualification: `NOT_PROVEN`')
+          print('- configuration: schema-v1 read without mutation, explicit Inbox upgrade to schema v2, two-role preservation, and malformed-state fail-closed: `PASS`')
+          print('- template registration, Registration assignment, no-hidden-mutation, active render, and deactivation fallback: `PASS`')
+          print('- Inbox admin mutation/geometry, real Gravity Flow Inbox/GPP integration, browser E2E, and production qualification: evaluated only by their own bounded checks; not promoted here')
           PY
 
       - name: Upload machine-readable WU-02 evidence

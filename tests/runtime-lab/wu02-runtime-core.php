@@ -26,11 +26,6 @@ if ( ! $evidence_path ) {
 	exit( 2 );
 }
 
-/**
- * @param bool   $condition Condition.
- * @param string $message Failure message.
- * @return void
- */
 function srwf_wu02_assert( $condition, $message ) {
 	if ( ! $condition ) {
 		fwrite( STDERR, "WU-02 assertion failed: {$message}\n" );
@@ -38,10 +33,6 @@ function srwf_wu02_assert( $condition, $message ) {
 	}
 }
 
-/**
- * @param string $path Evidence path.
- * @return array<string,mixed>
- */
 function srwf_wu02_read_evidence( $path ) {
 	if ( ! file_exists( $path ) ) {
 		return array();
@@ -51,11 +42,6 @@ function srwf_wu02_read_evidence( $path ) {
 	return is_array( $decoded ) ? $decoded : array();
 }
 
-/**
- * @param string              $path Evidence path.
- * @param array<string,mixed> $evidence Evidence.
- * @return void
- */
 function srwf_wu02_write_evidence( $path, $evidence ) {
 	$encoded = wp_json_encode( $evidence, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE );
 	if ( false === $encoded || false === file_put_contents( $path, $encoded . "\n" ) ) {
@@ -73,7 +59,7 @@ if ( 'active' === $phase ) {
 
 	$theme = wp_get_theme();
 	$evidence = array(
-		'schema'          => 'srwf-host-companion-wu02-runtime-core-v1',
+		'schema'          => 'srwf-host-companion-wu02-runtime-core-v2',
 		'evidence_class'  => 'DISPOSABLE_CI_RUNTIME_LAB',
 		'observed_at_utc' => gmdate( 'c' ),
 		'environment'     => array(
@@ -92,30 +78,71 @@ if ( 'active' === $phase ) {
 	srwf_wu02_assert( '' === $unrelated_before, 'Unrelated page changed during plugin load/registration.' );
 	srwf_wu02_assert( 'legacy-existing-template' === $legacy_before, 'Legacy page assignment changed during plugin load/registration.' );
 
-	delete_option( \SRWF\HostCompanion\Configuration::OPTION_NAME );
 	$expected_default = array(
-		'schema_version' => 1,
+		'schema_version' => 2,
 		'roles'          => array(
 			'registration' => array( 'page_id' => 0 ),
+			'inbox'        => array( 'page_id' => 0 ),
 		),
 	);
-	srwf_wu02_assert( $expected_default === \SRWF\HostCompanion\Configuration::get(), 'Absent configuration did not normalize to schema v1.' );
+
+	delete_option( \SRWF\HostCompanion\Configuration::OPTION_NAME );
+	srwf_wu02_assert( $expected_default === \SRWF\HostCompanion\Configuration::get(), 'Absent configuration did not normalize to schema v2 defaults.' );
+	srwf_wu02_assert( null === get_option( \SRWF\HostCompanion\Configuration::OPTION_NAME, null ), 'Configuration read wrote persistent state.' );
 	srwf_wu02_assert( 0 === \SRWF\HostCompanion\Configuration::get_registration_page_id(), 'Absent Registration page ID did not normalize to zero.' );
-	srwf_wu02_assert( \SRWF\HostCompanion\Configuration::set_registration_page_id( 321 ), 'Valid schema-v1 page ID did not persist.' );
+	srwf_wu02_assert( 0 === \SRWF\HostCompanion\Configuration::get_inbox_page_id(), 'Absent Inbox page ID did not normalize to zero.' );
+
+	$legacy_v1 = array(
+		'schema_version' => 1,
+		'roles'          => array(
+			'registration' => array( 'page_id' => 456 ),
+		),
+	);
+	update_option( \SRWF\HostCompanion\Configuration::OPTION_NAME, $legacy_v1, false );
+	$legacy_normalized = \SRWF\HostCompanion\Configuration::get();
+	srwf_wu02_assert( 2 === $legacy_normalized['schema_version'], 'Valid schema v1 did not normalize in memory to schema v2.' );
+	srwf_wu02_assert( 456 === $legacy_normalized['roles']['registration']['page_id'], 'Schema-v1 Registration page was not preserved during normalization.' );
+	srwf_wu02_assert( 0 === $legacy_normalized['roles']['inbox']['page_id'], 'Schema-v1 Inbox default was not zero.' );
+	srwf_wu02_assert( $legacy_v1 === get_option( \SRWF\HostCompanion\Configuration::OPTION_NAME, null ), 'Reading schema v1 persisted a migration.' );
+
+	srwf_wu02_assert( \SRWF\HostCompanion\Configuration::set_registration_page_id( 321 ), 'Registration setter failed on legacy state.' );
+	$legacy_registration_write = get_option( \SRWF\HostCompanion\Configuration::OPTION_NAME, null );
+	srwf_wu02_assert( 1 === $legacy_registration_write['schema_version'], 'Registration-only legacy write performed an unnecessary schema migration.' );
+	srwf_wu02_assert( 321 === $legacy_registration_write['roles']['registration']['page_id'], 'Registration-only legacy write did not persist the page ID.' );
+	srwf_wu02_assert( 0 === \SRWF\HostCompanion\Configuration::get_inbox_page_id(), 'Registration-only write changed Inbox default.' );
+
+	srwf_wu02_assert( \SRWF\HostCompanion\Configuration::set_inbox_page_id( 654 ), 'First explicit Inbox persistence failed.' );
 	$round_trip = \SRWF\HostCompanion\Configuration::get();
-	srwf_wu02_assert( 1 === $round_trip['schema_version'], 'Schema version changed during valid round-trip.' );
-	srwf_wu02_assert( 321 === $round_trip['roles']['registration']['page_id'], 'Registration page ID did not round-trip.' );
-	srwf_wu02_assert( array( 'registration' ) === array_keys( $round_trip['roles'] ), 'Configuration introduced a competing role truth.' );
+	$stored_v2  = get_option( \SRWF\HostCompanion\Configuration::OPTION_NAME, null );
+	srwf_wu02_assert( 2 === $stored_v2['schema_version'], 'First explicit Inbox persistence did not upgrade storage to schema v2.' );
+	srwf_wu02_assert( $stored_v2 === $round_trip, 'Persisted schema v2 did not read back canonically.' );
+	srwf_wu02_assert( 321 === $round_trip['roles']['registration']['page_id'], 'Inbox setter did not preserve Registration.' );
+	srwf_wu02_assert( 654 === $round_trip['roles']['inbox']['page_id'], 'Inbox page ID did not round-trip.' );
+	srwf_wu02_assert( array( 'registration', 'inbox' ) === array_keys( $round_trip['roles'] ), 'Schema v2 role cardinality changed unexpectedly.' );
 	srwf_wu02_assert( array( 'page_id' ) === array_keys( $round_trip['roles']['registration'] ), 'Registration cardinality is not exactly one page_id.' );
+	srwf_wu02_assert( array( 'page_id' ) === array_keys( $round_trip['roles']['inbox'] ), 'Inbox cardinality is not exactly one page_id.' );
+
+	srwf_wu02_assert( \SRWF\HostCompanion\Configuration::set_registration_page_id( 777 ), 'Schema-v2 Registration setter failed.' );
+	srwf_wu02_assert( 777 === \SRWF\HostCompanion\Configuration::get_registration_page_id(), 'Schema-v2 Registration setter did not persist.' );
+	srwf_wu02_assert( 654 === \SRWF\HostCompanion\Configuration::get_inbox_page_id(), 'Registration setter did not preserve Inbox.' );
+	srwf_wu02_assert( \SRWF\HostCompanion\Configuration::set_inbox_page_id( 888 ), 'Schema-v2 Inbox setter failed.' );
+	srwf_wu02_assert( 777 === \SRWF\HostCompanion\Configuration::get_registration_page_id(), 'Inbox setter did not preserve Registration.' );
+	srwf_wu02_assert( 888 === \SRWF\HostCompanion\Configuration::get_inbox_page_id(), 'Schema-v2 Inbox setter did not persist.' );
 
 	update_option( \SRWF\HostCompanion\Configuration::OPTION_NAME, 'malformed', false );
 	srwf_wu02_assert( $expected_default === \SRWF\HostCompanion\Configuration::get(), 'Scalar malformed configuration became truth.' );
 	update_option(
 		\SRWF\HostCompanion\Configuration::OPTION_NAME,
-		array( 'schema_version' => 2, 'roles' => array( 'registration' => array( 'page_id' => 77 ) ) ),
+		array( 'schema_version' => 99, 'roles' => array( 'registration' => array( 'page_id' => 77 ), 'inbox' => array( 'page_id' => 88 ) ) ),
 		false
 	);
 	srwf_wu02_assert( $expected_default === \SRWF\HostCompanion\Configuration::get(), 'Unsupported schema version became truth.' );
+	update_option(
+		\SRWF\HostCompanion\Configuration::OPTION_NAME,
+		array( 'schema_version' => 2, 'roles' => array( 'registration' => array( 'page_id' => 77 ) ) ),
+		false
+	);
+	srwf_wu02_assert( $expected_default === \SRWF\HostCompanion\Configuration::get(), 'Malformed schema v2 missing Inbox became truth.' );
 	update_option(
 		\SRWF\HostCompanion\Configuration::OPTION_NAME,
 		array( 'schema_version' => 1, 'roles' => array( 'registration' => array( 'page_id' => array( 1, 2 ) ) ) ),
@@ -135,8 +162,13 @@ if ( 'active' === $phase ) {
 	);
 	$normalized_extra = \SRWF\HostCompanion\Configuration::get();
 	srwf_wu02_assert( 654 === $normalized_extra['roles']['registration']['page_id'], 'Valid canonical page_id was not preserved.' );
+	srwf_wu02_assert( 0 === $normalized_extra['roles']['inbox']['page_id'], 'Schema-v1 Inbox default changed during normalization.' );
 	srwf_wu02_assert( array( 'page_id' ) === array_keys( $normalized_extra['roles']['registration'] ), 'Unexpected multi-page key leaked into canonical truth.' );
 	srwf_wu02_assert( ! isset( $normalized_extra['unexpected'] ), 'Unexpected top-level key leaked into canonical truth.' );
+
+	srwf_wu02_assert( \SRWF\HostCompanion\Configuration::set_inbox_page_id( 888 ), 'Could not restore a valid schema-v2 Inbox sentinel after malformed-state probes.' );
+	srwf_wu02_assert( 654 === \SRWF\HostCompanion\Configuration::get_registration_page_id(), 'Restoring the Inbox sentinel did not preserve the normalized Registration page.' );
+	srwf_wu02_assert( 888 === \SRWF\HostCompanion\Configuration::get_inbox_page_id(), 'Restored Inbox sentinel did not persist.' );
 
 	\SRWF\HostCompanion\Configuration::get();
 	srwf_wu02_assert( '' === get_page_template_slug( $unrelated_id ), 'Configuration read assigned an unrelated page.' );
@@ -203,6 +235,7 @@ if ( 'active' === $phase ) {
 	srwf_wu02_assert( 'srwf-host-companion' === $resolved->plugin, 'Resolved active template is not owned by SRWF Host Companion.' );
 
 	srwf_wu02_assert( \SRWF\HostCompanion\Configuration::set_registration_page_id( (int) $page_id ), 'Canonical Registration mapping did not persist.' );
+	srwf_wu02_assert( 888 === \SRWF\HostCompanion\Configuration::get_inbox_page_id(), 'Final Registration mapping rewrote the configured Inbox role.' );
 
 	$evidence['bootstrap'] = array(
 		'plugin_active' => is_plugin_active( 'srwf-host-companion/srwf-host-companion.php' ),
@@ -231,6 +264,10 @@ if ( 'active' === $phase ) {
 	);
 	$evidence['claims']['bootstrap_runtime_proven']              = true;
 	$evidence['claims']['config_runtime_proven']                 = true;
+	$evidence['claims']['schema_v1_read_without_mutation']       = true;
+	$evidence['claims']['inbox_explicit_schema_v2_upgrade']      = true;
+	$evidence['claims']['role_setters_preserve_other_role']      = true;
+	$evidence['claims']['malformed_config_fails_closed']         = true;
 	$evidence['claims']['template_registration_runtime_proven']  = true;
 	$evidence['claims']['assignment_runtime_proven']             = true;
 	$evidence['claims']['no_hidden_mutation_runtime_proven']     = true;

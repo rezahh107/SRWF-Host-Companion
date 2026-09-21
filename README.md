@@ -1,16 +1,20 @@
 # SRWF Host Companion
 
-Project-specific WordPress host integration layer for SRWF: deterministic block templates, full-width shells, runtime/template governance, diagnostics, and future bounded host-level integrations.
+Project-specific WordPress host integration layer for SRWF: deterministic block templates, full-width shells, runtime/template governance, diagnostics, and bounded host-level integrations.
 
-> **Current status:** V0 architecture is frozen and approved. WU-01 through WU-06 are implemented and qualified to their documented claim ceilings. WU-07 mechanical Owner E2E is implemented and real-browser qualified on the pinned WordPress `7.1.1` / PHP `8.3.33` / Twenty Twenty-Five `1.5` tuple. The Owner-approved personal GitHub release identity is `v0.1.0` under `GPL-2.0-or-later`, with release minimums WordPress `7.1` and PHP `8.3`. Human comprehension, production-host confirmation, unavailable real dependency regressions, complete WCAG 2.2 AA conformance, and `PRODUCTION_QUALIFIED_FOR_SRWF` remain unproven. GitHub Release `v0.1.0` was published on 2026-09-21 with the installable ZIP and SHA-256 checksum attached.
+> **Current status:** V0 architecture remains frozen and approved. WU-01 through WU-06 are implemented and qualified to their documented claim ceilings. WU-07 mechanical Owner E2E is implemented and real-browser qualified on the pinned WordPress `7.1.1` / PHP `8.3.33` / Twenty Twenty-Five `1.5` tuple. After the published `v0.1.0`, an explicit Owner-approved architecture amendment admits one independently selected Inbox Page for **the same existing Full Width host canvas only**; it does not authorize an Operational template, Inbox presentation ownership, Gravity Flow behavior changes, or GPP changes. The Owner-approved personal GitHub release identity remains `v0.1.0` under `GPL-2.0-or-later`, with release minimums WordPress `7.1` and PHP `8.3`. Human comprehension, production-host confirmation, real Gravity Flow Inbox integration, GPP integration, unavailable real dependency regressions, complete WCAG 2.2 AA conformance, and `PRODUCTION_QUALIFIED_FOR_SRWF` remain unproven. GitHub Release `v0.1.0` was published on 2026-09-21 with the installable ZIP and SHA-256 checksum attached.
 
 ## Purpose
 
 SRWF Host Companion owns the small WordPress **host-integration** boundary for SRWF.
 
-Its first product goal is simple:
+Its original V0 product goal was:
 
 > Let a non-technical administrator choose the SRWF Registration page and explicitly apply a canonical Full Width WordPress Block Template without editing theme files or learning Site Editor internals.
+
+The post-`v0.1.0` Inbox amendment adds one equally bounded host-level need:
+
+> Let the Owner independently select one Inbox Page and explicitly apply the **same** proven Full Width SRWF host canvas.
 
 The plugin complements the host theme. It does not replace the theme, Gravity Forms, Gravity Flow, GTB, GPP, PersianGravity, or Vazir.
 
@@ -22,10 +26,10 @@ Twenty Twenty-Five
 
 SRWF Host Companion
 ├── Owner-facing host setup
-├── SRWF page-role mapping
-├── canonical host templates
+├── SRWF page-role mapping (registration + inbox)
+├── canonical host template reuse
 ├── safe explicit template assignment
-└── runtime / drift diagnostics
+└── Registration-focused runtime / drift diagnostics
 
 Gravity Forms + GTB
 └── Registration behavior + presentation
@@ -40,9 +44,11 @@ Vazir / Vazirmatn
 └── approved frontend typography
 ```
 
-## V0 scope
+For Inbox, SRWF Host Companion owns only WordPress Page selection/configuration and explicit reuse of the existing Full Width canvas. It does not own Gravity Flow Inbox content/behavior, workflow state, assignments/permissions, or GPP presentation.
 
-V0 is intentionally narrow:
+## V0 scope and bounded post-v0.1.0 amendment
+
+The frozen V0 scope remains historical and intentionally narrow:
 
 - one Owner-facing admin surface under `Settings → SRWF Host`;
 - one versioned `registration.page_id` role;
@@ -52,21 +58,24 @@ V0 is intentionally narrow:
 - Persian-first, translatable, RTL-safe admin UX;
 - real browser/runtime qualification before any production-qualified claim.
 
-A separate Operational template is **not** part of V0. It may be added only if Inbox / Entry Detail runtime evidence proves a distinct shell is needed.
+A separate Operational template was not part of V0 and is still **not authorized**.
+
+The Owner-approved [`INBOX_FULL_WIDTH_HOST_CANVAS_AMENDMENT.md`](docs/architecture/INBOX_FULL_WIDTH_HOST_CANVAS_AMENDMENT.md) now admits exactly one additional role, `roles.inbox.page_id`, for host-canvas assignment only. Inbox reuses the current `registration-full-width` template identity and `templates/registration-full-width.html`; no second Inbox/Operational template is introduced.
 
 ## Governing documents
 
 Read these before implementation or technical review:
 
-1. [`docs/architecture/MOTHER_ARCHITECTURE.md`](docs/architecture/MOTHER_ARCHITECTURE.md) — canonical V0 product architecture, ownership boundaries, and stronger Production Qualification claim.
-2. [`docs/architecture/AUTOMATED_QUALIFICATION_LAB.md`](docs/architecture/AUTOMATED_QUALIFICATION_LAB.md) — Owner-approved qualification-evidence amendment for repeatable CI/browser evidence.
-3. [`docs/architecture/PERSONAL_GITHUB_RELEASE_POLICY.md`](docs/architecture/PERSONAL_GITHUB_RELEASE_POLICY.md) — Owner-approved authority for personal GitHub distribution, release identity/license/runtime minimums, release notes, and the distinction between personal-release readiness and `PRODUCTION_QUALIFIED_FOR_SRWF`.
-4. [`AGENTS.md`](AGENTS.md) — operating contract for coding agents and automated contributors.
-5. [`docs/architecture/PPDM_ADOPTION.md`](docs/architecture/PPDM_ADOPTION.md) — selectively adopted WordPress/self-guided UX guidance.
-6. [`docs/implementation/V0_IMPLEMENTATION_PLAN.md`](docs/implementation/V0_IMPLEMENTATION_PLAN.md) — bounded execution sequence and current work-unit status.
-7. [`docs/implementation/WU01_RUNTIME_FACTS.md`](docs/implementation/WU01_RUNTIME_FACTS.md) — target-runtime evidence and page-template contract.
+1. [`docs/architecture/MOTHER_ARCHITECTURE.md`](docs/architecture/MOTHER_ARCHITECTURE.md) — canonical frozen V0 product architecture, ownership boundaries, and stronger Production Qualification claim.
+2. [`docs/architecture/INBOX_FULL_WIDTH_HOST_CANVAS_AMENDMENT.md`](docs/architecture/INBOX_FULL_WIDTH_HOST_CANVAS_AMENDMENT.md) — Owner-approved post-`v0.1.0` amendment admitting one independently selected Inbox Page for the existing Full Width host canvas only.
+3. [`docs/architecture/AUTOMATED_QUALIFICATION_LAB.md`](docs/architecture/AUTOMATED_QUALIFICATION_LAB.md) — Owner-approved qualification-evidence amendment for repeatable CI/browser evidence.
+4. [`docs/architecture/PERSONAL_GITHUB_RELEASE_POLICY.md`](docs/architecture/PERSONAL_GITHUB_RELEASE_POLICY.md) — Owner-approved authority for personal GitHub distribution, release identity/license/runtime minimums, release notes, and the distinction between personal-release readiness and `PRODUCTION_QUALIFIED_FOR_SRWF`.
+5. [`AGENTS.md`](AGENTS.md) — operating contract for coding agents and automated contributors.
+6. [`docs/architecture/PPDM_ADOPTION.md`](docs/architecture/PPDM_ADOPTION.md) — selectively adopted WordPress/self-guided UX guidance.
+7. [`docs/implementation/V0_IMPLEMENTATION_PLAN.md`](docs/implementation/V0_IMPLEMENTATION_PLAN.md) — bounded V0 execution sequence and historical work-unit status.
+8. [`docs/implementation/WU01_RUNTIME_FACTS.md`](docs/implementation/WU01_RUNTIME_FACTS.md) — target-runtime evidence and page-template contract.
 
-The Mother Architecture remains frozen for V0. Owner-approved amendments may extend qualification or release policy while preserving the frozen V0 product mission and ownership boundaries.
+The Mother Architecture remains frozen. Explicit Owner-approved amendments may add bounded post-V0 needs while preserving the product mission and ownership boundaries.
 
 ## Platform policy
 
@@ -87,26 +96,29 @@ WU-01/WU-02/WU-03/WU-04/WU-05/WU-06/WU-07 pinned qualified lab PHP: 8.3.33
 Initial and qualified host theme: Twenty Twenty-Five 1.5
 ```
 
-The release minimums are the Owner-selected metadata floor for the personal GitHub `v0.1.0` release. They do not advertise broad compatibility beyond the exercised pinned tuple. Observed production identity provenance and disposable runtime/browser behavior are distinct evidence classes and do not by themselves establish production-host confirmation.
+The release minimums are the Owner-selected metadata floor for the already-published personal GitHub `v0.1.0` release. They do not advertise broad compatibility beyond the exercised pinned tuple. Observed production identity provenance and disposable runtime/browser behavior are distinct evidence classes and do not by themselves establish production-host confirmation.
 
 ## Repository status
 
 ```text
-Architecture: APPROVED / FROZEN FOR V0 + OWNER-APPROVED QUALIFICATION/RELEASE AMENDMENTS
+Architecture: APPROVED / FROZEN FOR V0 + OWNER-APPROVED BOUNDED AMENDMENTS
+Inbox Full Width host-canvas amendment: APPROVED / IMPLEMENTATION IN UNRELEASED SOURCE
 Personal GitHub release policy: APPROVED / OWNER_LOCKED
 Release identity: v0.1.0
 License: GPL-2.0-or-later
 Release minimum WordPress/PHP: 7.1 / 8.3
 WU-01 runtime-fact prerequisite: COMPLETE_FOR_WU02
 WU-02 minimal runtime core: IMPLEMENTED / INTEGRATION_PROVEN
-Configuration schema v1: IMPLEMENTED
+Configuration schema v2: UNRELEASED — registration + inbox; valid v1 remains readable without write-on-read migration
 Registration template registration: IMPLEMENTED
-Exact page-template assignment adapter: IMPLEMENTED
-WU-03 Owner settings workflow: IMPLEMENTED / WORDPRESS_INTEGRATION_PROVEN
-WU-04 runtime diagnostics/drift: IMPLEMENTED / WORDPRESS_INTEGRATION_QUALIFIED_ON_PINNED_TUPLE
-WU-05 Full Width geometry: IMPLEMENTED / FULL_WIDTH_GEOMETRY_AUTOMATED_QUALIFIED_ON_PINNED_TARGET_TUPLE
+Exact page-template assignment adapter: IMPLEMENTED / REUSED FOR INBOX
+WU-03 Owner settings workflow: IMPLEMENTED / WORDPRESS_INTEGRATION_PROVEN FOR REGISTRATION; INBOX EXTENSION UNDER CURRENT PR QUALIFICATION
+WU-04 runtime diagnostics/drift: IMPLEMENTED / REGISTRATION-FOCUSED / WORDPRESS_INTEGRATION_QUALIFIED_ON_PINNED_TUPLE
+WU-05 Full Width geometry: IMPLEMENTED / REGISTRATION QUALIFIED; INBOX REUSE UNDER CURRENT PR QUALIFICATION
 WU-06 admin UX/security/RTL/accessibility qualification: IMPLEMENTED / ADMIN_BROWSER_QUALIFICATION_PASS_ON_PINNED_TARGET_TUPLE
 WU-07 mechanical Owner E2E: IMPLEMENTED / WU07_MECHANICAL_OWNER_E2E_PASS_ON_PINNED_TARGET_TUPLE
+Real Gravity Flow Inbox integration: NOT_PROVEN
+GPP integration: NOT_PROVEN
 Human comprehension: NOT_PROVEN
 Production-host confirmation: NOT_PROVEN
 Complete WCAG 2.2 AA conformance: NOT_PROVEN
@@ -115,9 +127,11 @@ PRODUCTION_QUALIFIED_FOR_SRWF: NOT_PROVEN
 Personal GitHub release v0.1.0: PUBLISHED
 ```
 
-WU-03 provides the real Owner-facing mutation workflow under `Settings → SRWF Host`: Persian-first first-run guidance, one WordPress-page selector backed only by schema-v1 `roles.registration.page_id`, the explicit `ذخیره و اعمال قالب تمام‌عرض` action, page-state classification, capability/nonce guards, canonical assignment/readback, page-change safety, and truthful bounded result messages. It introduces no admin or frontend JavaScript/CSS.
+The unreleased configuration model keeps the single option `srwf_host_companion_config`. Reads normalize valid schema v1 in memory as Registration plus unconfigured Inbox (`0`) without writing. Registration-only legacy persistence may remain schema v1 until Inbox is explicitly configured. The first explicit Inbox persistence upgrades storage to schema v2 and preserves Registration. Once schema v2 exists, either role setter preserves the other role. Malformed/unsupported state remains fail-closed/unconfigured.
 
-WU-04 extends that same single screen with read-only current-state diagnostics and `بررسی دوباره`. Diagnostics reuse the existing page-validity model and separately record page evidence, page-template assignment, active frontend-provider evidence, raw-source comparison evidence, transformed returned-template evidence, interpretation, and the practical next action. Opening/rendering the screen and `بررسی دوباره` do not save configuration, assign a template, rewrite page content, delete a `wp_template`, rewrite a theme file, or repair drift.
+WU-03 provides the real Owner-facing mutation workflow under `Settings → SRWF Host`. Registration keeps its existing selector/action. The unreleased Inbox extension adds an independent `صفحه اینباکس` selector and independent explicit apply operation on the same screen. Both routes retain `manage_options`, role-specific nonce validation, target `edit_post` authorization, WordPress Page validation, canonical assignment/readback, page-change safety, truthful bounded result messages, and no page-content mutation. Applying one role does not re-save or re-assign the other role. No admin or frontend JavaScript/CSS is introduced.
+
+WU-04 remains Registration-focused. It extends the same single screen with read-only current-state diagnostics and `بررسی دوباره`. Diagnostics reuse the existing page-validity model and separately record page evidence, page-template assignment, active frontend-provider evidence, raw-source comparison evidence, transformed returned-template evidence, interpretation, and the practical next action. Opening/rendering the screen and `بررسی دوباره` do not save configuration, assign a template, rewrite page content, delete a `wp_template`, rewrite a theme file, or repair drift. Inbox-specific diagnostics are not part of the current amendment.
 
 On WordPress `7.1.1`, provider truth follows the same exact-slug `get_block_templates()` published-candidate model used by frontend `resolve_block_template()`. A matching draft or trashed database `wp_template` is therefore not promoted to `CUSTOMIZED_DB_OVERRIDE`; resolution falls through to the eligible theme/plugin provider. A published matching database override remains eligible and wins according to Core precedence. Provider classification continues to come only from proven `WP_Block_Template` provenance; unsupported provenance stays `UNKNOWN`.
 
@@ -129,21 +143,21 @@ Registered plugin provider identity remains proven from `source=plugin`, `origin
 
 Every WU-04 fixture snapshots relevant persistent state before/after diagnostics and verifies no hidden repair. A privacy-minimized text report is available through native read-only admin markup without JavaScript; it excludes page/form content, student data, uploads, authentication material, nonces, cookies and credentials.
 
-WU-05 keeps Full Width ownership at the WordPress host-template layer. The canonical Registration template uses native block-layout primitives only: an `alignfull` Registration shell, template-local constrained layout sizing with `contentSize` / `wideSize` at `100%`, an aligned Post Content boundary, and TT25 spacing tokens for safe horizontal gutters. It does not mutate global TT25 `contentSize`, introduce a page builder, add frontend JavaScript, add generic form styling, or require a viewport-breakout hack.
+WU-05 keeps Full Width ownership at the WordPress host-template layer. The canonical template uses native block-layout primitives only: an `alignfull` shell, template-local constrained layout sizing with `contentSize` / `wideSize` at `100%`, an aligned Post Content boundary, and TT25 spacing tokens for safe horizontal gutters. It does not mutate global TT25 `contentSize`, introduce a page builder, add frontend JavaScript, add generic form styling, or require a viewport-breakout hack.
 
-The WU-05 real-browser lab runs Chromium through Playwright against the exact disposable target tuple in Persian RTL at `320`, `390`, `430`, and `1440` CSS px. It records shell/content bounds, physical and inline gutters, rendered width, document/client overflow evidence, header/footer/navigation integrity, canonical template assignment/rendering, and dependency claim state in a machine-readable artifact. H1 is supported on the pinned tuple by measured browser geometry; screenshots remain diagnostic-only evidence.
+The WU-05 real-browser lab runs Chromium through Playwright against the exact disposable target tuple in Persian RTL at `320`, `390`, `430`, and `1440` CSS px. For this amendment the same lab creates independent synthetic Registration and Inbox WordPress Pages, assigns the same canonical template through the same adapter, and requires both roles to pass the Full Width host-canvas geometry/overflow/header/footer/navigation checks before the workflow can report its existing qualified status. This synthetic Inbox evidence is deliberately limited to the WordPress host canvas.
 
-The successful synthetic host-geometry evidence does **not** prove unavailable real Gravity Forms, Orbital, GTB, or approved Vazir/Vazirmatn integration. Those dependency-backed claims remain `ENVIRONMENT_UNAVAILABLE / NOT_PROVEN`.
+Successful synthetic host-geometry evidence does **not** prove real Gravity Flow Inbox integration, GPP integration, or unavailable real Gravity Forms/Orbital/GTB/approved Vazir/Vazirmatn integration. Those dependency-backed claims remain `ENVIRONMENT_UNAVAILABLE / NOT_PROVEN` or `NOT_PROVEN` as applicable.
 
-WU-06 reuses the existing WU-05 Playwright/Chromium foundation for real wp-admin qualification rather than introducing a second browser platform. On the pinned WordPress `7.1.1` / PHP `8.3.33` / Twenty Twenty-Five `1.5` tuple in Persian RTL, the lab exercises first-run, valid published/non-published pages, missing/trashed/wrong-type pages, wrong assignment, canonical state, published DB override, theme override, missing template and `UNKNOWN`. The browser qualification also exercises keyboard/focus, native disclosure, a `390×900` narrow-admin layout, authorization boundaries, invalid/missing nonce rejection, successful explicit apply, read-only `بررسی دوباره`, diagnostic privacy, and a scoped automated accessibility scan.
+WU-06 reuses the existing WU-05 Playwright/Chromium foundation for real wp-admin qualification rather than introducing a second browser platform. On the pinned WordPress `7.1.1` / PHP `8.3.33` / Twenty Twenty-Five `1.5` tuple in Persian RTL, the lab exercises first-run, valid published/non-published pages, missing/trashed/wrong-type pages, wrong assignment, canonical state, published DB override, theme override, missing template and `UNKNOWN`. The browser qualification also exercises keyboard/focus, native disclosure, a `390×900` narrow-admin layout, authorization boundaries, invalid/missing nonce rejection, successful explicit Registration apply, read-only `بررسی دوباره`, diagnostic privacy, and a scoped automated accessibility scan. Its Registration path remains deterministic with the independent Inbox control present.
 
-WU-07 reuses that same browser foundation for the mechanical Owner journey: login, reach `Settings → SRWF Host`, observe first-run guidance, select a Registration page, explicitly save/apply, observe the truthful result, verify persisted schema-v1 configuration and canonical assignment, open the frontend Registration page, verify the canonical host shell/RTL/basic host integrity without horizontal overflow, return to settings, and run read-only `Check Again`. This establishes `WU07_MECHANICAL_OWNER_E2E_PASS_ON_PINNED_TARGET_TUPLE` only.
+WU-07 reuses that same browser foundation for the mechanical Owner Registration journey: login, reach `Settings → SRWF Host`, observe first-run guidance, select a Registration page, explicitly save/apply, observe the truthful result, verify persisted Registration configuration and canonical assignment, open the frontend Registration page, verify the canonical host shell/RTL/basic host integrity without horizontal overflow, return to settings, and run read-only `Check Again`. This establishes `WU07_MECHANICAL_OWNER_E2E_PASS_ON_PINNED_TARGET_TUPLE` only; it is not an Inbox/Gravity Flow E2E claim.
 
-The Owner-approved Personal GitHub Release Policy permits the personal/project-specific `v0.1.0` GitHub release to proceed without converting unavailable evidence into PASS. Human comprehension, direct production-host confirmation, complete WCAG 2.2 AA conformance, and unavailable real Gravity Forms/Orbital/GTB/Vazir-Vazirmatn regressions remain unproven, and the build must not be labeled `PRODUCTION_QUALIFIED_FOR_SRWF` on that basis.
+The Owner-approved Personal GitHub Release Policy permitted the already-published personal/project-specific `v0.1.0` GitHub release without converting unavailable evidence into PASS. This unreleased Inbox capability does not alter that historical release, does not change `.github/release-manifest.json`, and does not publish or imply `v0.2.0`. Human comprehension, direct production-host confirmation, complete WCAG 2.2 AA conformance, real Gravity Flow Inbox/GPP integration, and unavailable dependency regressions remain unproven, and the source must not be labeled `PRODUCTION_QUALIFIED_FOR_SRWF` on that basis.
 
 Exact-head workflow/run/artifact identities belong in focused PR/release evidence rather than durable current-state text that would become stale when lifecycle state changes.
 
-The approved Automated Qualification Lab extends the existing disposable runtime-lab through WU-07 where behavior can be reproduced honestly. It favors deterministic fixtures, real-browser assertions when needed, machine-readable evidence and useful failure artifacts. Human comprehension and irreducibly production-specific confirmation remain separate evidence classes, and unavailable real dependencies must not be represented by synthetic PASS claims.
+The approved Automated Qualification Lab extends the existing disposable runtime-lab through WU-07 and bounded later host-canvas qualification where behavior can be reproduced honestly. It favors deterministic fixtures, real-browser assertions when needed, machine-readable evidence and useful failure artifacts. Human comprehension and irreducibly production-specific confirmation remain separate evidence classes, and unavailable real dependencies must not be represented by synthetic PASS claims.
 
 ## Repository layout
 
@@ -162,6 +176,7 @@ The approved Automated Qualification Lab extends the existing disposable runtime
 ├── docs/
 │   ├── architecture/
 │   │   ├── MOTHER_ARCHITECTURE.md
+│   │   ├── INBOX_FULL_WIDTH_HOST_CANVAS_AMENDMENT.md
 │   │   ├── AUTOMATED_QUALIFICATION_LAB.md
 │   │   ├── PERSONAL_GITHUB_RELEASE_POLICY.md
 │   │   └── PPDM_ADOPTION.md
@@ -188,6 +203,8 @@ The approved Automated Qualification Lab extends the existing disposable runtime
 │   └── runtime-lab/
 │       ├── fixture-plugin/
 │       │   └── srwf-host-companion-wu06-fixture.php
+│       ├── wu02-runtime-core.php
+│       ├── wu03-owner-settings.php
 │       ├── wu05-full-width.php
 │       └── wu06-admin-fixtures.php
 ├── AGENTS.md
@@ -214,7 +231,7 @@ test/
 chore/
 ```
 
-Each material PR must state its scope, governing architecture, what behavior remains unchanged, tests actually run, unproven/runtime-sensitive checks, and release impact.
+Each material PR must state its scope, governing architecture/amendment, what behavior remains unchanged, tests actually run, unproven/runtime-sensitive checks, and release impact.
 
 ## Evidence discipline
 
@@ -228,7 +245,7 @@ NOT_PROVEN
 ENVIRONMENT_UNAVAILABLE
 ```
 
-A unit test does not prove browser behavior. Source inspection does not prove production runtime. A fixture that creates prerequisite state does not prove the Owner can reach that state through the real product path. Automated accessibility scanning does not, by itself, prove full WCAG 2.2 AA conformance. Disposable exact-version CI does not, by itself, prove the real production host. Mechanical browser E2E does not prove human comprehension.
+A unit test does not prove browser behavior. Source inspection does not prove production runtime. A fixture that creates prerequisite state does not prove the Owner can reach that state through the real product path. Automated accessibility scanning does not, by itself, prove full WCAG 2.2 AA conformance. Disposable exact-version CI does not, by itself, prove the real production host. Mechanical browser E2E does not prove human comprehension. Synthetic Inbox host-canvas geometry does not prove Gravity Flow Inbox or GPP integration.
 
 ## License and personal distribution
 

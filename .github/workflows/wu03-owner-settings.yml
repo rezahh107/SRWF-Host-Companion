@@ -9,6 +9,7 @@ on:
       - 'src/**'
       - 'templates/**'
       - 'tests/runtime-lab/wu03-owner-settings.php'
+      - 'tests/runtime-lab/wu03-inbox-missing-nonce.php'
       - '.github/workflows/wu03-owner-settings.yml'
 
 permissions:
@@ -117,6 +118,7 @@ jobs:
         run: |
           set -Eeuo pipefail
           php "$SRWF_WP_CLI" --path="$SRWF_WP_PATH" eval-file "$GITHUB_WORKSPACE/tests/runtime-lab/wu03-owner-settings.php"
+          php "$SRWF_WP_CLI" --path="$SRWF_WP_PATH" eval-file "$GITHUB_WORKSPACE/tests/runtime-lab/wu03-inbox-missing-nonce.php"
           test -s "$SRWF_WU03_EVIDENCE_PATH"
 
       - name: Validate evidence and publish summary
@@ -147,9 +149,24 @@ jobs:
               'nonce_failure_fails_closed',
               'target_edit_capability_enforced',
               'truthful_success_result',
+              'independent_inbox_selector_present',
+              'inbox_security_guards_proven',
+              'inbox_missing_nonce_fails_closed',
+              'inbox_schema_v2_upgrade_proven',
+              'inbox_assignment_readback_proven',
+              'inbox_page_content_unchanged',
+              'inbox_previous_page_not_rewritten',
+              'inbox_preserves_registration',
+              'registration_preserves_inbox',
           ]
           claims = data['claims']
           assert all(claims.get(key) is True for key in required)
+          missing_nonce = data['inbox_missing_nonce_result']
+          assert missing_nonce['code'] == 'nonce_invalid'
+          assert missing_nonce['role'] == 'inbox'
+          assert missing_nonce['success'] is False
+          assert missing_nonce['configuration_saved'] is False
+          assert missing_nonce['template_applied'] is False
           assert claims['browser_e2e_proven'] is False
           assert claims['full_width_geometry_proven'] is False
           assert claims['diagnostics_drift_proven'] is False
@@ -168,9 +185,9 @@ jobs:
           env = d['environment']
           print(f"- capture status: `{d['capture_status']}`")
           print(f"- exact disposable tuple: WordPress `{env['wordpress_version']}`, PHP `{env['php_version']}`, `{env['theme_name']}` `{env['theme_version']}`")
-          print('- settings registration, side-effect-free render, authorization/nonce guards, page classification, schema-v1 persistence, assignment/readback, page-change safety, and truthful bounded result state: `PASS`')
+          print('- Registration workflow regression, independent Inbox selector/action, schema-v1 read compatibility, explicit Inbox schema-v2 persistence, role preservation, assignment/readback, previous-page no-rewrite, page-content preservation, authorization, invalid/missing nonce guards, and truthful bounded results: `PASS`')
           print('- evidence level: `WORDPRESS_INTEGRATION` (not browser/E2E)')
-          print('- WU-04 diagnostics/drift, WU-05 Full Width geometry, browser/E2E, accessibility/comprehension qualification, and production qualification: `NOT_PROVEN`')
+          print('- Inbox Full Width browser geometry: covered by WU-05; real Gravity Flow Inbox/GPP integration: `NOT_PROVEN`; human comprehension and production qualification: `NOT_PROVEN`')
           PY
 
       - name: Upload machine-readable WU-03 evidence
