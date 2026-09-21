@@ -10,7 +10,8 @@ This file is the operating contract for coding agents and automated contributors
 - **Primary operator:** non-technical Owner / WordPress administrator
 - **Canonical architecture:** `docs/architecture/MOTHER_ARCHITECTURE.md`
 - **Owner-approved qualification amendment:** `docs/architecture/AUTOMATED_QUALIFICATION_LAB.md`
-- **V0 status:** architecture approved and frozen; WU-01 prerequisite complete; WU-02 minimal runtime core, WU-03 Owner settings workflow, WU-04 diagnostics/drift, and WU-05 Full Width geometry are implemented on `main`; WU-06 admin browser RTL/security/accessibility qualification is implemented in PR #10 and automated-qualified on the pinned target tuple; WU-07 browser/E2E/comprehension/release-gate work remains open; Automated Qualification Lab includes WU-04 integration, WU-05 frontend-browser, and WU-06 admin-browser slices; production qualification `NOT_PROVEN`
+- **Owner-approved personal release policy:** `docs/architecture/PERSONAL_GITHUB_RELEASE_POLICY.md`
+- **V0 status:** architecture approved and frozen; WU-01 through WU-06 are implemented and qualified to their documented boundaries; WU-07 mechanical Owner E2E is implemented and real-browser qualified on the pinned target tuple; human comprehension, production-host confirmation, unavailable real dependency evidence, complete WCAG 2.2 AA conformance, and `PRODUCTION_QUALIFIED_FOR_SRWF` remain unproven; personal GitHub release policy is Owner-locked for `v0.1.0` under `GPL-2.0-or-later` with WordPress `7.1` / PHP `8.3` release minimums; no GitHub Release has been published
 
 The plugin exists to make SRWF host configuration deterministic, understandable, explicit, and verifiable.
 
@@ -24,8 +25,9 @@ Before any implementation, refactor, technical review, debugging, or architectur
 2. read this `AGENTS.md`;
 3. read `docs/architecture/PPDM_ADOPTION.md` when the task affects admin UX, diagnostics, guidance, accessibility, i18n/RTL, or qualification;
 4. read `docs/architecture/AUTOMATED_QUALIFICATION_LAB.md` when the task affects WU-04→WU-07 qualification strategy, CI evidence, browser testing, accessibility automation, release-candidate automation, or failure artifacts;
-5. read `docs/implementation/V0_IMPLEMENTATION_PLAN.md` when the task belongs to V0;
-6. inspect the current repository state and exact target runtime facts relevant to the task.
+5. read `docs/architecture/PERSONAL_GITHUB_RELEASE_POLICY.md` when the task affects personal GitHub distribution, release identity/version, license, release minimum WordPress/PHP, release notes, release-candidate consistency, personal-release readiness, or release-gate interpretation;
+6. read `docs/implementation/V0_IMPLEMENTATION_PLAN.md` when the task belongs to V0;
+7. inspect the current repository state and exact target runtime facts relevant to the task.
 
 Do not claim a preflight occurred if the files were not actually inspected.
 
@@ -36,10 +38,12 @@ For version-sensitive WordPress behavior, current official target-version WordPr
 For normative project decisions:
 
 1. current explicit Owner instruction;
-2. `docs/architecture/MOTHER_ARCHITECTURE.md` and explicit Owner-approved architecture amendments that do not contradict it;
+2. `docs/architecture/MOTHER_ARCHITECTURE.md` and explicit Owner-approved architecture amendments/policies that do not contradict the frozen product mission and ownership boundaries;
 3. accepted project-specific contracts/decisions;
 4. this `AGENTS.md`;
 5. applicable adopted guidance such as `PPDM_ADOPTION.md`.
+
+For personal GitHub release questions specifically, `docs/architecture/PERSONAL_GITHUB_RELEASE_POLICY.md` is the normative authority for distribution channel, release identity, selected license, release minimum WordPress/PHP, release-note claim ceilings, and the distinction between personal-release readiness and `PRODUCTION_QUALIFIED_FOR_SRWF`.
 
 For implementation facts:
 
@@ -289,7 +293,7 @@ Do not add Composer/npm/runtime dependencies without documenting:
 - maintenance/security cost;
 - compatibility consequence.
 
-Do not freeze a minimum PHP version from preference alone. The real production PHP target must be inspected before support policy is locked.
+Do not infer broad compatibility from the personal release minimums. For `v0.1.0`, the release metadata floor is Owner-selected as WordPress `7.1` / PHP `8.3`, while the pinned qualified tuple remains WordPress `7.1.1` / PHP `8.3.33` / Twenty Twenty-Five `1.5`.
 
 For CI qualification, do not substitute a fake PASS when a real licensed/proprietary dependency required for the claim is unavailable. Preserve the affected claim as `NOT_PROVEN` or `ENVIRONMENT_UNAVAILABLE`.
 
@@ -316,6 +320,7 @@ desktop PASS ≠ 390px RTL PASS
 automated accessibility scan PASS ≠ complete WCAG 2.2 AA conformance
 disposable exact-version CI PASS ≠ production-host confirmation
 browser workflow PASS ≠ human comprehension proven
+personal GitHub release ready ≠ PRODUCTION_QUALIFIED_FOR_SRWF
 ```
 
 Do not inflate a narrow test into a broader production-readiness claim.
@@ -324,15 +329,17 @@ For WU-04 through WU-07, prefer extending/reusing the existing disposable runtim
 
 ## 18. Release gate
 
-The authoritative Production Qualification / Release Gate is in the Mother Architecture.
+The authoritative stronger Production Qualification claim remains governed by the Mother Architecture and its evidence requirements.
 
-A development build may exist before every gate passes.
+Personal GitHub release readiness is a distinct Owner-approved policy boundary governed by `docs/architecture/PERSONAL_GITHUB_RELEASE_POLICY.md`.
 
-Automated Qualification Lab success may support an `AUTOMATED_QUALIFICATION_PASS`-style bounded claim when defined by implementation evidence, but it does not replace unresolved human-comprehension or production-specific gates.
+For personal GitHub release work, version, license, release minimum WordPress/PHP, distribution channel, release notes, unresolved-evidence disclosures, and release-candidate consistency must follow that policy. Do not create another release-policy source of truth.
 
-Do not call a build `PRODUCTION_QUALIFIED_FOR_SRWF` while a required gate is unresolved.
+A development/release-candidate build may exist before every Production Qualification gate passes. WU-07 mechanical browser success does not replace human comprehension or direct production-host confirmation.
 
-Do not publish a production release while the repository license is undeclared.
+Do not call a build `PRODUCTION_QUALIFIED_FOR_SRWF` while a required stronger-gate item is unresolved.
+
+The Owner has selected `GPL-2.0-or-later`; release qualification must verify plugin metadata, repository license text, and release-policy routing remain consistent before personal publication.
 
 ## 19. Repository workflow
 
@@ -387,14 +394,15 @@ The bootstrap plugin file may remain inert until the first implementation work u
 
 Stop and report instead of guessing when:
 
-- the Mother Architecture or an applicable approved amendment is missing or contradictory;
+- the Mother Architecture or an applicable approved amendment/policy is missing or contradictory;
+- a release/license/distribution/runtime-minimum/release-note decision conflicts with or cannot be resolved from `docs/architecture/PERSONAL_GITHUB_RELEASE_POLICY.md`;
 - the exact WordPress behavior required by the implementation is unverified;
 - the current production PHP version is needed but unknown;
 - a requested change crosses an ownership boundary;
 - a change requires silent/destructive repair;
 - a test cannot exercise the target being claimed;
 - a required dependency is unavailable and the requested claim would require pretending it was exercised;
-- a release would exceed the evidence ceiling;
-- a production release is requested before a license is explicitly selected.
+- a release claim would exceed its approved evidence ceiling;
+- `PRODUCTION_QUALIFIED_FOR_SRWF` would be asserted while stronger required evidence remains unresolved.
 
 Prefer explicit `NOT_PROVEN` to false closure.
