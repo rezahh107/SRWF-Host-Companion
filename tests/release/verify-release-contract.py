@@ -200,8 +200,8 @@ def validate(root: Path) -> list[str]:
         errors.append("CHANGELOG current WU-07 status is still NOT_RUN")
     if "WU07_MECHANICAL_OWNER_E2E_PASS_ON_PINNED_TARGET_TUPLE" not in status_section:
         errors.append("CHANGELOG current status does not record WU-07 mechanical qualification")
-    if "Production qualification: NOT_PROVEN" not in status_section:
-        errors.append("CHANGELOG no longer preserves Production qualification = NOT_PROVEN")
+    if "PRODUCTION_QUALIFIED_FOR_SRWF: NOT_PROVEN" not in status_section:
+        errors.append("CHANGELOG no longer preserves PRODUCTION_QUALIFIED_FOR_SRWF = NOT_PROVEN")
     if "Production release: NOT_PUBLISHED" not in status_section:
         errors.append("CHANGELOG no longer preserves Production release = NOT_PUBLISHED")
 
