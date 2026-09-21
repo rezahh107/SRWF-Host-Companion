@@ -24,7 +24,7 @@ final class TemplateDiagnostics {
 		$page_id    = Configuration::get_registration_page_id();
 		$page       = 0 === $page_id ? self::unconfigured_page() : self::classify_page( $page_id );
 		$assignment = self::inspect_assignment( $page_id, $page );
-		$resolution = self::inspect_resolution();
+		$resolution = self::with_legacy_resolution_aliases( self::inspect_resolution() );
 		$primary_state = self::primary_state( $page, $assignment, $resolution );
 		return array(
 			'status'             => self::overall_status( $primary_state ),
@@ -317,6 +317,45 @@ final class TemplateDiagnostics {
 
 	private static function not_proven_transformed( $reason ) {
 		return array( 'status' => 'NOT_PROVEN', 'basis' => 'GET_BLOCK_TEMPLATES_RETURNED_CONTENT', 'transformation_status' => 'NOT_PROVEN', 'reason' => (string) $reason, 'fingerprint' => '' );
+	}
+
+	/**
+	 * Preserve the reviewed WU-04 UI/report field shape while sourcing truth from
+	 * the repaired nested provider/raw-source/transformed evidence model.
+	 *
+	 * @param array<string,mixed> $resolution Resolution result.
+	 * @return array<string,mixed>
+	 */
+	private static function with_legacy_resolution_aliases( $resolution ) {
+		if ( ! isset( $resolution['evidence'] ) || ! is_array( $resolution['evidence'] ) ) {
+			return $resolution;
+		}
+
+		$evidence    = $resolution['evidence'];
+		$provider    = is_array( $evidence['provider'] ?? null ) ? $evidence['provider'] : array();
+		$comparison  = is_array( $evidence['source_comparison'] ?? null ) ? $evidence['source_comparison'] : array();
+		$transformed = is_array( $evidence['transformed_resolved'] ?? null ) ? $evidence['transformed_resolved'] : array();
+
+		$evidence['id']                        = (string) ( $provider['id'] ?? '' );
+		$evidence['source']                    = (string) ( $provider['source'] ?? '' );
+		$evidence['origin']                    = (string) ( $provider['origin'] ?? '' );
+		$evidence['plugin']                    = (string) ( $provider['plugin'] ?? '' );
+		$evidence['wp_id']                     = (int) ( $provider['wp_id'] ?? 0 );
+		$evidence['has_theme_file']            = (bool) ( $provider['has_theme_file'] ?? false );
+		$evidence['canonical_fingerprint']     = (string) ( $comparison['canonical_fingerprint'] ?? '' );
+		$evidence['resolved_fingerprint']      = (string) ( $transformed['fingerprint'] ?? '' );
+		$evidence['content_matches_canonical'] = $comparison['content_matches_canonical'] ?? null;
+
+		if ( 'PASS' === ( $comparison['status'] ?? '' ) ) {
+			$evidence['content_comparison'] = 'NORMALIZED_RAW_SOURCE_COMPARISON';
+		} elseif ( 'plugin' === ( $provider['source'] ?? '' ) && 'plugin' === ( $provider['origin'] ?? '' ) && 'srwf-host-companion' === ( $provider['plugin'] ?? '' ) ) {
+			$evidence['content_comparison'] = 'NATIVE_PLUGIN_RESOLUTION_NOT_DIRECTLY_COMPARABLE';
+		} else {
+			$evidence['content_comparison'] = 'NOT_PROVEN';
+		}
+
+		$resolution['evidence'] = $evidence;
+		return $resolution;
 	}
 
 	private static function core_transformation_status( $provider ) {
