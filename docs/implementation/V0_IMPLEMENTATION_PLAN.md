@@ -1,7 +1,7 @@
 # V0 Implementation Plan
 
-**Status:** `APPROVED_SEQUENCE / EXECUTION_IN_PROGRESS`  
-**Governing authority:** `docs/architecture/MOTHER_ARCHITECTURE.md` plus Owner-approved amendments/policies  
+**Status:** `APPROVED_SEQUENCE / EXECUTION_IN_PROGRESS`
+**Governing authority:** `docs/architecture/MOTHER_ARCHITECTURE.md` plus Owner-approved amendments/policies
 **Purpose:** break the frozen V0 architecture into bounded implementation work without reopening architecture selection.
 
 This plan is operational sequencing, not a second architecture authority.
