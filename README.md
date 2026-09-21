@@ -2,7 +2,7 @@
 
 Project-specific WordPress host integration layer for SRWF: deterministic block templates, full-width shells, runtime/template governance, diagnostics, and future bounded host-level integrations.
 
-> **Current status:** V0 architecture is frozen and approved. WU-01 target-runtime facts and WU-02 minimal runtime core are complete. WU-03 Owner settings workflow is implemented in PR #6 with exact-target WordPress integration evidence; diagnostics/drift, Full Width geometry qualification, browser/E2E, accessibility/comprehension qualification, and production qualification are still pending.
+> **Current status:** V0 architecture is frozen and approved. WU-01 target-runtime facts, WU-02 minimal runtime core, and WU-03 Owner settings workflow are merged on `main`. WU-04 diagnostics/drift, WU-05 Full Width browser geometry, WU-06 admin qualification, WU-07 browser E2E/comprehension/release gate, and production qualification remain open. The Owner has approved an Automated Qualification Lab direction to move the largest practical share of repeatable WU-04→WU-07 technical qualification into deterministic CI without treating CI as production-equivalent evidence.
 
 ## Purpose
 
@@ -59,12 +59,13 @@ A separate Operational template is **not** part of V0. It may be added only if I
 Read these before implementation or technical review:
 
 1. [`docs/architecture/MOTHER_ARCHITECTURE.md`](docs/architecture/MOTHER_ARCHITECTURE.md) — canonical V0 architecture and invariants.
-2. [`AGENTS.md`](AGENTS.md) — operating contract for coding agents and automated contributors.
-3. [`docs/architecture/PPDM_ADOPTION.md`](docs/architecture/PPDM_ADOPTION.md) — selectively adopted WordPress/self-guided UX guidance.
-4. [`docs/implementation/V0_IMPLEMENTATION_PLAN.md`](docs/implementation/V0_IMPLEMENTATION_PLAN.md) — bounded execution sequence and current work-unit status.
-5. [`docs/implementation/WU01_RUNTIME_FACTS.md`](docs/implementation/WU01_RUNTIME_FACTS.md) — target-runtime evidence and page-template contract.
+2. [`docs/architecture/AUTOMATED_QUALIFICATION_LAB.md`](docs/architecture/AUTOMATED_QUALIFICATION_LAB.md) — Owner-approved qualification-evidence amendment; extends the Mother Architecture without replacing the Release Gate.
+3. [`AGENTS.md`](AGENTS.md) — operating contract for coding agents and automated contributors.
+4. [`docs/architecture/PPDM_ADOPTION.md`](docs/architecture/PPDM_ADOPTION.md) — selectively adopted WordPress/self-guided UX guidance.
+5. [`docs/implementation/V0_IMPLEMENTATION_PLAN.md`](docs/implementation/V0_IMPLEMENTATION_PLAN.md) — bounded execution sequence and current work-unit status.
+6. [`docs/implementation/WU01_RUNTIME_FACTS.md`](docs/implementation/WU01_RUNTIME_FACTS.md) — target-runtime evidence and page-template contract.
 
-The Mother Architecture is frozen for V0. Implementation may change low-level mechanisms only when the approved contracts and invariants remain intact.
+The Mother Architecture is frozen for V0. Owner-approved architecture amendments may extend implementation/evidence policy while preserving the frozen V0 product mission, boundaries and Release Gate.
 
 ## Platform policy
 
@@ -90,26 +91,29 @@ Observed production identity provenance and disposable runtime behavior are dist
 ## Repository status
 
 ```text
-Architecture: APPROVED / FROZEN FOR V0
+Architecture: APPROVED / FROZEN FOR V0 + OWNER-APPROVED QUALIFICATION-LAB AMENDMENT
 WU-01 runtime-fact prerequisite: COMPLETE_FOR_WU02
 WU-02 minimal runtime core: IMPLEMENTED_ON_MAIN
 Configuration schema v1: IMPLEMENTED
 Registration template registration: IMPLEMENTED
 Exact page-template assignment adapter: IMPLEMENTED
-WU-03 Owner settings workflow: IMPLEMENTED / WORDPRESS_INTEGRATION_PROVEN_IN_PR_6
+WU-03 Owner settings workflow: IMPLEMENTED_ON_MAIN / WORDPRESS_INTEGRATION_PROVEN
 WU-04 runtime diagnostics/drift: NOT_IMPLEMENTED
 WU-05 Full Width geometry qualification: NOT_PROVEN
 WU-06 admin UX/security/RTL/accessibility qualification: NOT_RUN
 WU-07 browser/E2E release gate: NOT_RUN
+Automated Qualification Lab: APPROVED_DIRECTION / NOT_YET_FULLY_IMPLEMENTED
 Production qualification: NOT_PROVEN
 Production release: NOT_PUBLISHED
 ```
 
 WU-03 adds the real Owner-facing workflow under `Settings → SRWF Host`: Persian-first first-run guidance, one WordPress-page selector backed only by schema-v1 `roles.registration.page_id`, the explicit `ذخیره و اعمال قالب تمام‌عرض` action, page-state classification, capability/nonce guards, canonical assignment/readback, page-change safety, and truthful bounded result messages. It introduces no admin or frontend JavaScript/CSS.
 
-Exact-target WU-03 CI on PR #6 uses WordPress `7.1.1`, PHP `8.3.33`, and Twenty Twenty-Five `1.5`. The evidence level is WordPress integration. It does **not** prove browser/E2E behavior, Persian RTL visual quality, accessibility/comprehension, WU-04 diagnostics/drift, WU-05 Full Width geometry, or production qualification.
+PR #6 merged WU-03 to `main` as `18fd0b3959301d2bd1066d255a9eb3f1897c199e`. Exact-head WU-03 CI used WordPress `7.1.1`, PHP `8.3.33`, and Twenty Twenty-Five `1.5`; WU-01 and WU-02 regression workflows also passed on the same PR head. The evidence level is WordPress integration. It does **not** prove browser/E2E behavior, Persian RTL visual quality, accessibility/comprehension, WU-04 diagnostics/drift, WU-05 Full Width geometry, or production qualification.
 
 WU-02 remains the runtime owner of the canonical template registration and exact page-template assignment/readback primitive. WU-03 composes those existing primitives through an explicit authorized Owner action; rendering the settings screen does not assign or repair templates.
+
+The approved Automated Qualification Lab extends the existing disposable runtime-lab for WU-04 through WU-07 where behavior can be reproduced honestly. It favors deterministic fixtures, real-browser assertions when needed, machine-readable evidence and useful failure artifacts. Human comprehension and irreducibly production-specific confirmation remain separate evidence requirements, and unavailable real dependencies must not be represented by synthetic PASS claims.
 
 ## Repository layout
 
@@ -124,6 +128,7 @@ WU-02 remains the runtime owner of the canonical template registration and exact
 ├── docs/
 │   ├── architecture/
 │   │   ├── MOTHER_ARCHITECTURE.md
+│   │   ├── AUTOMATED_QUALIFICATION_LAB.md
 │   │   └── PPDM_ADOPTION.md
 │   ├── evidence/
 │   │   └── PRODUCTION_SITE_HEALTH_IDENTITY.md
@@ -176,7 +181,7 @@ NOT_PROVEN
 ENVIRONMENT_UNAVAILABLE
 ```
 
-A unit test does not prove browser behavior. Source inspection does not prove production runtime. A fixture that creates prerequisite state does not prove the Owner can reach that state through the real product path.
+A unit test does not prove browser behavior. Source inspection does not prove production runtime. A fixture that creates prerequisite state does not prove the Owner can reach that state through the real product path. Automated accessibility scanning does not, by itself, prove full WCAG 2.2 AA conformance. Disposable exact-version CI does not, by itself, prove the real production host.
 
 ## License
 

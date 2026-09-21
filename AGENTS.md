@@ -9,7 +9,8 @@ This file is the operating contract for coding agents and automated contributors
 - **Primary consumer:** SRWF
 - **Primary operator:** non-technical Owner / WordPress administrator
 - **Canonical architecture:** `docs/architecture/MOTHER_ARCHITECTURE.md`
-- **V0 status:** architecture approved and frozen; WU-01 prerequisite complete; WU-02 minimal runtime core implemented on `main`; WU-03/WU-04 not implemented; WU-05 Full Width geometry `NOT_PROVEN`; WU-06/WU-07 qualification and browser/E2E `NOT_RUN`; production qualification `NOT_PROVEN`
+- **Owner-approved qualification amendment:** `docs/architecture/AUTOMATED_QUALIFICATION_LAB.md`
+- **V0 status:** architecture approved and frozen; WU-01 prerequisite complete; WU-02 minimal runtime core and WU-03 Owner settings workflow are implemented on `main`; WU-04 not implemented; WU-05 Full Width geometry `NOT_PROVEN`; WU-06/WU-07 browser/qualification work remains open; Automated Qualification Lab direction is approved but not yet fully implemented; production qualification `NOT_PROVEN`
 
 The plugin exists to make SRWF host configuration deterministic, understandable, explicit, and verifiable.
 
@@ -22,8 +23,9 @@ Before any implementation, refactor, technical review, debugging, or architectur
 1. read `docs/architecture/MOTHER_ARCHITECTURE.md`;
 2. read this `AGENTS.md`;
 3. read `docs/architecture/PPDM_ADOPTION.md` when the task affects admin UX, diagnostics, guidance, accessibility, i18n/RTL, or qualification;
-4. read `docs/implementation/V0_IMPLEMENTATION_PLAN.md` when the task belongs to V0;
-5. inspect the current repository state and exact target runtime facts relevant to the task.
+4. read `docs/architecture/AUTOMATED_QUALIFICATION_LAB.md` when the task affects WU-04→WU-07 qualification strategy, CI evidence, browser testing, accessibility automation, release-candidate automation, or failure artifacts;
+5. read `docs/implementation/V0_IMPLEMENTATION_PLAN.md` when the task belongs to V0;
+6. inspect the current repository state and exact target runtime facts relevant to the task.
 
 Do not claim a preflight occurred if the files were not actually inspected.
 
@@ -34,7 +36,7 @@ For version-sensitive WordPress behavior, current official target-version WordPr
 For normative project decisions:
 
 1. current explicit Owner instruction;
-2. `docs/architecture/MOTHER_ARCHITECTURE.md`;
+2. `docs/architecture/MOTHER_ARCHITECTURE.md` and explicit Owner-approved architecture amendments that do not contradict it;
 3. accepted project-specific contracts/decisions;
 4. this `AGENTS.md`;
 5. applicable adopted guidance such as `PPDM_ADOPTION.md`.
@@ -65,6 +67,8 @@ V0 includes:
 - Persian-first translatable admin UX;
 - security and authorization guards;
 - unit/integration/E2E evidence appropriate to the claim.
+
+The approved Automated Qualification Lab strengthens how repeatable technical evidence is produced; it does not expand the product scope.
 
 V0 does **not** include a separate Operational template unless architecture is amended after real Inbox / Entry Detail evidence.
 
@@ -254,7 +258,7 @@ A copyable diagnostic report must exclude student data, Gravity entry values, up
 - Use semantic HTML and native controls.
 - Preserve keyboard usability and visible focus.
 - Do not convey state by color alone.
-- Accessibility baseline is WCAG 2.2 AA, but conformance claims require appropriate runtime evidence.
+- Accessibility baseline is WCAG 2.2 AA, but conformance claims require appropriate runtime and human evidence; automated accessibility scanning alone is not a conformance claim.
 
 For the plugin's own wp-admin UI, native WordPress admin typography is the default unless a later approved requirement says otherwise.
 
@@ -287,6 +291,8 @@ Do not add Composer/npm/runtime dependencies without documenting:
 
 Do not freeze a minimum PHP version from preference alone. The real production PHP target must be inspected before support policy is locked.
 
+For CI qualification, do not substitute a fake PASS when a real licensed/proprietary dependency required for the claim is unavailable. Preserve the affected claim as `NOT_PROVEN` or `ENVIRONMENT_UNAVAILABLE`.
+
 ## 17. Validation and claim ceiling
 
 Use explicit evidence states:
@@ -307,15 +313,22 @@ registration template registered ≠ page assignment proven
 fixture state PASS ≠ Owner reachability proven
 source inspection ≠ production runtime proof
 desktop PASS ≠ 390px RTL PASS
+automated accessibility scan PASS ≠ complete WCAG 2.2 AA conformance
+disposable exact-version CI PASS ≠ production-host confirmation
+browser workflow PASS ≠ human comprehension proven
 ```
 
 Do not inflate a narrow test into a broader production-readiness claim.
+
+For WU-04 through WU-07, prefer extending/reusing the existing disposable runtime-lab into deterministic qualification automation when the behavior can be reproduced faithfully. Preserve clear per-WU evidence boundaries; use real browser automation where browser evidence is required; retain diagnostic failure artifacts only when useful. Full/expensive qualification need not run on every trivial PR when focused checks plus a justified release-candidate/full-qualification boundary provide equal confidence.
 
 ## 18. Release gate
 
 The authoritative Production Qualification / Release Gate is in the Mother Architecture.
 
 A development build may exist before every gate passes.
+
+Automated Qualification Lab success may support an `AUTOMATED_QUALIFICATION_PASS`-style bounded claim when defined by implementation evidence, but it does not replace unresolved human-comprehension or production-specific gates.
 
 Do not call a build `PRODUCTION_QUALIFIED_FOR_SRWF` while a required gate is unresolved.
 
@@ -374,12 +387,13 @@ The bootstrap plugin file may remain inert until the first implementation work u
 
 Stop and report instead of guessing when:
 
-- the Mother Architecture is missing or contradictory;
+- the Mother Architecture or an applicable approved amendment is missing or contradictory;
 - the exact WordPress behavior required by the implementation is unverified;
 - the current production PHP version is needed but unknown;
 - a requested change crosses an ownership boundary;
 - a change requires silent/destructive repair;
 - a test cannot exercise the target being claimed;
+- a required dependency is unavailable and the requested claim would require pretending it was exercised;
 - a release would exceed the evidence ceiling;
 - a production release is requested before a license is explicitly selected.
 
