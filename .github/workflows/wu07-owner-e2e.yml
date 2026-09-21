@@ -11,12 +11,14 @@ on:
       - 'tests/runtime-lab/wu06-admin-fixtures.php'
       - 'tests/runtime-lab/fixture-plugin/srwf-host-companion-wu06-fixture.php'
       - 'tests/browser/wu07-owner-e2e.mjs'
+      - 'tests/release/verify-release-contract.py'
       - '.github/workflows/wu07-owner-e2e.yml'
       - 'docs/architecture/PERSONAL_GITHUB_RELEASE_POLICY.md'
       - 'README.md'
       - 'CHANGELOG.md'
       - 'AGENTS.md'
       - 'docs/implementation/V0_IMPLEMENTATION_PLAN.md'
+      - 'LICENSE'
 
 permissions:
   contents: read
@@ -71,6 +73,16 @@ jobs:
           test "$GITHUB_REPOSITORY" = 'rezahh107/SRWF-Host-Companion'
           test "$(git rev-parse HEAD)" = "$SRWF_TESTED_COMMIT_SHA"
           mkdir -p "$SRWF_ARTIFACT_DIR" "$SRWF_WU07_SCRATCH_DIR" "$SRWF_WP_PATH"
+
+      - name: Verify and falsify release contract consistency
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          python3 -m py_compile tests/release/verify-release-contract.py
+          python3 tests/release/verify-release-contract.py --self-test
+          python3 tests/release/verify-release-contract.py --root .
+          git fetch --no-tags origin main --depth=1
+          git diff --check FETCH_HEAD HEAD
 
       - name: Set up exact PHP runtime
         uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240
