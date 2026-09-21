@@ -4,7 +4,7 @@ SRWF Host Companion is a project-specific WordPress host-integration plugin.
 
 ## Current status
 
-V0 architecture remains approved and frozen. WU-01 through WU-07 mechanical qualification are implemented/qualified to their documented claim ceilings, and the personal/project-specific GitHub Release `v0.1.0` is published. The qualified target remains WordPress `7.1.1`, PHP `8.3.33`, and Twenty Twenty-Five `1.5`.
+V0 architecture remains approved and frozen. WU-01 through WU-07 mechanical qualification are implemented/qualified to their documented claim ceilings, the bounded Inbox Full Width amendment is implemented/qualified, and the personal/project-specific GitHub Release `v0.2.0` is published. The qualified target remains WordPress `7.1.1`, PHP `8.3.33`, and Twenty Twenty-Five `1.5`.
 
 This published personal release is **not** a claim of `PRODUCTION_QUALIFIED_FOR_SRWF`. Human comprehension, direct production-host confirmation, complete WCAG 2.2 AA conformance, and unavailable real Gravity Forms / Orbital / GTB / Vazir-Vazirmatn integration remain explicitly unproven.
 
@@ -28,7 +28,7 @@ Use a private channel with the repository Owner for sensitive reports. If GitHub
 
 ## Published version
 
-Current personal GitHub release: `v0.1.0`.
+Current personal GitHub release: `v0.2.0`.
 
 Release metadata floor:
 
