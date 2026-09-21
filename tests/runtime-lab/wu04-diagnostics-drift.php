@@ -187,11 +187,15 @@ srwf_wu04_assert( current_user_can( 'manage_options' ), 'Runtime administrator l
 
 $canonical = \SRWF\HostCompanion\TemplateRegistrar::get_canonical_content();
 srwf_wu04_assert( is_string( $canonical ) && '' !== $canonical, 'Canonical template content is unavailable.' );
-$serialization_variant = str_replace( '<!-- wp:post-content /-->', '<!-- wp:post-content/-->', $canonical );
+$serialization_variant = str_replace(
+	'<!-- wp:template-part {"slug":"header","tagName":"header"} /-->',
+	'<!-- wp:template-part { "slug": "header", "tagName": "header" } /-->',
+	$canonical
+);
 srwf_wu04_assert( $serialization_variant !== $canonical, 'Normalization fixture did not change raw serialization.' );
 srwf_wu04_assert(
 	\SRWF\HostCompanion\TemplateDiagnostics::fingerprint_content( $serialization_variant ) === \SRWF\HostCompanion\TemplateDiagnostics::fingerprint_content( $canonical ),
-	'parse_blocks()/serialize_blocks() did not normalize harmless block-comment serialization trivia.'
+	'parse_blocks()/serialize_blocks() did not normalize valid block-attribute serialization whitespace.'
 );
 $material_drift = $canonical . "\n<!-- wp:paragraph --><p>SRWF_WU04_TEMPLATE_DRIFT_MARKER</p><!-- /wp:paragraph -->\n";
 srwf_wu04_assert(
