@@ -16,11 +16,6 @@ if ( ! $evidence_path ) {
 	exit( 2 );
 }
 
-/**
- * @param bool   $condition Condition.
- * @param string $message Failure message.
- * @return void
- */
 function srwf_wu03_assert( $condition, $message ) {
 	if ( ! $condition ) {
 		fwrite( STDERR, "WU-03 assertion failed: {$message}\n" );
@@ -28,30 +23,15 @@ function srwf_wu03_assert( $condition, $message ) {
 	}
 }
 
-/**
- * @param string $message Message.
- * @param string $title Title.
- * @param array  $args Args.
- * @throws RuntimeException Always.
- * @return void
- */
 function srwf_wu03_wp_die_handler( $message, $title = '', $args = array() ) {
 	unset( $title, $args );
 	throw new RuntimeException( wp_strip_all_tags( (string) $message ) );
 }
 
-/**
- * @return string
- */
 function srwf_wu03_wp_die_handler_filter() {
 	return 'srwf_wu03_wp_die_handler';
 }
 
-/**
- * @param string $title Synthetic title.
- * @param string $status Post status.
- * @return int
- */
 function srwf_wu03_create_page( $title, $status ) {
 	$id = wp_insert_post(
 		array(
@@ -66,10 +46,6 @@ function srwf_wu03_create_page( $title, $status ) {
 	return (int) $id;
 }
 
-/**
- * @param array<string,mixed> $request Request.
- * @return array<string,mixed>
- */
 function srwf_wu03_process( $request ) {
 	return \SRWF\HostCompanion\AdminSettings::process_save_apply( $request );
 }
@@ -124,7 +100,6 @@ srwf_wu03_assert( has_action( 'admin_post_srwf_host_companion_save_apply', array
 $links = apply_filters( 'plugin_action_links_srwf-host-companion/srwf-host-companion.php', array() );
 srwf_wu03_assert( isset( $links[0] ) && false !== strpos( $links[0], 'page=srwf-host' ), 'Plugin-row Settings action link is unavailable.' );
 
-// First-run render is informative and side-effect-free.
 delete_option( \SRWF\HostCompanion\Configuration::OPTION_NAME );
 update_post_meta( $page_a, '_wp_page_template', 'legacy-render-sentinel' );
 $sentinel_before = get_page_template_slug( $page_a );
@@ -138,7 +113,6 @@ srwf_wu03_assert( false !== strpos( $first_run_html, 'Gravity Forms' ), 'First-r
 srwf_wu03_assert( null === get_option( \SRWF\HostCompanion\Configuration::OPTION_NAME, null ), 'Rendering created configuration state.' );
 srwf_wu03_assert( $sentinel_before === get_page_template_slug( $page_a ), 'Rendering changed a page template assignment.' );
 
-// Rendering an existing configuration is also side-effect-free.
 srwf_wu03_assert( \SRWF\HostCompanion\Configuration::set_registration_page_id( $page_a ), 'Could not seed canonical configuration for render test.' );
 update_post_meta( $page_a, '_wp_page_template', 'legacy-old-template' );
 $config_before_render   = \SRWF\HostCompanion\Configuration::get();
@@ -150,7 +124,6 @@ srwf_wu03_assert( false !== strpos( $configured_html, 'صفحه ثبت‌نام'
 srwf_wu03_assert( $config_before_render === \SRWF\HostCompanion\Configuration::get(), 'Rendering changed stored configuration.' );
 srwf_wu03_assert( $template_before_render === get_page_template_slug( $page_a ), 'Rendering changed configured page template.' );
 
-// Users without manage_options cannot render the screen.
 $subscriber_id = wp_create_user( 'srwf_wu03_subscriber', wp_generate_password( 32, true, true ), 'srwf-wu03-subscriber@example.invalid' );
 srwf_wu03_assert( ! is_wp_error( $subscriber_id ), 'Subscriber user could not be created.' );
 $subscriber = new WP_User( (int) $subscriber_id );
@@ -172,7 +145,6 @@ $base_request = array(
 	\SRWF\HostCompanion\AdminSettings::NONCE_NAME => $admin_nonce,
 );
 
-// Malformed, missing, trashed and wrong-type targets fail closed without corrupting canonical configuration.
 $config_before_invalid = \SRWF\HostCompanion\Configuration::get();
 $invalid = srwf_wu03_process( $base_request + array( \SRWF\HostCompanion\AdminSettings::FIELD_PAGE_ID => '12oops' ) );
 srwf_wu03_assert( 'invalid_page_id' === $invalid['code'], 'Malformed page ID was not rejected.' );
@@ -190,7 +162,6 @@ $wrong_type = srwf_wu03_process( $base_request + array( \SRWF\HostCompanion\Admi
 srwf_wu03_assert( 'page_type_invalid' === $wrong_type['code'], 'Wrong post type was not rejected.' );
 srwf_wu03_assert( $config_before_invalid === \SRWF\HostCompanion\Configuration::get(), 'Wrong post type corrupted canonical configuration.' );
 
-// Nonce failure prevents all mutation.
 $page_b_before_nonce = get_page_template_slug( $page_b );
 $nonce_failure = srwf_wu03_process(
 	array(
@@ -202,7 +173,6 @@ srwf_wu03_assert( 'nonce_invalid' === $nonce_failure['code'], 'Invalid nonce was
 srwf_wu03_assert( $config_before_invalid === \SRWF\HostCompanion\Configuration::get(), 'Nonce failure changed canonical configuration.' );
 srwf_wu03_assert( $page_b_before_nonce === get_page_template_slug( $page_b ), 'Nonce failure changed target template.' );
 
-// manage_options alone is insufficient when the user cannot edit the selected page.
 add_role(
 	'srwf_wu03_settings_only',
 	'SRWF WU-03 Settings Only',
@@ -229,7 +199,6 @@ srwf_wu03_assert( 'target_edit_denied' === $edit_denied['code'], 'Target edit ca
 srwf_wu03_assert( $config_before_invalid === \SRWF\HostCompanion\Configuration::get(), 'Target edit denial changed canonical configuration.' );
 srwf_wu03_assert( $page_b_before_nonce === get_page_template_slug( $page_b ), 'Target edit denial changed target template.' );
 
-// Draft/private pages are valid pages but are classified as non-published; an authorized explicit apply is allowed.
 wp_set_current_user( $admin->ID );
 $admin_nonce = wp_create_nonce( \SRWF\HostCompanion\AdminSettings::NONCE_ACTION );
 $draft_result = srwf_wu03_process(
@@ -246,7 +215,6 @@ srwf_wu03_assert( $draft_id === \SRWF\HostCompanion\Configuration::get_registrat
 srwf_wu03_assert( \SRWF\HostCompanion\TemplateRegistrar::TEMPLATE_SLUG === \SRWF\HostCompanion\PageTemplateAssignment::read( $draft_id ), 'Draft page template assignment did not read back.' );
 srwf_wu03_assert( 'legacy-old-template' === get_page_template_slug( $page_a ), 'Changing Registration page silently rewrote the previous page.' );
 
-// A published-page apply persists, assigns, reads back, and reports only the bounded operation as successful.
 $admin_nonce = wp_create_nonce( \SRWF\HostCompanion\AdminSettings::NONCE_ACTION );
 $published_result = srwf_wu03_process(
 	array(
@@ -265,6 +233,15 @@ srwf_wu03_assert( \SRWF\HostCompanion\TemplateRegistrar::TEMPLATE_SLUG === \SRWF
 srwf_wu03_assert( \SRWF\HostCompanion\TemplateRegistrar::TEMPLATE_SLUG === get_page_template_slug( $draft_id ), 'Previous draft page was silently rewritten when selection changed again.' );
 
 $_GET = array( 'srwf_result' => 'success' );
+ob_start();
+\SRWF\HostCompanion\AdminSettings::render_page();
+$spoofed_success_html = (string) ob_get_clean();
+srwf_wu03_assert( false === strpos( $spoofed_success_html, 'فقط موفقیت همین عملیات' ), 'Unsigned result query produced a false success notice.' );
+
+$_GET = array(
+	'srwf_result' => 'success',
+	\SRWF\HostCompanion\AdminSettings::RESULT_NONCE_NAME => wp_create_nonce( 'srwf_host_companion_result_success' ),
+);
 ob_start();
 \SRWF\HostCompanion\AdminSettings::render_page();
 $success_html = (string) ob_get_clean();

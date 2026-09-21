@@ -3,11 +3,12 @@
 namespace SRWF\HostCompanion;
 
 final class AdminSettings {
-	const PAGE_SLUG     = 'srwf-host';
-	const ACTION        = 'srwf_host_companion_save_apply';
-	const NONCE_ACTION  = 'srwf_host_companion_save_apply';
-	const NONCE_NAME    = '_srwf_host_nonce';
-	const FIELD_PAGE_ID = 'srwf_registration_page_id';
+	const PAGE_SLUG         = 'srwf-host';
+	const ACTION            = 'srwf_host_companion_save_apply';
+	const NONCE_ACTION      = 'srwf_host_companion_save_apply';
+	const NONCE_NAME        = '_srwf_host_nonce';
+	const RESULT_NONCE_NAME = '_srwf_result_nonce';
+	const FIELD_PAGE_ID     = 'srwf_registration_page_id';
 
 	/**
 	 * Attach the bounded V0 Owner settings workflow to native wp-admin hooks.
@@ -72,8 +73,13 @@ final class AdminSettings {
 		$current_page_id = Configuration::get_registration_page_id();
 		$result_code     = '';
 
-		if ( isset( $_GET['srwf_result'] ) && is_scalar( $_GET['srwf_result'] ) ) {
-			$result_code = sanitize_key( wp_unslash( (string) $_GET['srwf_result'] ) );
+		if ( isset( $_GET['srwf_result'], $_GET[ self::RESULT_NONCE_NAME ] ) && is_scalar( $_GET['srwf_result'] ) && is_scalar( $_GET[ self::RESULT_NONCE_NAME ] ) ) {
+			$candidate_result = sanitize_key( wp_unslash( (string) $_GET['srwf_result'] ) );
+			$result_nonce     = sanitize_text_field( wp_unslash( (string) $_GET[ self::RESULT_NONCE_NAME ] ) );
+
+			if ( wp_verify_nonce( $result_nonce, self::result_nonce_action( $candidate_result ) ) ) {
+				$result_code = $candidate_result;
+			}
 		}
 		?>
 		<div class="wrap" dir="rtl">
@@ -145,8 +151,9 @@ final class AdminSettings {
 
 		$url = add_query_arg(
 			array(
-				'page'        => self::PAGE_SLUG,
-				'srwf_result' => $result['code'],
+				'page'                   => self::PAGE_SLUG,
+				'srwf_result'            => $result['code'],
+				self::RESULT_NONCE_NAME => wp_create_nonce( self::result_nonce_action( $result['code'] ) ),
 			),
 			admin_url( 'options-general.php' )
 		);
@@ -319,6 +326,16 @@ final class AdminSettings {
 			<p><?php echo esc_html( $message ); ?></p>
 		</div>
 		<?php
+	}
+
+	/**
+	 * Bind an Owner-facing result notice to the actual explicit action response.
+	 *
+	 * @param string $code Internal result code.
+	 * @return string
+	 */
+	private static function result_nonce_action( $code ) {
+		return 'srwf_host_companion_result_' . sanitize_key( $code );
 	}
 
 	/**
