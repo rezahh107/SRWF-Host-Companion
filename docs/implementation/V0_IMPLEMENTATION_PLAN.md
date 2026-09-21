@@ -164,16 +164,24 @@ On WordPress `7.1.1`, PHP `8.3.33`, and Twenty Twenty-Five `1.5`, the dedicated 
 - `WRONG_PAGE_ASSIGNMENT`;
 - `PAGE_NOT_PUBLISHED`;
 - missing/trashed/wrong-post-type forms of `PAGE_INVALID`;
-- `CUSTOMIZED_DB_OVERRIDE`;
-- `THEME_OVERRIDE`;
+- frontend exclusion of matching draft and trashed database `wp_template` objects;
+- positive selection of a matching published `CUSTOMIZED_DB_OVERRIDE`;
+- `CUSTOMIZED_DB_OVERRIDE` under native Block Hooks with canonically equivalent and materially different raw source;
+- `THEME_OVERRIDE` under native Block Hooks with canonically equivalent and materially different raw source;
 - `MISSING_TEMPLATE`;
-- `UNKNOWN` fallback for a resolver result whose provenance does not match the proven plugin/theme/database contracts.
+- `UNKNOWN` through the repaired `get_block_templates()` observation seam.
 
-WordPress 7.1.1 source and runtime evidence establish the relevant resolution order as database template → active-theme file → registered plugin template. The detector classifies only provenance exposed by the resolved `WP_Block_Template`; it does not infer undocumented source semantics.
+WordPress 7.1.1 source and runtime evidence establish two distinct WU-04 evidence boundaries.
 
-Where source and resolved markup are directly comparable, such as database or theme overrides, drift comparison normalizes block markup with `parse_blocks()` → `serialize_blocks()` before SHA-256 fingerprinting. The qualification fixture proves valid serialization whitespace compares equal while an added material block compares different. Registered plugin-template content is transformed by WordPress's native Block Hooks resolution path before it is returned, so WU-04 classifies the canonical plugin provider from proven `source` / `origin` / `plugin` provenance and deliberately leaves raw-source-versus-resolved content equivalence `NOT_PROVEN` instead of depending on private Core APIs or reporting a false mismatch.
+**Active provider evidence** follows the same public published-candidate model used by frontend resolution: exact-slug `get_block_templates()` candidates. Its normal non-`wp_id` database query admits only published `wp_template` objects; matching draft or trashed DB objects therefore do not become active frontend providers and resolution falls through to the eligible theme or registered-plugin provider. A published matching DB object remains eligible and retains Core precedence. Provider classification is derived only from the resulting `WP_Block_Template` provenance; unsupported provenance remains `UNKNOWN`.
 
-For every WU-04 fixture, the lab snapshots relevant persistent state before/after inspection and real settings-page rendering / `Check Again`. PASS requires configuration, page-template assignment, page content, and any DB/theme override fixture to remain unchanged. Missing-template diagnostics also prove that inspection does not silently re-register the removed fixture template.
+**Content drift evidence** comes from raw provider source before Core's Block Hooks transformations. For a proven active DB provider, WU-04 reads the persisted `wp_template` source associated with the proven published `wp_id`. For a proven theme provider, it locates the actual child/parent theme template file through WordPress theme and block-theme-folder APIs and reads that raw file. Comparable raw markup is normalized with `parse_blocks()` → `serialize_blocks()` before SHA-256 fingerprinting. If exact raw source cannot be established, comparison remains `NOT_PROVEN` with `content_matches_canonical = null`; it is never promoted to equality or mismatch from transformed returned content.
+
+The returned `WP_Block_Template->content` is retained only as transformed runtime evidence. Dedicated native Block Hooks falsification fixtures prove that canonically equivalent raw DB and theme source remains a source-level match even when Core changes returned template content, while separate materially changed DB/theme raw-source positive controls still produce a mismatch. This prevents both the original false-mismatch defect and a fix that merely suppresses all drift comparisons.
+
+Registered-plugin provider identity remains proven from WordPress `source` / `origin` / `plugin` provenance. Direct repository-raw-source versus post-resolution plugin content equivalence remains `NOT_PROVEN_NATIVE_BLOCK_HOOKS_TRANSFORM`; product code does not call private Core helpers to manufacture that comparison.
+
+For every WU-04 fixture, the lab snapshots relevant persistent state before/after inspection and real settings-page rendering / `Check Again`. PASS requires configuration, page-template assignment, page content, and DB/theme override source sentinels to remain unchanged. Missing-template diagnostics also prove that inspection does not silently re-register the removed fixture template.
 
 The same settings screen presents Persian-first practical status and next action, with optional technical details and a privacy-minimized read-only report. No CSS, JavaScript, automatic repair, browser automation, or persistent diagnostic cache is introduced by WU-04.
 
