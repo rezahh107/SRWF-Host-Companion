@@ -13,6 +13,7 @@ import subprocess
 import sys
 import tempfile
 from pathlib import Path
+from typing import Callable
 
 POLICY_PATH = Path("docs/architecture/PERSONAL_GITHUB_RELEASE_POLICY.md")
 PLUGIN_PATH = Path("srwf-host-companion.php")
@@ -127,11 +128,12 @@ def validate(root: Path) -> list[str]:
     require_equal(errors, "plugin Requires PHP", plugin["Requires PHP"], facts["php"])
     require_equal(errors, "plugin License", plugin["License"], facts["license"])
 
-    if "GNU GENERAL PUBLIC LICENSE" not in license_text or "Version 2, June 1991" not in license_text:
-        errors.append("LICENSE is not recognizable as GNU GPL version 2 text")
-    if facts["license"] != "GPL-2.0-or-later":
+    if facts["license"] in {"GPL-2.0-only", "GPL-2.0-or-later"}:
+        if "GNU GENERAL PUBLIC LICENSE" not in license_text or "Version 2, June 1991" not in license_text:
+            errors.append("LICENSE is not recognizable as GNU GPL version 2 text")
+    else:
         errors.append(
-            "selected policy license is not the repository-supported GPL-2.0-or-later declaration"
+            f"release-contract verifier has no LICENSE compatibility rule for policy license {facts['license']!r}"
         )
 
     policy_ref = str(POLICY_PATH)
@@ -252,8 +254,7 @@ def self_test(root: Path) -> int:
             print(f"- {error}", file=sys.stderr)
         return 1
 
-    facts = parse_policy(read(root, POLICY_PATH))
-    cases: list[tuple[str, callable]] = []
+    cases: list[tuple[str, Callable[[Path], None]]] = []
 
     def license_mismatch(temp: Path) -> None:
         path = temp / PLUGIN_PATH
@@ -266,7 +267,7 @@ def self_test(root: Path) -> int:
         text = path.read_text(encoding="utf-8")
         text = re.sub(
             r"^(\s*\*\s*Requires at least:\s*).*$",
-            r"\10.0",
+            r"\g<1>0.0",
             text,
             count=1,
             flags=re.MULTILINE,
