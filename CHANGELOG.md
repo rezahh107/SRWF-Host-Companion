@@ -2,7 +2,7 @@
 
 All notable project changes should be recorded here.
 
-The project has not published a production release.
+No GitHub Release has been published yet.
 
 ## [Unreleased]
 
@@ -11,6 +11,7 @@ The project has not published a production release.
 - approved V0 Mother Architecture;
 - PPDM adoption record for relevant WordPress/self-guided UX guidance;
 - Owner-approved Automated Qualification Lab architecture amendment for repeatable WU-04→WU-07 technical qualification in CI while preserving production/human claim boundaries;
+- Owner-approved Personal GitHub Release Policy for project-specific GitHub Releases, `v0.1.0`, `GPL-2.0-or-later`, WordPress `7.1`, PHP `8.3`, release-note claim ceilings, and the explicit distinction between personal-release readiness and `PRODUCTION_QUALIFIED_FOR_SRWF`;
 - repository operating contract (`AGENTS.md`);
 - bounded V0 implementation plan;
 - WordPress plugin bootstrap and minimal WU-02 runtime loader;
@@ -30,21 +31,30 @@ The project has not published a production release.
 - WU-06 real wp-admin qualification reusing the WU-05 Playwright/Chromium foundation, with deterministic first-run/page/drift fixtures, Persian RTL and technical LTR assertions, keyboard/focus and native disclosure checks, `390×900` narrow-admin overflow measurements, authorization/nonce/target-edit failure paths, successful keyboard-driven apply, read-only `بررسی دوباره`, diagnostic privacy, and bounded machine-readable evidence;
 - pinned test-only `@axe-core/playwright` scanning for machine-detectable plugin-scope accessibility violations without promoting that evidence to full WCAG conformance;
 - WU-06 same-head regression orchestration that dispatches and collects WU-01 through WU-05 before accepting the bounded WU-06 result;
+- WU-07 real-browser mechanical Owner E2E covering login, Settings → SRWF Host reachability, first-run guidance, Registration selection, explicit save/apply, truthful success, schema-v1/canonical persistence, frontend Registration opening, canonical shell/RTL/basic host integrity, return to settings, and read-only `Check Again`;
+- release-contract consistency qualification that derives version/license/WordPress/PHP expectations from the Personal GitHub Release Policy and fails closed on release metadata, authority-routing, current-state, or license-text drift;
 - repository hygiene and pull-request foundation.
 
 ### Status
 
 ```text
-Architecture: APPROVED / FROZEN FOR V0 + OWNER-APPROVED QUALIFICATION-LAB AMENDMENT
+Architecture: APPROVED / FROZEN FOR V0 + OWNER-APPROVED QUALIFICATION/RELEASE AMENDMENTS
+Personal GitHub release policy: APPROVED / OWNER_LOCKED
+Release identity: v0.1.0
+License: GPL-2.0-or-later
+Release minimum WordPress/PHP: 7.1 / 8.3
 WU-01: COMPLETE_FOR_WU02
-WU-02: IMPLEMENTED_ON_MAIN
-WU-03 Owner settings workflow: IMPLEMENTED_ON_MAIN / WORDPRESS_INTEGRATION_PROVEN
-WU-04 diagnostics/drift: IMPLEMENTED_ON_MAIN / WORDPRESS_INTEGRATION_QUALIFIED_ON_PINNED_TUPLE
-WU-05 Full Width geometry: IMPLEMENTED_ON_MAIN / FULL_WIDTH_GEOMETRY_AUTOMATED_QUALIFIED_ON_PINNED_TARGET_TUPLE
-WU-06 admin UX/security/RTL/accessibility qualification: IMPLEMENTED_IN_PR_10 / ADMIN_BROWSER_QUALIFICATION_PASS_ON_PINNED_TARGET_TUPLE
-WU-07 browser/E2E/release gate: NOT_RUN
-Automated Qualification Lab: WU04_INTEGRATION + WU05_FRONTEND_BROWSER + WU06_ADMIN_BROWSER
-Production qualification: NOT_PROVEN
+WU-02: IMPLEMENTED / INTEGRATION_PROVEN
+WU-03 Owner settings workflow: IMPLEMENTED / WORDPRESS_INTEGRATION_PROVEN
+WU-04 diagnostics/drift: IMPLEMENTED / WORDPRESS_INTEGRATION_QUALIFIED_ON_PINNED_TUPLE
+WU-05 Full Width geometry: IMPLEMENTED / FULL_WIDTH_GEOMETRY_AUTOMATED_QUALIFIED_ON_PINNED_TARGET_TUPLE
+WU-06 admin UX/security/RTL/accessibility qualification: IMPLEMENTED / ADMIN_BROWSER_QUALIFICATION_PASS_ON_PINNED_TARGET_TUPLE
+WU-07 mechanical Owner E2E: IMPLEMENTED / WU07_MECHANICAL_OWNER_E2E_PASS_ON_PINNED_TARGET_TUPLE
+Human comprehension: NOT_PROVEN
+Production-host confirmation: NOT_PROVEN
+Complete WCAG 2.2 AA conformance: NOT_PROVEN
+Unavailable real dependency regressions: ENVIRONMENT_UNAVAILABLE / NOT_PROVEN
+PRODUCTION_QUALIFIED_FOR_SRWF: NOT_PROVEN
 Production release: NOT_PUBLISHED
 ```
 
@@ -64,6 +74,8 @@ WU-06 extends the same browser lab into wp-admin. On the pinned WordPress `7.1.1
 
 WU-06 security evidence exercises real browser/HTTP boundaries: a user without `manage_options` is blocked from the protected screen and mutation endpoint; a `manage_options` user without target-page edit permission fails closed without state change; invalid and missing nonces do not mutate state or produce fake success; an authorized keyboard-driven apply persists schema-v1 configuration and canonical assignment/readback; and keyboard-triggered `بررسی دوباره` remains read-only. The diagnostic report excludes the exercised synthetic student/form values, upload URL, cookies, credentials/passwords, session/nonce material, secrets/tokens, and synthetic email PII while retaining bounded useful technical fields.
 
-The WU-06 accessibility scan is explicitly a machine-detectable automated check scoped to the plugin `.wrap`; zero plugin-scope violations in the exercised states does not establish complete WCAG 2.2 AA conformance. WU-07 human comprehension/Owner release-gate work, production-host confirmation, and unavailable Gravity Forms/Orbital/GTB/approved Vazir-Vazirmatn regressions remain outside the WU-06 claim ceiling.
+WU-07 reuses the established Playwright/Chromium browser foundation for the mechanical Owner journey. On the pinned tuple it passes navigation to the real settings surface, first-run guidance visibility, Registration selection, explicit apply, truthful success, persisted schema-v1 configuration/canonical assignment, frontend Registration opening with the canonical host shell and RTL/basic host integrity, return to settings, and a read-only `Check Again`. This is mechanical browser evidence only and does not establish human comprehension.
 
-Gravity Forms, Orbital, GTB, and approved Vazir/Vazirmatn were not lawfully/reliably present in the disposable WU-05/WU-06 environment; their regression claims remain `ENVIRONMENT_UNAVAILABLE / NOT_PROVEN`. WU-07 mechanical Owner browser E2E plus human comprehension, production-host confirmation, complete WCAG 2.2 AA conformance, and Production Qualification remain outside the current claim.
+The Owner-approved Personal GitHub Release Policy permits the personal/project-specific `v0.1.0` GitHub release to use this bounded automated evidence while keeping human comprehension, direct production-host confirmation, complete WCAG 2.2 AA conformance, and unavailable Gravity Forms/Orbital/GTB/approved Vazir-Vazirmatn regressions explicitly unproven. `PRODUCTION_QUALIFIED_FOR_SRWF` remains `NOT_PROVEN`.
+
+Historical work-unit/PR statements that correctly recorded earlier `NOT_RUN` states remain historical evidence and are not retroactively rewritten into PASS.
