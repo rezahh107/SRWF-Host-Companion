@@ -1,0 +1,91 @@
+name: One-time v0.2.0 factual sync
+
+on:
+  push:
+    branches:
+      - docs/post-v0.2.0-release-sync
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: docs/post-v0.2.0-release-sync
+          fetch-depth: 1
+
+      - name: Synchronize factual current-state text
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+
+          def replace_once(path, old, new):
+              p = Path(path)
+              text = p.read_text(encoding='utf-8')
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f'{path}: expected one occurrence, found {count}: {old[:100]!r}')
+              p.write_text(text.replace(old, new, 1), encoding='utf-8')
+
+          # README current-state only; preserve historical v0.1.0 references.
+          replace_once(
+              'README.md',
+              '> **Current status:** V0 architecture remains frozen and approved. WU-01 through WU-06 are implemented and qualified to their documented claim ceilings. WU-07 mechanical Owner E2E is implemented and real-browser qualified on the pinned WordPress `7.1.1` / PHP `8.3.33` / Twenty Twenty-Five `1.5` tuple. After the published `v0.1.0`, an explicit Owner-approved architecture amendment admits one independently selected Inbox Page for **the same existing Full Width host canvas only**; it does not authorize an Operational template, Inbox presentation ownership, Gravity Flow behavior changes, or GPP changes. The Owner-approved personal GitHub release identity remains `v0.1.0` under `GPL-2.0-or-later`, with release minimums WordPress `7.1` and PHP `8.3`. Human comprehension, production-host confirmation, real Gravity Flow Inbox integration, GPP integration, unavailable real dependency regressions, complete WCAG 2.2 AA conformance, and `PRODUCTION_QUALIFIED_FOR_SRWF` remain unproven. GitHub Release `v0.1.0` was published on 2026-09-21 with the installable ZIP and SHA-256 checksum attached.',
+              '> **Current status:** V0 architecture remains frozen and approved, with the Owner-approved Inbox Full Width amendment implemented and published. WU-01 through WU-07 remain qualified to their documented claim ceilings on the pinned WordPress `7.1.1` / PHP `8.3.33` / Twenty Twenty-Five `1.5` tuple. Personal GitHub Release `v0.2.0` is published under `GPL-2.0-or-later`, with release minimums WordPress `7.1` and PHP `8.3`; it adds one independently selected Inbox Page using the same existing Full Width host canvas and does not add an Operational template, Gravity Flow behavior changes, Inbox presentation ownership, or GPP changes. Human comprehension, production-host confirmation, real Gravity Flow Inbox integration, GPP integration, unavailable real dependency regressions, complete WCAG 2.2 AA conformance, and `PRODUCTION_QUALIFIED_FOR_SRWF` remain unproven.'
+          )
+          replace_once('README.md', 'Personal GitHub release identity: v0.1.0', 'Personal GitHub release identity: v0.2.0')
+          replace_once(
+              'README.md',
+              'The release minimums are the Owner-selected metadata floor for the already-published personal GitHub `v0.1.0` release.',
+              'The release minimums are the Owner-selected metadata floor for the current personal GitHub `v0.2.0` release.'
+          )
+          replace_once('README.md', 'Inbox Full Width host-canvas amendment: APPROVED / IMPLEMENTATION IN UNRELEASED SOURCE', 'Inbox Full Width host-canvas amendment: APPROVED / IMPLEMENTED / PUBLISHED IN v0.2.0')
+          replace_once('README.md', 'Release identity: v0.1.0', 'Release identity: v0.2.0')
+          replace_once('README.md', 'Configuration schema v2: UNRELEASED — registration + inbox; valid v1 remains readable without write-on-read migration', 'Configuration schema v2: IMPLEMENTED / PUBLISHED — registration + inbox; valid v1 remains readable without write-on-read migration')
+          replace_once('README.md', 'WU-03 Owner settings workflow: IMPLEMENTED / WORDPRESS_INTEGRATION_PROVEN FOR REGISTRATION; INBOX EXTENSION UNDER CURRENT PR QUALIFICATION', 'WU-03 Owner settings workflow: IMPLEMENTED / WORDPRESS_INTEGRATION_PROVEN; INBOX EXTENSION QUALIFIED')
+          replace_once('README.md', 'WU-05 Full Width geometry: IMPLEMENTED / REGISTRATION QUALIFIED; INBOX REUSE UNDER CURRENT PR QUALIFICATION', 'WU-05 Full Width geometry: IMPLEMENTED / REGISTRATION + INBOX HOST-CANVAS REUSE QUALIFIED')
+
+          # AGENTS current snapshot only.
+          replace_once(
+              'AGENTS.md',
+              '- **V0 status:** architecture approved and frozen; WU-01 through WU-06 are implemented and qualified to their documented boundaries; WU-07 mechanical Owner E2E is implemented and real-browser qualified on the pinned target tuple; human comprehension, production-host confirmation, unavailable real dependency evidence, complete WCAG 2.2 AA conformance, and `PRODUCTION_QUALIFIED_FOR_SRWF` remain unproven; personal GitHub release policy is Owner-locked for `v0.1.0` under `GPL-2.0-or-later` with WordPress `7.1` / PHP `8.3` release minimums; personal GitHub Release `v0.1.0` is published',
+              '- **V0 status:** architecture approved and frozen; WU-01 through WU-07 remain qualified to their documented boundaries; the bounded Inbox Full Width amendment is implemented/qualified and personal GitHub Release `v0.2.0` is published under `GPL-2.0-or-later` with WordPress `7.1` / PHP `8.3` release minimums; human comprehension, production-host confirmation, real Gravity Flow Inbox/GPP integration, unavailable real dependency evidence, complete WCAG 2.2 AA conformance, and `PRODUCTION_QUALIFIED_FOR_SRWF` remain unproven'
+          )
+
+          # SECURITY published version/current status.
+          replace_once(
+              'SECURITY.md',
+              'V0 architecture remains approved and frozen. WU-01 through WU-07 mechanical qualification are implemented/qualified to their documented claim ceilings, and the personal/project-specific GitHub Release `v0.1.0` is published. The qualified target remains WordPress `7.1.1`, PHP `8.3.33`, and Twenty Twenty-Five `1.5`.',
+              'V0 architecture remains approved and frozen. WU-01 through WU-07 mechanical qualification are implemented/qualified to their documented claim ceilings, the bounded Inbox Full Width amendment is implemented/qualified, and the personal/project-specific GitHub Release `v0.2.0` is published. The qualified target remains WordPress `7.1.1`, PHP `8.3.33`, and Twenty Twenty-Five `1.5`.'
+          )
+          replace_once('SECURITY.md', 'Current personal GitHub release: `v0.1.0`.', 'Current personal GitHub release: `v0.2.0`.')
+
+          # CHANGELOG current 0.2.0 state only; historical 0.1.0 stays intact.
+          replace_once('CHANGELOG.md', 'Release candidate identity: v0.2.0', 'Release identity: v0.2.0')
+          replace_once('CHANGELOG.md', 'Personal GitHub release v0.2.0: RELEASE_CANDIDATE_NOT_YET_PUBLISHED', 'Personal GitHub release v0.2.0: PUBLISHED')
+          replace_once(
+              'CHANGELOG.md',
+              '- publication occurs only after this release-candidate PR is merged and the existing GitHub Release workflow validates the exact publication commit;',
+              '- GitHub Release `v0.2.0` was published from main after exact release/package validation;'
+          )
+
+          workflow = Path('.github/workflows/post-v020-release-sync.yml')
+          workflow.unlink()
+          PY
+
+      - name: Commit factual sync and remove one-time workflow
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          git diff --check
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add README.md AGENTS.md SECURITY.md CHANGELOG.md .github/workflows/post-v020-release-sync.yml
+          git commit -m 'docs: sync repository after v0.2.0 publication'
+          git push origin HEAD:docs/post-v0.2.0-release-sync
