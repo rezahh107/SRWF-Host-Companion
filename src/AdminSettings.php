@@ -3,21 +3,26 @@
 namespace SRWF\HostCompanion;
 
 final class AdminSettings {
-	const PAGE_SLUG         = 'srwf-host';
-	const ACTION            = 'srwf_host_companion_save_apply';
-	const NONCE_ACTION      = 'srwf_host_companion_save_apply';
-	const NONCE_NAME        = '_srwf_host_nonce';
-	const RESULT_NONCE_NAME = '_srwf_result_nonce';
-	const FIELD_PAGE_ID     = 'srwf_registration_page_id';
+	const PAGE_SLUG           = 'srwf-host';
+	const ACTION              = 'srwf_host_companion_save_apply';
+	const INBOX_ACTION        = 'srwf_host_companion_inbox_save_apply';
+	const NONCE_ACTION        = 'srwf_host_companion_save_apply';
+	const INBOX_NONCE_ACTION  = 'srwf_host_companion_inbox_save_apply';
+	const NONCE_NAME          = '_srwf_host_nonce';
+	const INBOX_NONCE_NAME    = '_srwf_inbox_nonce';
+	const RESULT_NONCE_NAME   = '_srwf_result_nonce';
+	const FIELD_PAGE_ID       = 'srwf_registration_page_id';
+	const INBOX_FIELD_PAGE_ID = 'srwf_inbox_page_id';
 
 	/**
-	 * Attach the bounded V0 Owner settings workflow to native wp-admin hooks.
+	 * Attach the bounded Owner settings workflow to native wp-admin hooks.
 	 *
 	 * @return void
 	 */
 	public static function boot() {
 		add_action( 'admin_menu', array( __CLASS__, 'register_menu' ) );
 		add_action( 'admin_post_' . self::ACTION, array( __CLASS__, 'handle_save_apply' ) );
+		add_action( 'admin_post_' . self::INBOX_ACTION, array( __CLASS__, 'handle_inbox_save_apply' ) );
 		add_filter( 'plugin_action_links_' . plugin_basename( dirname( __DIR__ ) . '/srwf-host-companion.php' ), array( __CLASS__, 'add_settings_link' ) );
 	}
 
@@ -57,7 +62,7 @@ final class AdminSettings {
 	}
 
 	/**
-	 * Render the single V0 settings screen without changing stored state.
+	 * Render the single settings screen without changing stored state.
 	 *
 	 * @return void
 	 */
@@ -70,15 +75,26 @@ final class AdminSettings {
 			);
 		}
 
-		$current_page_id = Configuration::get_registration_page_id();
-		$result_code     = '';
+		$current_page_id       = Configuration::get_registration_page_id();
+		$current_inbox_page_id = Configuration::get_inbox_page_id();
+		$result_code           = '';
+		$result_role           = 'registration';
 
 		if ( isset( $_GET['srwf_result'], $_GET[ self::RESULT_NONCE_NAME ] ) && is_scalar( $_GET['srwf_result'] ) && is_scalar( $_GET[ self::RESULT_NONCE_NAME ] ) ) {
 			$candidate_result = sanitize_key( wp_unslash( (string) $_GET['srwf_result'] ) );
 			$result_nonce     = sanitize_text_field( wp_unslash( (string) $_GET[ self::RESULT_NONCE_NAME ] ) );
+			$candidate_role   = 'registration';
 
-			if ( wp_verify_nonce( $result_nonce, self::result_nonce_action( $candidate_result ) ) ) {
+			if ( isset( $_GET['srwf_role'] ) && is_scalar( $_GET['srwf_role'] ) ) {
+				$requested_role = sanitize_key( wp_unslash( (string) $_GET['srwf_role'] ) );
+				if ( in_array( $requested_role, array( 'registration', 'inbox' ), true ) ) {
+					$candidate_role = $requested_role;
+				}
+			}
+
+			if ( wp_verify_nonce( $result_nonce, self::result_nonce_action( $candidate_result, $candidate_role ) ) ) {
 				$result_code = $candidate_result;
+				$result_role = $candidate_role;
 			}
 		}
 
@@ -87,7 +103,7 @@ final class AdminSettings {
 		<div class="wrap" dir="rtl">
 			<h1><?php esc_html_e( 'SRWF Host', 'srwf-host-companion' ); ?></h1>
 
-			<?php self::render_result_notice( $result_code ); ?>
+			<?php self::render_result_notice( $result_code, $result_role ); ?>
 			<?php self::render_diagnostics( $diagnostics ); ?>
 
 			<?php if ( 0 === $current_page_id ) : ?>
@@ -97,6 +113,7 @@ final class AdminSettings {
 				</div>
 			<?php endif; ?>
 
+			<h2><?php esc_html_e( 'صفحه ثبت‌نام', 'srwf-host-companion' ); ?></h2>
 			<p><?php esc_html_e( 'صفحه‌ای را که نقش ثبت‌نام SRWF دارد انتخاب کنید. برای این کار نیازی به Site Editor، نام قالب یا ویرایش کد نیست.', 'srwf-host-companion' ); ?></p>
 
 			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
@@ -132,115 +149,97 @@ final class AdminSettings {
 
 				<?php submit_button( __( 'ذخیره و اعمال قالب تمام‌عرض', 'srwf-host-companion' ), 'primary', 'submit', false ); ?>
 			</form>
+
+			<hr />
+			<h2><?php esc_html_e( 'صفحه اینباکس', 'srwf-host-companion' ); ?></h2>
+			<p><?php esc_html_e( 'یک برگه WordPress را برای نقش اینباکس SRWF انتخاب کنید. این عملیات فقط همان پوسته میزبان تمام‌عرض SRWF را روی آن برگه اعمال می‌کند.', 'srwf-host-companion' ); ?></p>
+			<p class="description"><?php esc_html_e( 'این انتخاب رفتار یا محتوای Gravity Flow، وضعیت گردش‌کار، تخصیص‌ها، مجوزهای Gravity Flow یا ارائه GPP را تغییر نمی‌دهد.', 'srwf-host-companion' ); ?></p>
+
+			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+				<input type="hidden" name="action" value="<?php echo esc_attr( self::INBOX_ACTION ); ?>" />
+				<?php wp_nonce_field( self::INBOX_NONCE_ACTION, self::INBOX_NONCE_NAME ); ?>
+
+				<table class="form-table" role="presentation">
+					<tr>
+						<th scope="row">
+							<label for="<?php echo esc_attr( self::INBOX_FIELD_PAGE_ID ); ?>"><?php esc_html_e( 'صفحه اینباکس', 'srwf-host-companion' ); ?></label>
+						</th>
+						<td>
+							<?php
+							wp_dropdown_pages(
+								array(
+									'name'              => self::INBOX_FIELD_PAGE_ID,
+									'id'                => self::INBOX_FIELD_PAGE_ID,
+									'selected'          => $current_inbox_page_id,
+									'show_option_none'  => __( '— یک صفحه انتخاب کنید —', 'srwf-host-companion' ),
+									'option_none_value' => '0',
+									'post_status'       => array( 'publish', 'private', 'draft', 'pending', 'future' ),
+									'sort_column'       => 'post_title',
+								)
+							);
+							?>
+							<p class="description"><?php esc_html_e( 'این انتخاب مستقل از صفحه ثبت‌نام ذخیره و اعمال می‌شود.', 'srwf-host-companion' ); ?></p>
+						</td>
+					</tr>
+				</table>
+
+				<p><?php esc_html_e( 'قالب موجود «SRWF — Registration Full Width» بدون ایجاد قالب Inbox یا Operational جداگانه reuse می‌شود. محتوای برگه تغییر نمی‌کند.', 'srwf-host-companion' ); ?></p>
+				<p class="description"><?php esc_html_e( 'اگر صفحه اینباکس را عوض کنید، صفحه جدید مرجع تنظیمات می‌شود و قالب به همان صفحه اعمال می‌شود. قالب صفحه اینباکس قبلی به‌صورت خودکار بازنویسی یا بازیابی نمی‌شود.', 'srwf-host-companion' ); ?></p>
+
+				<?php submit_button( __( 'ذخیره و اعمال قالب تمام‌عرض به اینباکس', 'srwf-host-companion' ), 'secondary', 'submit', false ); ?>
+			</form>
 		</div>
 		<?php
 	}
 
 	/**
-	 * Handle the explicit mutation request, then return to the settings screen.
+	 * Handle the explicit Registration mutation request, then return to settings.
 	 *
 	 * @return void
 	 */
 	public static function handle_save_apply() {
-		$result = self::process_save_apply( $_POST );
-
-		if ( 'insufficient_manage_options' === $result['code'] ) {
-			wp_die(
-				esc_html__( 'شما اجازه تغییر تنظیمات SRWF Host را ندارید.', 'srwf-host-companion' ),
-				esc_html__( 'دسترسی غیرمجاز', 'srwf-host-companion' ),
-				array( 'response' => 403 )
-			);
-		}
-
-		$url = add_query_arg(
-			array(
-				'page'                   => self::PAGE_SLUG,
-				'srwf_result'            => $result['code'],
-				self::RESULT_NONCE_NAME => wp_create_nonce( self::result_nonce_action( $result['code'] ) ),
-			),
-			admin_url( 'options-general.php' )
-		);
-
-		wp_safe_redirect( $url );
-		exit;
+		self::handle_result( self::process_save_apply( $_POST ), 'registration' );
 	}
 
 	/**
-	 * Validate, authorize and execute the explicit save/apply operation.
+	 * Handle the explicit Inbox mutation request, then return to settings.
+	 *
+	 * @return void
+	 */
+	public static function handle_inbox_save_apply() {
+		self::handle_result( self::process_inbox_save_apply( $_POST ), 'inbox' );
+	}
+
+	/**
+	 * Validate, authorize and execute the explicit Registration save/apply operation.
 	 *
 	 * @param array<string,mixed> $request Submitted request data.
 	 * @return array<string,mixed>
 	 */
 	public static function process_save_apply( $request ) {
-		if ( ! current_user_can( 'manage_options' ) ) {
-			return self::result( false, 'insufficient_manage_options' );
-		}
+		return self::process_role_save_apply(
+			$request,
+			'registration',
+			self::NONCE_NAME,
+			self::NONCE_ACTION,
+			self::FIELD_PAGE_ID
+		);
+	}
 
-		$nonce = '';
-		if ( isset( $request[ self::NONCE_NAME ] ) && is_scalar( $request[ self::NONCE_NAME ] ) ) {
-			$nonce = sanitize_text_field( wp_unslash( (string) $request[ self::NONCE_NAME ] ) );
-		}
-
-		if ( ! wp_verify_nonce( $nonce, self::NONCE_ACTION ) ) {
-			return self::result( false, 'nonce_invalid' );
-		}
-
-		$page_id = self::normalize_page_id( $request[ self::FIELD_PAGE_ID ] ?? null );
-		if ( $page_id <= 0 ) {
-			return self::result( false, 'invalid_page_id' );
-		}
-
-		$page_state = self::classify_page( $page_id );
-		if ( TemplateDiagnostics::PAGE_MISSING === $page_state['code'] ) {
-			return self::result( false, 'page_missing', $page_id, $page_state['code'] );
-		}
-		if ( TemplateDiagnostics::PAGE_TRASHED === $page_state['code'] ) {
-			return self::result( false, 'page_trashed', $page_id, $page_state['code'] );
-		}
-		if ( TemplateDiagnostics::PAGE_TYPE_INVALID === $page_state['code'] ) {
-			return self::result( false, 'page_type_invalid', $page_id, $page_state['code'] );
-		}
-
-		if ( ! current_user_can( 'edit_post', $page_id ) ) {
-			return self::result( false, 'target_edit_denied', $page_id, $page_state['code'] );
-		}
-
-		$previous_page_id = Configuration::get_registration_page_id();
-		if ( ! Configuration::set_registration_page_id( $page_id ) ) {
-			return self::result( false, 'configuration_save_failed', $page_id, $page_state['code'], false, false, $previous_page_id );
-		}
-
-		$assignment = PageTemplateAssignment::assign( $page_id );
-		if ( empty( $assignment['success'] ) ) {
-			return self::result(
-				false,
-				'configuration_saved_template_failed',
-				$page_id,
-				$page_state['code'],
-				true,
-				false,
-				$previous_page_id,
-				isset( $assignment['code'] ) ? (string) $assignment['code'] : 'assignment_failed'
-			);
-		}
-
-		$readback = PageTemplateAssignment::read( $page_id );
-		if ( TemplateRegistrar::TEMPLATE_SLUG !== $readback ) {
-			return self::result(
-				false,
-				'configuration_saved_template_failed',
-				$page_id,
-				$page_state['code'],
-				true,
-				false,
-				$previous_page_id,
-				'readback_mismatch'
-			);
-		}
-
-		$code = TemplateDiagnostics::PAGE_NOT_PUBLISHED === $page_state['code'] ? 'success_non_published' : 'success';
-
-		return self::result( true, $code, $page_id, $page_state['code'], true, true, $previous_page_id, 'assigned' );
+	/**
+	 * Validate, authorize and execute the explicit Inbox save/apply operation.
+	 *
+	 * @param array<string,mixed> $request Submitted request data.
+	 * @return array<string,mixed>
+	 */
+	public static function process_inbox_save_apply( $request ) {
+		return self::process_role_save_apply(
+			$request,
+			'inbox',
+			self::INBOX_NONCE_NAME,
+			self::INBOX_NONCE_ACTION,
+			self::INBOX_FIELD_PAGE_ID
+		);
 	}
 
 	/**
@@ -254,7 +253,126 @@ final class AdminSettings {
 	}
 
 	/**
-	 * Render a compact practical status followed by optional technical evidence.
+	 * @param array<string,mixed> $result Explicit mutation result.
+	 * @param string              $role Role that was explicitly mutated.
+	 * @return void
+	 */
+	private static function handle_result( $result, $role ) {
+		if ( 'insufficient_manage_options' === $result['code'] ) {
+			wp_die(
+				esc_html__( 'شما اجازه تغییر تنظیمات SRWF Host را ندارید.', 'srwf-host-companion' ),
+				esc_html__( 'دسترسی غیرمجاز', 'srwf-host-companion' ),
+				array( 'response' => 403 )
+			);
+		}
+
+		$url = add_query_arg(
+			array(
+				'page'                   => self::PAGE_SLUG,
+				'srwf_result'            => $result['code'],
+				'srwf_role'              => $role,
+				self::RESULT_NONCE_NAME => wp_create_nonce( self::result_nonce_action( $result['code'], $role ) ),
+			),
+			admin_url( 'options-general.php' )
+		);
+
+		wp_safe_redirect( $url );
+		exit;
+	}
+
+	/**
+	 * Execute one bounded role mutation without touching the other role.
+	 *
+	 * @param array<string,mixed> $request Submitted request data.
+	 * @param string              $role Supported role.
+	 * @param string              $nonce_name Request nonce field.
+	 * @param string              $nonce_action Request nonce action.
+	 * @param string              $field_name Request page-ID field.
+	 * @return array<string,mixed>
+	 */
+	private static function process_role_save_apply( $request, $role, $nonce_name, $nonce_action, $field_name ) {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			return self::result( false, 'insufficient_manage_options', 0, '', false, false, 0, '', $role );
+		}
+
+		$nonce = '';
+		if ( isset( $request[ $nonce_name ] ) && is_scalar( $request[ $nonce_name ] ) ) {
+			$nonce = sanitize_text_field( wp_unslash( (string) $request[ $nonce_name ] ) );
+		}
+
+		if ( ! wp_verify_nonce( $nonce, $nonce_action ) ) {
+			return self::result( false, 'nonce_invalid', 0, '', false, false, 0, '', $role );
+		}
+
+		$page_id = self::normalize_page_id( $request[ $field_name ] ?? null );
+		if ( $page_id <= 0 ) {
+			return self::result( false, 'invalid_page_id', 0, '', false, false, 0, '', $role );
+		}
+
+		$page_state = self::classify_page( $page_id );
+		if ( TemplateDiagnostics::PAGE_MISSING === $page_state['code'] ) {
+			return self::result( false, 'page_missing', $page_id, $page_state['code'], false, false, 0, '', $role );
+		}
+		if ( TemplateDiagnostics::PAGE_TRASHED === $page_state['code'] ) {
+			return self::result( false, 'page_trashed', $page_id, $page_state['code'], false, false, 0, '', $role );
+		}
+		if ( TemplateDiagnostics::PAGE_TYPE_INVALID === $page_state['code'] ) {
+			return self::result( false, 'page_type_invalid', $page_id, $page_state['code'], false, false, 0, '', $role );
+		}
+
+		if ( ! current_user_can( 'edit_post', $page_id ) ) {
+			return self::result( false, 'target_edit_denied', $page_id, $page_state['code'], false, false, 0, '', $role );
+		}
+
+		if ( 'inbox' === $role ) {
+			$previous_page_id = Configuration::get_inbox_page_id();
+			$saved            = Configuration::set_inbox_page_id( $page_id );
+		} else {
+			$previous_page_id = Configuration::get_registration_page_id();
+			$saved            = Configuration::set_registration_page_id( $page_id );
+		}
+
+		if ( ! $saved ) {
+			return self::result( false, 'configuration_save_failed', $page_id, $page_state['code'], false, false, $previous_page_id, '', $role );
+		}
+
+		$assignment = PageTemplateAssignment::assign( $page_id );
+		if ( empty( $assignment['success'] ) ) {
+			return self::result(
+				false,
+				'configuration_saved_template_failed',
+				$page_id,
+				$page_state['code'],
+				true,
+				false,
+				$previous_page_id,
+				isset( $assignment['code'] ) ? (string) $assignment['code'] : 'assignment_failed',
+				$role
+			);
+		}
+
+		$readback = PageTemplateAssignment::read( $page_id );
+		if ( TemplateRegistrar::TEMPLATE_SLUG !== $readback ) {
+			return self::result(
+				false,
+				'configuration_saved_template_failed',
+				$page_id,
+				$page_state['code'],
+				true,
+				false,
+				$previous_page_id,
+				'readback_mismatch',
+				$role
+			);
+		}
+
+		$code = TemplateDiagnostics::PAGE_NOT_PUBLISHED === $page_state['code'] ? 'success_non_published' : 'success';
+
+		return self::result( true, $code, $page_id, $page_state['code'], true, true, $previous_page_id, 'assigned', $role );
+	}
+
+	/**
+	 * Render Registration diagnostics only; Inbox-specific diagnostics are out of scope.
 	 *
 	 * @param array<string,mixed> $diagnostics Read-only diagnostic result.
 	 * @return void
@@ -273,7 +391,8 @@ final class AdminSettings {
 			admin_url( 'options-general.php' )
 		);
 		?>
-		<h2><?php esc_html_e( 'وضعیت فعلی SRWF Host', 'srwf-host-companion' ); ?></h2>
+		<h2><?php esc_html_e( 'وضعیت فعلی صفحه ثبت‌نام SRWF Host', 'srwf-host-companion' ); ?></h2>
+		<p class="description"><?php esc_html_e( 'این بخش تشخیصی فقط صفحه ثبت‌نام را پوشش می‌دهد. برای صفحه اینباکس در این نسخه تشخیص یا تعمیر خودکار جداگانه‌ای وجود ندارد.', 'srwf-host-companion' ); ?></p>
 		<div class="notice <?php echo esc_attr( $copy['class'] ); ?> inline" role="status">
 			<p><strong><?php echo esc_html( $copy['title'] ); ?></strong></p>
 			<p><?php echo esc_html( $copy['message'] ); ?></p>
@@ -283,7 +402,7 @@ final class AdminSettings {
 		</div>
 		<p>
 			<a class="button button-secondary" href="<?php echo esc_url( $check_url ); ?>"><?php esc_html_e( 'بررسی دوباره', 'srwf-host-companion' ); ?></a>
-			<span class="description"><?php esc_html_e( 'این بررسی فقط وضعیت فعلی را دوباره می‌خواند و هیچ تنظیم، محتوا، اتصال قالب یا سفارشی‌سازی را تغییر نمی‌دهد.', 'srwf-host-companion' ); ?></span>
+			<span class="description"><?php esc_html_e( 'این بررسی فقط وضعیت فعلی صفحه ثبت‌نام را دوباره می‌خواند و هیچ تنظیم، محتوا، اتصال قالب یا سفارشی‌سازی را تغییر نمی‌دهد.', 'srwf-host-companion' ); ?></span>
 		</p>
 		<details>
 			<summary><strong><?php esc_html_e( 'جزئیات فنی', 'srwf-host-companion' ); ?></strong></summary>
@@ -457,9 +576,11 @@ final class AdminSettings {
 
 	/**
 	 * @param string $result_code Result code supplied after an explicit action.
+	 * @param string $role Role associated with the result.
 	 * @return void
 	 */
-	private static function render_result_notice( $result_code ) {
+	private static function render_result_notice( $result_code, $role ) {
+		$role_label = 'inbox' === $role ? __( 'اینباکس', 'srwf-host-companion' ) : __( 'ثبت‌نام', 'srwf-host-companion' );
 		$notices = array(
 			'success' => array(
 				'notice-success',
@@ -475,7 +596,7 @@ final class AdminSettings {
 			),
 			'invalid_page_id' => array(
 				'notice-error',
-				__( 'یک صفحه ثبت‌نام معتبر انتخاب نشده است؛ هیچ تغییری انجام نشد.', 'srwf-host-companion' ),
+				sprintf( __( 'یک صفحه معتبر برای نقش %s انتخاب نشده است؛ هیچ تغییری انجام نشد.', 'srwf-host-companion' ), $role_label ),
 			),
 			'page_missing' => array(
 				'notice-error',
@@ -495,11 +616,11 @@ final class AdminSettings {
 			),
 			'configuration_save_failed' => array(
 				'notice-error',
-				__( 'ذخیره تنظیم صفحه ثبت‌نام تأیید نشد؛ قالب اعمال نشد. دوباره تلاش کنید و اگر مشکل ادامه داشت، وضعیت WordPress را بررسی کنید.', 'srwf-host-companion' ),
+				sprintf( __( 'ذخیره تنظیم صفحه %s تأیید نشد؛ قالب اعمال نشد. دوباره تلاش کنید و اگر مشکل ادامه داشت، وضعیت WordPress را بررسی کنید.', 'srwf-host-companion' ), $role_label ),
 			),
 			'configuration_saved_template_failed' => array(
 				'notice-error',
-				__( 'صفحه ثبت‌نام در تنظیمات ذخیره شد، اما اعمال یا بازخوانی قالب تمام‌عرض تأیید نشد. محتوای صفحه تغییر نکرد؛ پیش از ادامه، این صفحه را دوباره بررسی کنید.', 'srwf-host-companion' ),
+				sprintf( __( 'صفحه %s در تنظیمات ذخیره شد، اما اعمال یا بازخوانی قالب تمام‌عرض تأیید نشد. محتوای صفحه تغییر نکرد؛ پیش از ادامه، این صفحه را دوباره بررسی کنید.', 'srwf-host-companion' ), $role_label ),
 			),
 		);
 
@@ -518,10 +639,17 @@ final class AdminSettings {
 	/**
 	 * Bind an Owner-facing result notice to the actual explicit action response.
 	 *
+	 * Registration keeps the historical nonce action for compatibility.
+	 *
 	 * @param string $code Internal result code.
+	 * @param string $role Role associated with the result.
 	 * @return string
 	 */
-	private static function result_nonce_action( $code ) {
+	private static function result_nonce_action( $code, $role = 'registration' ) {
+		if ( 'inbox' === $role ) {
+			return 'srwf_host_companion_result_inbox_' . sanitize_key( $code );
+		}
+
 		return 'srwf_host_companion_result_' . sanitize_key( $code );
 	}
 
@@ -546,10 +674,11 @@ final class AdminSettings {
 	/**
 	 * @return array<string,mixed>
 	 */
-	private static function result( $success, $code, $page_id = 0, $page_state = '', $configuration_saved = false, $template_applied = false, $previous_page_id = 0, $assignment_code = '' ) {
+	private static function result( $success, $code, $page_id = 0, $page_state = '', $configuration_saved = false, $template_applied = false, $previous_page_id = 0, $assignment_code = '', $role = 'registration' ) {
 		return array(
 			'success'             => (bool) $success,
 			'code'                => (string) $code,
+			'role'                => (string) $role,
 			'page_id'             => (int) $page_id,
 			'page_state'          => (string) $page_state,
 			'configuration_saved' => (bool) $configuration_saved,
