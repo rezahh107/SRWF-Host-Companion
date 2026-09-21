@@ -11,7 +11,7 @@ This file is the operating contract for coding agents and automated contributors
 - **Canonical architecture:** `docs/architecture/MOTHER_ARCHITECTURE.md`
 - **Owner-approved qualification amendment:** `docs/architecture/AUTOMATED_QUALIFICATION_LAB.md`
 - **Owner-approved personal release policy:** `docs/architecture/PERSONAL_GITHUB_RELEASE_POLICY.md`
-- **V0 status:** architecture approved and frozen; WU-01 through WU-06 are implemented and qualified to their documented boundaries; WU-07 mechanical Owner E2E is implemented and real-browser qualified on the pinned target tuple; human comprehension, production-host confirmation, unavailable real dependency evidence, complete WCAG 2.2 AA conformance, and `PRODUCTION_QUALIFIED_FOR_SRWF` remain unproven; personal GitHub release policy is Owner-locked for `v0.1.0` under `GPL-2.0-or-later` with WordPress `7.1` / PHP `8.3` release minimums; no GitHub Release has been published
+- **V0 status:** architecture approved and frozen; WU-01 through WU-06 are implemented and qualified to their documented boundaries; WU-07 mechanical Owner E2E is implemented and real-browser qualified on the pinned target tuple; human comprehension, production-host confirmation, unavailable real dependency evidence, complete WCAG 2.2 AA conformance, and `PRODUCTION_QUALIFIED_FOR_SRWF` remain unproven; personal GitHub release policy is Owner-locked for `v0.1.0` under `GPL-2.0-or-later` with WordPress `7.1` / PHP `8.3` release minimums; personal GitHub Release `v0.1.0` is published
 
 The plugin exists to make SRWF host configuration deterministic, understandable, explicit, and verifiable.
 

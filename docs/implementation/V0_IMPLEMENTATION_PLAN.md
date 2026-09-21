@@ -1,6 +1,6 @@
 # V0 Implementation Plan
 
-**Status:** `APPROVED_SEQUENCE / EXECUTION_IN_PROGRESS`
+**Status:** `V0_IMPLEMENTED / PERSONAL_GITHUB_RELEASE_V0_1_0_PUBLISHED / STRONGER_PRODUCTION_QUALIFICATION_NOT_PROVEN`
 **Governing authority:** `docs/architecture/MOTHER_ARCHITECTURE.md` plus Owner-approved amendments/policies
 **Purpose:** break the frozen V0 architecture into bounded implementation work without reopening architecture selection.
 
@@ -395,6 +395,8 @@ Only when the stronger Production Qualification requirements are actually satisf
 ```text
 PRODUCTION_QUALIFIED_FOR_SRWF
 ```
+
+Personal GitHub Release `v0.1.0` was published from `main` on 2026-09-21 with the validated installable ZIP and SHA-256 checksum. This publication closes the Owner-approved personal GitHub release outcome without changing the stronger Production Qualification claim ceiling.
 
 Exact final-head workflow/run/artifact identity belongs in focused PR/release evidence rather than durable plan text.
 

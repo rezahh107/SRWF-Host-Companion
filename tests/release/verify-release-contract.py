@@ -168,6 +168,7 @@ def validate(root: Path) -> list[str]:
         "README current WU-07 state is still NOT_RUN": r"^WU-07[^\n]*NOT_RUN\s*$",
         "README still describes WU-07 as open": r"WU-07[^\n]*remain(?:s)? open",
         "README still describes WU-06 by open-PR lifecycle": r"WU-06[^\n]*implemented in PR #10",
+        "README still says no GitHub Release has been published": r"No GitHub Release has been published",
     }
     for label, pattern in obsolete_readme_patterns.items():
         if re.search(pattern, readme, re.MULTILINE | re.IGNORECASE):
@@ -187,6 +188,7 @@ def validate(root: Path) -> list[str]:
         "WU-07 browser/E2E/comprehension/release-gate work remains open",
         "Do not publish a production release while the repository license is undeclared.",
         "a production release is requested before a license is explicitly selected",
+        "no GitHub Release has been published",
     ):
         if stale in agents:
             errors.append(f"AGENTS contains obsolete current-state/release-policy wording: {stale}")
@@ -202,8 +204,8 @@ def validate(root: Path) -> list[str]:
         errors.append("CHANGELOG current status does not record WU-07 mechanical qualification")
     if "PRODUCTION_QUALIFIED_FOR_SRWF: NOT_PROVEN" not in status_section:
         errors.append("CHANGELOG no longer preserves PRODUCTION_QUALIFIED_FOR_SRWF = NOT_PROVEN")
-    if "Production release: NOT_PUBLISHED" not in status_section:
-        errors.append("CHANGELOG no longer preserves Production release = NOT_PUBLISHED")
+    if "Personal GitHub release v0.1.0: PUBLISHED" not in status_section:
+        errors.append("CHANGELOG no longer records personal GitHub release v0.1.0 = PUBLISHED")
 
     try:
         wu07 = markdown_section(plan, "## WU-07 — E2E / comprehension / release gate")

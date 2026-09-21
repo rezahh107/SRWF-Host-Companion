@@ -2,9 +2,13 @@
 
 All notable project changes should be recorded here.
 
-No GitHub Release has been published yet.
+GitHub Release `v0.1.0` was published on 2026-09-21.
 
 ## [Unreleased]
+
+No unreleased changes yet.
+
+## [0.1.0] - 2026-09-21
 
 ### Added
 
@@ -55,7 +59,7 @@ Production-host confirmation: NOT_PROVEN
 Complete WCAG 2.2 AA conformance: NOT_PROVEN
 Unavailable real dependency regressions: ENVIRONMENT_UNAVAILABLE / NOT_PROVEN
 PRODUCTION_QUALIFIED_FOR_SRWF: NOT_PROVEN
-Production release: NOT_PUBLISHED
+Personal GitHub release v0.1.0: PUBLISHED
 ```
 
 WU-04 reads current state only. Opening diagnostics or using `بررسی دوباره` does not save configuration, assign/repair templates, alter page content, rewrite customized `wp_template` content, or modify theme files.

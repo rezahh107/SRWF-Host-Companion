@@ -2,7 +2,7 @@
 
 Project-specific WordPress host integration layer for SRWF: deterministic block templates, full-width shells, runtime/template governance, diagnostics, and future bounded host-level integrations.
 
-> **Current status:** V0 architecture is frozen and approved. WU-01 through WU-06 are implemented and qualified to their documented claim ceilings. WU-07 mechanical Owner E2E is implemented and real-browser qualified on the pinned WordPress `7.1.1` / PHP `8.3.33` / Twenty Twenty-Five `1.5` tuple. The Owner-approved personal GitHub release identity is `v0.1.0` under `GPL-2.0-or-later`, with release minimums WordPress `7.1` and PHP `8.3`. Human comprehension, production-host confirmation, unavailable real dependency regressions, complete WCAG 2.2 AA conformance, and `PRODUCTION_QUALIFIED_FOR_SRWF` remain unproven. No GitHub Release has been published.
+> **Current status:** V0 architecture is frozen and approved. WU-01 through WU-06 are implemented and qualified to their documented claim ceilings. WU-07 mechanical Owner E2E is implemented and real-browser qualified on the pinned WordPress `7.1.1` / PHP `8.3.33` / Twenty Twenty-Five `1.5` tuple. The Owner-approved personal GitHub release identity is `v0.1.0` under `GPL-2.0-or-later`, with release minimums WordPress `7.1` and PHP `8.3`. Human comprehension, production-host confirmation, unavailable real dependency regressions, complete WCAG 2.2 AA conformance, and `PRODUCTION_QUALIFIED_FOR_SRWF` remain unproven. GitHub Release `v0.1.0` was published on 2026-09-21 with the installable ZIP and SHA-256 checksum attached.
 
 ## Purpose
 
@@ -112,7 +112,7 @@ Production-host confirmation: NOT_PROVEN
 Complete WCAG 2.2 AA conformance: NOT_PROVEN
 Unavailable real dependency regressions: ENVIRONMENT_UNAVAILABLE / NOT_PROVEN
 PRODUCTION_QUALIFIED_FOR_SRWF: NOT_PROVEN
-Production release: NOT_PUBLISHED
+Personal GitHub release v0.1.0: PUBLISHED
 ```
 
 WU-03 provides the real Owner-facing mutation workflow under `Settings → SRWF Host`: Persian-first first-run guidance, one WordPress-page selector backed only by schema-v1 `roles.registration.page_id`, the explicit `ذخیره و اعمال قالب تمام‌عرض` action, page-state classification, capability/nonce guards, canonical assignment/readback, page-change safety, and truthful bounded result messages. It introduces no admin or frontend JavaScript/CSS.
