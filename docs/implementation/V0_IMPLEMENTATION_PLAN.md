@@ -1,14 +1,15 @@
 # V0 Implementation Plan
 
-**Status:** `APPROVED_SEQUENCE / EXECUTION_IN_PROGRESS`  
-**Governing authority:** `docs/architecture/MOTHER_ARCHITECTURE.md` plus Owner-approved amendments  
+**Status:** `APPROVED_SEQUENCE / EXECUTION_IN_PROGRESS`
+**Governing authority:** `docs/architecture/MOTHER_ARCHITECTURE.md` plus Owner-approved amendments/policies
 **Purpose:** break the frozen V0 architecture into bounded implementation work without reopening architecture selection.
 
 This plan is operational sequencing, not a second architecture authority.
 
-Owner-approved qualification evidence direction is recorded in:
+Owner-approved qualification/release direction is recorded in:
 
 - `docs/architecture/AUTOMATED_QUALIFICATION_LAB.md`
+- `docs/architecture/PERSONAL_GITHUB_RELEASE_POLICY.md`
 
 ## WU-00 — Repository foundation
 
@@ -129,7 +130,7 @@ Key execution rules:
 - do not let automated qualification alone imply `PRODUCTION_QUALIFIED_FOR_SRWF`;
 - use focused checks on ordinary PRs and broader/full automated qualification at a justified regression or release boundary rather than forcing every expensive test on every trivial change.
 
-WU-04 established the first deterministic integration slice. WU-05 added the first reusable frontend real-browser slice, and WU-06 reuses that same Playwright/Chromium foundation for real wp-admin qualification without coupling the product runtime to the browser framework.
+WU-04 established the first deterministic integration slice. WU-05 added the first reusable frontend real-browser slice, WU-06 reused that same Playwright/Chromium foundation for real wp-admin qualification, and WU-07 reuses it again for the mechanical Owner journey without coupling product runtime to browser tooling.
 
 ## WU-04 — Read-only diagnostics and drift
 
@@ -296,7 +297,7 @@ Exercise:
 
 Automate the repeatable part through integration plus real browser/HTTP tests. Automated accessibility scanning is useful evidence for machine-detectable failures but does not, by itself, prove complete WCAG 2.2 AA conformance.
 
-Current WU-06 implementation/qualification state in PR #10:
+WU-06 qualification result established by PR #10 (the `WU07_NOT_RUN` line below is historical to that earlier work-unit boundary and is intentionally preserved):
 
 ```text
 ADMIN_BROWSER_QUALIFICATION_IMPLEMENTED
@@ -354,13 +355,48 @@ Record:
 
 The mechanical Owner journey should be browser-automated where practical, including navigation to the settings surface, first-run guidance presence, page selection, explicit apply, truthful result, frontend opening, and read-only verification when implemented.
 
-Human comprehension remains a human evidence requirement. Production-host-specific facts not faithfully reproduced in the lab remain separate confirmation requirements.
+Human comprehension remains a human evidence requirement for the stronger Production Qualification claim. Production-host-specific facts not faithfully reproduced in the lab remain separate confirmation requirements.
 
-Only when all applicable required gates pass may the build be called:
+Current WU-07 mechanical implementation/qualification result:
+
+```text
+WU07_MECHANICAL_OWNER_E2E_IMPLEMENTED
+WU07_MECHANICAL_OWNER_E2E_PASS_ON_PINNED_TARGET_TUPLE
+HUMAN_COMPREHENSION_NOT_PROVEN
+PRODUCTION_HOST_CONFIRMATION_NOT_PROVEN
+COMPLETE_WCAG_2_2_AA_CONFORMANCE_NOT_PROVEN
+GRAVITY_FORMS_ORBITAL_GTB_VAZIR_ENVIRONMENT_UNAVAILABLE_NOT_PROVEN
+PRODUCTION_QUALIFIED_FOR_SRWF_NOT_PROVEN
+```
+
+The exercised mechanical Owner path is:
+
+```text
+login
+→ Settings → SRWF Host
+→ first-run guidance
+→ select Registration page
+→ explicit save/apply
+→ truthful success
+→ schema-v1 configuration + canonical assignment/readback
+→ open frontend Registration page
+→ canonical host shell + RTL + header/footer/navigation + no horizontal overflow
+→ return to settings
+→ Check Again
+→ read-only sentinel
+```
+
+This establishes browser reachability and mechanics on the pinned disposable tuple. It does **not** establish human comprehension, direct production-host confirmation, unavailable real dependency integration, or complete WCAG 2.2 AA conformance.
+
+For the Owner's personal GitHub release, `docs/architecture/PERSONAL_GITHUB_RELEASE_POLICY.md` governs the distinct release-ready boundary. That policy permits unresolved evidence to remain explicitly `NOT_PROVEN`/`ENVIRONMENT_UNAVAILABLE` for `v0.1.0` when the exercised release-candidate automation is green and the release notes preserve the claim ceiling. It does not convert those unresolved items into PASS.
+
+Only when the stronger Production Qualification requirements are actually satisfied may the build be called:
 
 ```text
 PRODUCTION_QUALIFIED_FOR_SRWF
 ```
+
+Exact final-head workflow/run/artifact identity belongs in focused PR/release evidence rather than durable plan text.
 
 ## Change-control rule
 

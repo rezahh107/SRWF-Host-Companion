@@ -2,7 +2,7 @@
 
 Project-specific WordPress host integration layer for SRWF: deterministic block templates, full-width shells, runtime/template governance, diagnostics, and future bounded host-level integrations.
 
-> **Current status:** V0 architecture is frozen and approved. WU-01 target-runtime facts, WU-02 minimal runtime core, WU-03 Owner settings workflow, WU-04 read-only diagnostics/drift, and WU-05 Full Width host geometry are implemented on `main`. WU-06 admin/browser RTL/security/accessibility qualification is implemented in PR #10 and automated-qualified on the pinned WordPress `7.1.1` / PHP `8.3.33` / Twenty Twenty-Five `1.5` tuple. WU-07 browser E2E/comprehension/release gate, real unavailable dependency regressions, and production qualification remain open.
+> **Current status:** V0 architecture is frozen and approved. WU-01 through WU-06 are implemented and qualified to their documented claim ceilings. WU-07 mechanical Owner E2E is implemented and real-browser qualified on the pinned WordPress `7.1.1` / PHP `8.3.33` / Twenty Twenty-Five `1.5` tuple. The Owner-approved personal GitHub release identity is `v0.1.0` under `GPL-2.0-or-later`, with release minimums WordPress `7.1` and PHP `8.3`. Human comprehension, production-host confirmation, unavailable real dependency regressions, complete WCAG 2.2 AA conformance, and `PRODUCTION_QUALIFIED_FOR_SRWF` remain unproven. No GitHub Release has been published.
 
 ## Purpose
 
@@ -58,52 +58,60 @@ A separate Operational template is **not** part of V0. It may be added only if I
 
 Read these before implementation or technical review:
 
-1. [`docs/architecture/MOTHER_ARCHITECTURE.md`](docs/architecture/MOTHER_ARCHITECTURE.md) — canonical V0 architecture and invariants.
-2. [`docs/architecture/AUTOMATED_QUALIFICATION_LAB.md`](docs/architecture/AUTOMATED_QUALIFICATION_LAB.md) — Owner-approved qualification-evidence amendment; extends the Mother Architecture without replacing the Release Gate.
-3. [`AGENTS.md`](AGENTS.md) — operating contract for coding agents and automated contributors.
-4. [`docs/architecture/PPDM_ADOPTION.md`](docs/architecture/PPDM_ADOPTION.md) — selectively adopted WordPress/self-guided UX guidance.
-5. [`docs/implementation/V0_IMPLEMENTATION_PLAN.md`](docs/implementation/V0_IMPLEMENTATION_PLAN.md) — bounded execution sequence and current work-unit status.
-6. [`docs/implementation/WU01_RUNTIME_FACTS.md`](docs/implementation/WU01_RUNTIME_FACTS.md) — target-runtime evidence and page-template contract.
+1. [`docs/architecture/MOTHER_ARCHITECTURE.md`](docs/architecture/MOTHER_ARCHITECTURE.md) — canonical V0 product architecture, ownership boundaries, and stronger Production Qualification claim.
+2. [`docs/architecture/AUTOMATED_QUALIFICATION_LAB.md`](docs/architecture/AUTOMATED_QUALIFICATION_LAB.md) — Owner-approved qualification-evidence amendment for repeatable CI/browser evidence.
+3. [`docs/architecture/PERSONAL_GITHUB_RELEASE_POLICY.md`](docs/architecture/PERSONAL_GITHUB_RELEASE_POLICY.md) — Owner-approved authority for personal GitHub distribution, release identity/license/runtime minimums, release notes, and the distinction between personal-release readiness and `PRODUCTION_QUALIFIED_FOR_SRWF`.
+4. [`AGENTS.md`](AGENTS.md) — operating contract for coding agents and automated contributors.
+5. [`docs/architecture/PPDM_ADOPTION.md`](docs/architecture/PPDM_ADOPTION.md) — selectively adopted WordPress/self-guided UX guidance.
+6. [`docs/implementation/V0_IMPLEMENTATION_PLAN.md`](docs/implementation/V0_IMPLEMENTATION_PLAN.md) — bounded execution sequence and current work-unit status.
+7. [`docs/implementation/WU01_RUNTIME_FACTS.md`](docs/implementation/WU01_RUNTIME_FACTS.md) — target-runtime evidence and page-template contract.
 
-The Mother Architecture is frozen for V0. Owner-approved architecture amendments may extend implementation/evidence policy while preserving the frozen V0 product mission, boundaries and Release Gate.
+The Mother Architecture remains frozen for V0. Owner-approved amendments may extend qualification or release policy while preserving the frozen V0 product mission and ownership boundaries.
 
 ## Platform policy
 
-Current evidence baseline:
+Current release and evidence baseline:
 
 ```text
-Minimum WordPress: 6.7
+Personal GitHub release identity: v0.1.0
+Release minimum WordPress: 7.1
+Release minimum PHP: 8.3
+Selected license: GPL-2.0-or-later
+
 Observed production WordPress: 7.1.1
-WU-01/WU-02/WU-03/WU-04/WU-05/WU-06 pinned qualified lab WordPress: 7.1.1
-
-Preferred engineering PHP floor: 8.2+
 Observed production PHP: 8.3.33
-WU-01/WU-02/WU-03/WU-04/WU-05/WU-06 pinned qualified lab PHP: 8.3.33
-Minimum production PHP support policy: NOT_YET_FROZEN
-
-Initial host theme: Twenty Twenty-Five
 Observed production TT25: 1.5
-WU-01/WU-02/WU-03/WU-04/WU-05/WU-06 pinned qualified lab TT25: 1.5
+
+WU-01/WU-02/WU-03/WU-04/WU-05/WU-06/WU-07 pinned qualified lab WordPress: 7.1.1
+WU-01/WU-02/WU-03/WU-04/WU-05/WU-06/WU-07 pinned qualified lab PHP: 8.3.33
+Initial and qualified host theme: Twenty Twenty-Five 1.5
 ```
 
-Observed production identity provenance and disposable runtime behavior are distinct evidence classes. They do not by themselves establish production qualification.
+The release minimums are the Owner-selected metadata floor for the personal GitHub `v0.1.0` release. They do not advertise broad compatibility beyond the exercised pinned tuple. Observed production identity provenance and disposable runtime/browser behavior are distinct evidence classes and do not by themselves establish production-host confirmation.
 
 ## Repository status
 
 ```text
-Architecture: APPROVED / FROZEN FOR V0 + OWNER-APPROVED QUALIFICATION-LAB AMENDMENT
+Architecture: APPROVED / FROZEN FOR V0 + OWNER-APPROVED QUALIFICATION/RELEASE AMENDMENTS
+Personal GitHub release policy: APPROVED / OWNER_LOCKED
+Release identity: v0.1.0
+License: GPL-2.0-or-later
+Release minimum WordPress/PHP: 7.1 / 8.3
 WU-01 runtime-fact prerequisite: COMPLETE_FOR_WU02
-WU-02 minimal runtime core: IMPLEMENTED_ON_MAIN
+WU-02 minimal runtime core: IMPLEMENTED / INTEGRATION_PROVEN
 Configuration schema v1: IMPLEMENTED
 Registration template registration: IMPLEMENTED
 Exact page-template assignment adapter: IMPLEMENTED
-WU-03 Owner settings workflow: IMPLEMENTED_ON_MAIN / WORDPRESS_INTEGRATION_PROVEN
-WU-04 runtime diagnostics/drift: IMPLEMENTED_ON_MAIN / WORDPRESS_INTEGRATION_QUALIFIED_ON_PINNED_TUPLE
-WU-05 Full Width geometry: IMPLEMENTED_ON_MAIN / FULL_WIDTH_GEOMETRY_AUTOMATED_QUALIFIED_ON_PINNED_TARGET_TUPLE
-WU-06 admin UX/security/RTL/accessibility qualification: IMPLEMENTED_IN_PR_10 / ADMIN_BROWSER_QUALIFICATION_PASS_ON_PINNED_TARGET_TUPLE
-WU-07 browser/E2E release gate: NOT_RUN
-Automated Qualification Lab: WU04_INTEGRATION + WU05_FRONTEND_BROWSER + WU06_ADMIN_BROWSER
-Production qualification: NOT_PROVEN
+WU-03 Owner settings workflow: IMPLEMENTED / WORDPRESS_INTEGRATION_PROVEN
+WU-04 runtime diagnostics/drift: IMPLEMENTED / WORDPRESS_INTEGRATION_QUALIFIED_ON_PINNED_TUPLE
+WU-05 Full Width geometry: IMPLEMENTED / FULL_WIDTH_GEOMETRY_AUTOMATED_QUALIFIED_ON_PINNED_TARGET_TUPLE
+WU-06 admin UX/security/RTL/accessibility qualification: IMPLEMENTED / ADMIN_BROWSER_QUALIFICATION_PASS_ON_PINNED_TARGET_TUPLE
+WU-07 mechanical Owner E2E: IMPLEMENTED / WU07_MECHANICAL_OWNER_E2E_PASS_ON_PINNED_TARGET_TUPLE
+Human comprehension: NOT_PROVEN
+Production-host confirmation: NOT_PROVEN
+Complete WCAG 2.2 AA conformance: NOT_PROVEN
+Unavailable real dependency regressions: ENVIRONMENT_UNAVAILABLE / NOT_PROVEN
+PRODUCTION_QUALIFIED_FOR_SRWF: NOT_PROVEN
 Production release: NOT_PUBLISHED
 ```
 
@@ -127,15 +135,15 @@ The WU-05 real-browser lab runs Chromium through Playwright against the exact di
 
 The successful synthetic host-geometry evidence does **not** prove unavailable real Gravity Forms, Orbital, GTB, or approved Vazir/Vazirmatn integration. Those dependency-backed claims remain `ENVIRONMENT_UNAVAILABLE / NOT_PROVEN`.
 
-WU-06 reuses the existing WU-05 Playwright/Chromium foundation for real wp-admin qualification rather than introducing a second browser platform. On the pinned WordPress `7.1.1` / PHP `8.3.33` / Twenty Twenty-Five `1.5` tuple in Persian RTL, the lab exercises first-run, valid published/non-published pages, missing/trashed/wrong-type pages, wrong assignment, canonical state, published DB override, theme override, missing template and `UNKNOWN`. Each state must present truthful Owner-facing text, preserve read-only sentinels during rendering/accessibility scanning, keep the admin surface RTL while technical identifiers/report remain LTR, and expose native semantic controls.
+WU-06 reuses the existing WU-05 Playwright/Chromium foundation for real wp-admin qualification rather than introducing a second browser platform. On the pinned WordPress `7.1.1` / PHP `8.3.33` / Twenty Twenty-Five `1.5` tuple in Persian RTL, the lab exercises first-run, valid published/non-published pages, missing/trashed/wrong-type pages, wrong assignment, canonical state, published DB override, theme override, missing template and `UNKNOWN`. The browser qualification also exercises keyboard/focus, native disclosure, a `390×900` narrow-admin layout, authorization boundaries, invalid/missing nonce rejection, successful explicit apply, read-only `بررسی دوباره`, diagnostic privacy, and a scoped automated accessibility scan.
 
-The WU-06 browser qualification also exercises real keyboard traversal/focus, native `<details>/<summary>` disclosure, the `390×900` narrow-admin layout, real HTTP/browser authorization boundaries, target-page edit denial, invalid/missing nonce rejection, successful keyboard-driven save/apply, read-only `بررسی دوباره`, and diagnostic privacy. The accessibility scan is pinned `@axe-core/playwright` evidence scoped to the plugin `.wrap`; zero plugin-scope machine-detectable violations on the exercised states is a bounded automated check, **not** complete WCAG 2.2 AA conformance.
+WU-07 reuses that same browser foundation for the mechanical Owner journey: login, reach `Settings → SRWF Host`, observe first-run guidance, select a Registration page, explicitly save/apply, observe the truthful result, verify persisted schema-v1 configuration and canonical assignment, open the frontend Registration page, verify the canonical host shell/RTL/basic host integrity without horizontal overflow, return to settings, and run read-only `Check Again`. This establishes `WU07_MECHANICAL_OWNER_E2E_PASS_ON_PINNED_TARGET_TUPLE` only.
 
-WU-06 preserves the same claim ceiling: human comprehension, WU-07 Owner E2E/release-gate evidence, direct production-host confirmation, complete WCAG 2.2 AA conformance, unavailable Gravity Forms/Orbital/GTB/Vazir dependency regressions, and `PRODUCTION_QUALIFIED_FOR_SRWF` remain `NOT_RUN`, `ENVIRONMENT_UNAVAILABLE`, or `NOT_PROVEN` as applicable.
+The Owner-approved Personal GitHub Release Policy permits the personal/project-specific `v0.1.0` GitHub release to proceed without converting unavailable evidence into PASS. Human comprehension, direct production-host confirmation, complete WCAG 2.2 AA conformance, and unavailable real Gravity Forms/Orbital/GTB/Vazir-Vazirmatn regressions remain unproven, and the build must not be labeled `PRODUCTION_QUALIFIED_FOR_SRWF` on that basis.
 
-Exact-head workflow/run/artifact identity for focused qualification PRs is recorded in PR evidence rather than embedded as a self-referential commit identifier here.
+Exact-head workflow/run/artifact identities belong in focused PR/release evidence rather than durable current-state text that would become stale when lifecycle state changes.
 
-The approved Automated Qualification Lab extends the existing disposable runtime-lab for WU-04 through WU-07 where behavior can be reproduced honestly. It favors deterministic fixtures, real-browser assertions when needed, machine-readable evidence and useful failure artifacts. Human comprehension and irreducibly production-specific confirmation remain separate evidence requirements, and unavailable real dependencies must not be represented by synthetic PASS claims.
+The approved Automated Qualification Lab extends the existing disposable runtime-lab through WU-07 where behavior can be reproduced honestly. It favors deterministic fixtures, real-browser assertions when needed, machine-readable evidence and useful failure artifacts. Human comprehension and irreducibly production-specific confirmation remain separate evidence classes, and unavailable real dependencies must not be represented by synthetic PASS claims.
 
 ## Repository layout
 
@@ -148,12 +156,14 @@ The approved Automated Qualification Lab extends the existing disposable runtime
 │   │   ├── wu03-owner-settings.yml
 │   │   ├── wu04-diagnostics-drift.yml
 │   │   ├── wu05-full-width-geometry.yml
-│   │   └── wu06-admin-qualification.yml
+│   │   ├── wu06-admin-qualification.yml
+│   │   └── wu07-owner-e2e.yml
 │   └── PULL_REQUEST_TEMPLATE.md
 ├── docs/
 │   ├── architecture/
 │   │   ├── MOTHER_ARCHITECTURE.md
 │   │   ├── AUTOMATED_QUALIFICATION_LAB.md
+│   │   ├── PERSONAL_GITHUB_RELEASE_POLICY.md
 │   │   └── PPDM_ADOPTION.md
 │   ├── evidence/
 │   │   └── PRODUCTION_SITE_HEALTH_IDENTITY.md
@@ -171,7 +181,10 @@ The approved Automated Qualification Lab extends the existing disposable runtime
 ├── tests/
 │   ├── browser/
 │   │   ├── wu05-full-width.mjs
-│   │   └── wu06-admin-qualification.mjs
+│   │   ├── wu06-admin-qualification.mjs
+│   │   └── wu07-owner-e2e.mjs
+│   ├── release/
+│   │   └── verify-release-contract.py
 │   └── runtime-lab/
 │       ├── fixture-plugin/
 │       │   └── srwf-host-companion-wu06-fixture.php
@@ -179,6 +192,7 @@ The approved Automated Qualification Lab extends the existing disposable runtime
 │       └── wu06-admin-fixtures.php
 ├── AGENTS.md
 ├── CHANGELOG.md
+├── LICENSE
 ├── SECURITY.md
 ├── README.md
 └── srwf-host-companion.php
@@ -214,10 +228,12 @@ NOT_PROVEN
 ENVIRONMENT_UNAVAILABLE
 ```
 
-A unit test does not prove browser behavior. Source inspection does not prove production runtime. A fixture that creates prerequisite state does not prove the Owner can reach that state through the real product path. Automated accessibility scanning does not, by itself, prove full WCAG 2.2 AA conformance. Disposable exact-version CI does not, by itself, prove the real production host.
+A unit test does not prove browser behavior. Source inspection does not prove production runtime. A fixture that creates prerequisite state does not prove the Owner can reach that state through the real product path. Automated accessibility scanning does not, by itself, prove full WCAG 2.2 AA conformance. Disposable exact-version CI does not, by itself, prove the real production host. Mechanical browser E2E does not prove human comprehension.
 
-## License
+## License and personal distribution
 
-A repository license has **not yet been selected**.
+The Owner selected `GPL-2.0-or-later`. The repository `LICENSE` contains the GNU GPL version 2 license text, and the plugin header carries the matching `GPL-2.0-or-later` declaration.
 
-Do not publish or describe a production distribution as licensed for general use until the Owner explicitly chooses and records a license.
+Personal GitHub distribution, release identity, release runtime minimums, release-note claim ceilings, and personal-release readiness are governed by [`docs/architecture/PERSONAL_GITHUB_RELEASE_POLICY.md`](docs/architecture/PERSONAL_GITHUB_RELEASE_POLICY.md).
+
+This personal release policy does not weaken the stronger `PRODUCTION_QUALIFIED_FOR_SRWF` evidence boundary.
