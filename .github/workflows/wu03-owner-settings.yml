@@ -7,6 +7,7 @@ on:
     paths:
       - 'srwf-host-companion.php'
       - 'src/**'
+      - 'templates/**'
       - 'tests/runtime-lab/wu03-owner-settings.php'
       - '.github/workflows/wu03-owner-settings.yml'
 
