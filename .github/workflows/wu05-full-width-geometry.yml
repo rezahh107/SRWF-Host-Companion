@@ -50,7 +50,8 @@ jobs:
       SRWF_WP_CLI_VERSION: '2.12.0'
       SRWF_WP_CLI_SHA256: ce34ddd838f7351d6759068d09793f26755463b4a4610a5a5c0a97b68220d85c
       SRWF_TESTED_COMMIT_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
-      SRWF_WU05_MODE: diagnostic
+      SRWF_WU05_MODE: qualification
+      SRWF_WU05_BASE_URL: http://127.0.0.1:8080
 
     steps:
       - name: Checkout exact target
@@ -100,8 +101,12 @@ jobs:
           php "$SRWF_WP_CLI" core download --path="$SRWF_WP_PATH" --version="$SRWF_WP_VERSION" --force
           php "$SRWF_WP_CLI" config create --path="$SRWF_WP_PATH" --dbname=wordpress --dbuser=root --dbpass='' --dbhost=127.0.0.1:3306 --skip-check
           admin_password="$(openssl rand -hex 24)"
-          php "$SRWF_WP_CLI" core install --path="$SRWF_WP_PATH" --url=http://127.0.0.1:8080 --title='SRWF Host Companion WU-05 Lab' --admin_user=runtime_admin --admin_password="$admin_password" --admin_email='runtime@example.invalid' --skip-email
+          php "$SRWF_WP_CLI" core install --path="$SRWF_WP_PATH" --url="$SRWF_WU05_BASE_URL" --title='SRWF Host Companion WU-05 Lab' --admin_user=runtime_admin --admin_password="$admin_password" --admin_email='runtime@example.invalid' --skip-email
           unset admin_password
+          php "$SRWF_WP_CLI" option update home "$SRWF_WU05_BASE_URL" --path="$SRWF_WP_PATH"
+          php "$SRWF_WP_CLI" option update siteurl "$SRWF_WU05_BASE_URL" --path="$SRWF_WP_PATH"
+          test "$(php "$SRWF_WP_CLI" option get home --path="$SRWF_WP_PATH")" = "$SRWF_WU05_BASE_URL"
+          test "$(php "$SRWF_WP_CLI" option get siteurl --path="$SRWF_WP_PATH")" = "$SRWF_WU05_BASE_URL"
           test "$(php "$SRWF_WP_CLI" core version --path="$SRWF_WP_PATH")" = "$SRWF_WP_VERSION"
           php "$SRWF_WP_CLI" theme install twentytwentyfive --version="$SRWF_TT25_VERSION" --force --path="$SRWF_WP_PATH"
           test "$(php "$SRWF_WP_CLI" theme get twentytwentyfive --field=version --path="$SRWF_WP_PATH")" = "$SRWF_TT25_VERSION"
@@ -123,7 +128,7 @@ jobs:
           php "$SRWF_WP_CLI" plugin activate srwf-host-companion --path="$SRWF_WP_PATH"
           test "$(php "$SRWF_WP_CLI" plugin get srwf-host-companion --field=status --path="$SRWF_WP_PATH")" = 'active'
           fixture_url="$(php "$SRWF_WP_CLI" --path="$SRWF_WP_PATH" eval-file "$GITHUB_WORKSPACE/tests/runtime-lab/wu05-full-width-fixture.php" | tail -n 1)"
-          [[ "$fixture_url" == http://127.0.0.1:8080/* ]]
+          [[ "$fixture_url" == "$SRWF_WU05_BASE_URL"/* ]]
           echo "SRWF_WU05_FIXTURE_URL=$fixture_url" >> "$GITHUB_ENV"
           test -s "$SRWF_WU05_FIXTURE_EVIDENCE_PATH"
 
@@ -178,12 +183,15 @@ jobs:
           assert data['fixture']['contract_status'] == 'PASS'
           assert data['fixture']['assignment_readback'] == 'registration-full-width'
           assert sorted(int(key) for key in data['viewport_status']) == [320, 390, 430, 1440]
+          assert all(status == 'PASS' for status in data['viewport_status'].values())
+          assert data['overall_wu05_automated_qualification'] == 'PASS'
+          assert data['claim_ceiling']['bounded_status'] == 'FULL_WIDTH_GEOMETRY_AUTOMATED_QUALIFIED_ON_PINNED_TARGET_TUPLE'
           assert data['claims']['gravity_forms_orbital_gtb'] == 'NOT_PROVEN'
           assert data['claims']['approved_frontend_typography'] == 'NOT_PROVEN'
           assert data['claim_ceiling']['wu06_admin_rtl_accessibility_security'] == 'NOT_RUN'
           assert data['claim_ceiling']['wu07_owner_browser_e2e_comprehension'] == 'NOT_RUN'
           assert data['claim_ceiling']['production_qualified_for_srwf'] == 'NOT_PROVEN'
-          print('WU-05 browser evidence captured:', data['overall_wu05_automated_qualification'])
+          print('WU-05 browser evidence qualified:', data['overall_wu05_automated_qualification'])
           PY
 
           echo '### WU-05 Full Width host canvas — browser evidence' >> "$GITHUB_STEP_SUMMARY"
@@ -198,6 +206,7 @@ jobs:
           print(f"- RTL locale: `{env['language']}` / `{env['is_rtl']}`")
           print(f"- viewport status: `{d['viewport_status']}`")
           print(f"- WU-05 automated geometry status: `{d['overall_wu05_automated_qualification']}`")
+          print(f"- bounded claim: `{d['claim_ceiling']['bounded_status']}`")
           print('- Gravity Forms / Orbital / GTB: `NOT_PROVEN` (`ENVIRONMENT_UNAVAILABLE`)')
           print('- approved Vazir/Vazirmatn frontend typography: `NOT_PROVEN` (`ENVIRONMENT_UNAVAILABLE`)')
           print('- WU-06: `NOT_RUN`; WU-07: `NOT_RUN`; Production Qualification: `NOT_PROVEN`')
