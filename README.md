@@ -115,6 +115,8 @@ On the pinned WordPress `7.1.1` runtime, WU-04 distinguishes the proven resoluti
 
 The WU-04 Automated Qualification Lab slice creates deterministic synthetic fixtures for canonical state, wrong assignment, valid non-published page, missing/trashed/wrong-type targets, database override, theme override, missing canonical template, and an intentionally unclassifiable resolver result. Every fixture also snapshots relevant persistent state before/after diagnostics and verifies no hidden repair. A privacy-minimized text report is available through native read-only admin markup without JavaScript; it excludes page/form content, student data, uploads, authentication material, nonces, cookies and credentials.
 
+Exact-head workflow/run/artifact identity for the open PR is recorded in the PR evidence rather than embedded as a self-referential commit identifier here.
+
 WU-04 evidence is WordPress integration, not browser qualification. It does **not** prove Full Width geometry, browser RTL/accessibility/security behavior, Owner browser E2E/comprehension, the production host, or production qualification.
 
 The approved Automated Qualification Lab extends the existing disposable runtime-lab for WU-04 through WU-07 where behavior can be reproduced honestly. It favors deterministic fixtures, real-browser assertions when needed, machine-readable evidence and useful failure artifacts. Human comprehension and irreducibly production-specific confirmation remain separate evidence requirements, and unavailable real dependencies must not be represented by synthetic PASS claims.
