@@ -10,8 +10,10 @@ This file is the operating contract for coding agents and automated contributors
 - **Primary operator:** non-technical Owner / WordPress administrator
 - **Canonical architecture:** `docs/architecture/MOTHER_ARCHITECTURE.md`
 - **Owner-approved qualification amendment:** `docs/architecture/AUTOMATED_QUALIFICATION_LAB.md`
+- **Owner-approved Inbox host-canvas amendment:** `docs/architecture/INBOX_FULL_WIDTH_HOST_CANVAS_AMENDMENT.md`
 - **Owner-approved personal release policy:** `docs/architecture/PERSONAL_GITHUB_RELEASE_POLICY.md`
 - **V0 status:** architecture approved and frozen; WU-01 through WU-06 are implemented and qualified to their documented boundaries; WU-07 mechanical Owner E2E is implemented and real-browser qualified on the pinned target tuple; human comprehension, production-host confirmation, unavailable real dependency evidence, complete WCAG 2.2 AA conformance, and `PRODUCTION_QUALIFIED_FOR_SRWF` remain unproven; personal GitHub release policy is Owner-locked for `v0.1.0` under `GPL-2.0-or-later` with WordPress `7.1` / PHP `8.3` release minimums; personal GitHub Release `v0.1.0` is published
+- **Post-v0.1.0 bounded scope:** one independently selected Inbox Page may reuse the existing canonical Full Width host canvas only; no Operational template or Gravity Flow/GPP ownership is added
 
 The plugin exists to make SRWF host configuration deterministic, understandable, explicit, and verifiable.
 
@@ -25,9 +27,10 @@ Before any implementation, refactor, technical review, debugging, or architectur
 2. read this `AGENTS.md`;
 3. read `docs/architecture/PPDM_ADOPTION.md` when the task affects admin UX, diagnostics, guidance, accessibility, i18n/RTL, or qualification;
 4. read `docs/architecture/AUTOMATED_QUALIFICATION_LAB.md` when the task affects WU-04→WU-07 qualification strategy, CI evidence, browser testing, accessibility automation, release-candidate automation, or failure artifacts;
-5. read `docs/architecture/PERSONAL_GITHUB_RELEASE_POLICY.md` when the task affects personal GitHub distribution, release identity/version, license, release minimum WordPress/PHP, release notes, release-candidate consistency, personal-release readiness, or release-gate interpretation;
-6. read `docs/implementation/V0_IMPLEMENTATION_PLAN.md` when the task belongs to V0;
-7. inspect the current repository state and exact target runtime facts relevant to the task.
+5. read `docs/architecture/INBOX_FULL_WIDTH_HOST_CANVAS_AMENDMENT.md` when the task affects Inbox page selection, host-canvas assignment, role configuration, or claims about Inbox coverage;
+6. read `docs/architecture/PERSONAL_GITHUB_RELEASE_POLICY.md` when the task affects personal GitHub distribution, release identity/version, license, release minimum WordPress/PHP, release notes, release-candidate consistency, personal-release readiness, or release-gate interpretation;
+7. read `docs/implementation/V0_IMPLEMENTATION_PLAN.md` when the task belongs to V0;
+8. inspect the current repository state and exact target runtime facts relevant to the task.
 
 Do not claim a preflight occurred if the files were not actually inspected.
 
@@ -54,15 +57,15 @@ For implementation facts:
 
 Do not force one flat authority order across normative decisions and factual implementation behavior.
 
-## 4. Frozen V0 mission
+## 4. Frozen V0 mission and post-v0.1.0 amendment
 
-V0 solves one host-level problem:
+The frozen V0 mission remains historical and unchanged:
 
 > Let the Owner choose the SRWF Registration page and explicitly apply a canonical Full Width WordPress Block Template from a simple WordPress-native settings surface.
 
-V0 includes:
+V0 included:
 
-- versioned role-based configuration with only `roles.registration.page_id`;
+- versioned role-based configuration with `roles.registration.page_id`;
 - one Registration Full Width template;
 - explicit save/apply;
 - read-only status check;
@@ -74,7 +77,7 @@ V0 includes:
 
 The approved Automated Qualification Lab strengthens how repeatable technical evidence is produced; it does not expand the product scope.
 
-V0 does **not** include a separate Operational template unless architecture is amended after real Inbox / Entry Detail evidence.
+After `v0.1.0`, `docs/architecture/INBOX_FULL_WIDTH_HOST_CANVAS_AMENDMENT.md` records the explicit Owner-approved additional product need: one independently selected Inbox Page may reuse the exact existing Full Width host canvas. That amendment authorizes only host-page selection/configuration/assignment/readback for Inbox. It does **not** authorize a separate Operational template, Inbox presentation ownership, Gravity Flow behavior changes, GPP changes, or Inbox-specific diagnostics.
 
 ## 5. Core boundaries
 
@@ -109,7 +112,8 @@ Do not introduce without an explicit Owner-approved architecture amendment:
 - hidden automatic template repair;
 - automatic mutation when rendering or checking status;
 - speculative multi-page Registration cardinality;
-- a separate Operational template in V0;
+- a separate Inbox/Operational template;
+- Inbox-specific diagnostics or automatic repair without separate authorization;
 - frontend JavaScript without a proven need;
 - bundled font delivery.
 
@@ -125,30 +129,33 @@ WordPress native capability/API
 → JavaScript only for a proven residual gap
 ```
 
-For V0 settings, PHP/native admin + WordPress Settings/Options APIs are the default.
+For settings, PHP/native admin + WordPress Settings/Options APIs are the default.
 
 React, SPA, custom settings frameworks, service-provider frameworks, capability registries, and adapter hierarchies require evidence of real complexity before adoption.
 
 ## 8. Configuration invariant
 
-V0 configuration is versioned and role-based.
-
-Conceptual contract:
+Current configuration remains one versioned role-based option. Schema v2 admits exactly the two Owner-approved page roles:
 
 ```php
 [
-    'schema_version' => 1,
+    'schema_version' => 2,
     'roles' => [
         'registration' => [
             'page_id' => 123,
+        ],
+        'inbox' => [
+            'page_id' => 456,
         ],
     ],
 ]
 ```
 
-Do not replace this with multiple competing options or assume `registration` is a list of pages.
+Do not replace this with multiple competing options or assume either role is a list of pages.
 
-Any future schema change requires version increment and defined migration behavior.
+Valid schema-v1 installations remain readable without persistent migration: Registration is preserved and Inbox is treated as unconfigured (`0`). Opening/rendering settings must not write an upgrade. Explicit Inbox persistence is the schema-v1 → schema-v2 storage boundary. Once schema v2 exists, changing either role must preserve the other role.
+
+Malformed or unsupported stored configuration remains fail-closed/unconfigured. Future schema changes require another version increment and defined migration behavior.
 
 ## 9. Mutation and security invariant
 
@@ -177,6 +184,8 @@ Treat submitted IDs as untrusted input. Validate/sanitize at boundaries and esca
 
 Nonce does not replace capability checks.
 
+Registration and Inbox mutation operations are independent. Applying one role must not re-save or re-assign the other role. Changing a role target must not silently rewrite/revert the previously selected page.
+
 ## 10. Do not guess WordPress persistence
 
 The Mother Architecture intentionally does not freeze the internal stored representation of page-template assignment.
@@ -203,6 +212,8 @@ Full Width application shell
 ```
 
 Do not turn H1 into an invariant.
+
+The Inbox amendment reuses whatever canonical Full Width canvas is already proven; it does not create a second layout hypothesis or template variant.
 
 ## 12. Owner-facing UX rules
 
@@ -253,6 +264,8 @@ When a problem is user-facing, explain the practical consequence and next valid 
 
 A copyable diagnostic report must exclude student data, Gravity entry values, uploads, workflow assignments, cookies, nonces, credentials, tokens, and unnecessary PII.
 
+Current diagnostics remain Registration-focused. Do not imply that Registration diagnostics establish Inbox drift/health, and do not add Inbox auto-repair for symmetry.
+
 ## 14. RTL, i18n and accessibility
 
 - Owner-facing qualified UX is Persian-first.
@@ -279,7 +292,7 @@ Never commit real student/customer/payment/PII data into:
 
 Use synthetic data only.
 
-Do not add telemetry or external reporting in V0.
+Do not add telemetry or external reporting.
 
 ## 16. Dependency policy
 
@@ -320,12 +333,13 @@ desktop PASS ≠ 390px RTL PASS
 automated accessibility scan PASS ≠ complete WCAG 2.2 AA conformance
 disposable exact-version CI PASS ≠ production-host confirmation
 browser workflow PASS ≠ human comprehension proven
+synthetic Inbox host canvas PASS ≠ real Gravity Flow Inbox integration
 personal GitHub release ready ≠ PRODUCTION_QUALIFIED_FOR_SRWF
 ```
 
 Do not inflate a narrow test into a broader production-readiness claim.
 
-For WU-04 through WU-07, prefer extending/reusing the existing disposable runtime-lab into deterministic qualification automation when the behavior can be reproduced faithfully. Preserve clear per-WU evidence boundaries; use real browser automation where browser evidence is required; retain diagnostic failure artifacts only when useful. Full/expensive qualification need not run on every trivial PR when focused checks plus a justified release-candidate/full-qualification boundary provide equal confidence.
+For WU-04 through WU-07 and the bounded Inbox host-canvas addition, prefer extending/reusing the existing disposable runtime/browser lab when the behavior can be reproduced faithfully. Preserve clear evidence boundaries; use real browser automation where browser evidence is required; retain diagnostic failure artifacts only when useful. Full/expensive qualification need not run on every trivial PR when focused checks plus a justified release-candidate/full-qualification boundary provide equal confidence.
 
 ## 18. Release gate
 
@@ -357,7 +371,7 @@ Recommended prefixes:
 
 Each material PR should state:
 
-- governing architecture/work unit;
+- governing architecture/work unit/amendment;
 - exact scope;
 - behavior intentionally unchanged;
 - files changed;
