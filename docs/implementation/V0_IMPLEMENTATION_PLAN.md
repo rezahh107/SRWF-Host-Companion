@@ -129,7 +129,7 @@ Key execution rules:
 - do not let automated qualification alone imply `PRODUCTION_QUALIFIED_FOR_SRWF`;
 - use focused checks on ordinary PRs and broader/full automated qualification at a justified regression or release boundary rather than forcing every expensive test on every trivial change.
 
-WU-04 established the first deterministic integration slice. WU-05 adds the first reusable real-browser slice without coupling the product runtime to the browser framework.
+WU-04 established the first deterministic integration slice. WU-05 added the first reusable frontend real-browser slice, and WU-06 reuses that same Playwright/Chromium foundation for real wp-admin qualification without coupling the product runtime to the browser framework.
 
 ## WU-04 — Read-only diagnostics and drift
 
@@ -215,15 +215,13 @@ If a required real dependency is unavailable in CI, preserve that regression cla
 
 If H1 fails, replace the implementation mechanism without reopening the architecture contract.
 
-Current WU-05 implementation/qualification state in PR #9:
+Current WU-05 implementation/qualification state on `main` after merged PR #9:
 
 ```text
-IMPLEMENTED_NATIVE_H1
+IMPLEMENTED_NATIVE_H1_ON_MAIN
 FULL_WIDTH_GEOMETRY_AUTOMATED_QUALIFIED_ON_PINNED_TARGET_TUPLE
 REAL_BROWSER_RTL_MATRIX_PASS
 GRAVITY_FORMS_ORBITAL_GTB_TYPOGRAPHY_ENVIRONMENT_UNAVAILABLE_NOT_PROVEN
-WU06_NOT_RUN
-WU07_NOT_RUN
 PRODUCTION_QUALIFICATION_NOT_PROVEN
 ```
 
@@ -297,6 +295,51 @@ Exercise:
 - diagnostic privacy.
 
 Automate the repeatable part through integration plus real browser/HTTP tests. Automated accessibility scanning is useful evidence for machine-detectable failures but does not, by itself, prove complete WCAG 2.2 AA conformance.
+
+Current WU-06 implementation/qualification state in PR #10:
+
+```text
+ADMIN_BROWSER_QUALIFICATION_IMPLEMENTED
+ADMIN_BROWSER_QUALIFICATION_PASS_ON_PINNED_TARGET_TUPLE
+REAL_WP_ADMIN_PERSIAN_RTL_PASS
+KEYBOARD_FOCUS_AND_NARROW_ADMIN_PASS
+AUTHORIZATION_NONCE_TARGET_EDIT_BOUNDARIES_PASS
+DIAGNOSTIC_PRIVACY_PASS
+MACHINE_DETECTABLE_ACCESSIBILITY_CHECK_PASS
+WU07_NOT_RUN
+HUMAN_COMPREHENSION_NOT_RUN
+PRODUCTION_HOST_QUALIFICATION_NOT_PROVEN
+COMPLETE_WCAG_2_2_AA_CONFORMANCE_NOT_PROVEN
+GRAVITY_FORMS_ORBITAL_GTB_VAZIR_ENVIRONMENT_UNAVAILABLE_NOT_PROVEN
+```
+
+WU-06 reuses the WU-05 pinned Playwright/Chromium browser foundation instead of creating a parallel browser stack. The disposable exact-target lab runs WordPress `7.1.1`, PHP `8.3.33`, Twenty Twenty-Five `1.5`, and Persian `fa_IR` wp-admin.
+
+The deterministic state matrix exercises:
+
+- first-run / unconfigured state;
+- valid published and valid non-published pages;
+- missing, trashed, and wrong-post-type configured targets;
+- wrong page-template assignment;
+- canonical active state;
+- published database override;
+- theme-file override;
+- missing canonical template;
+- unsupported provider provenance represented truthfully as `UNKNOWN`.
+
+For each state, PASS requires the rendered Persian Owner-facing message to match the underlying WU-04 evidence model, the document/plugin surface to compute RTL, technical identifiers and the read-only diagnostic report to remain LTR/copyable, native semantic controls to remain present, and read-only browser rendering plus the automated accessibility scan to leave configuration/page/template/provider sentinels unchanged.
+
+The browser qualification also exercises logical Tab/Shift+Tab progression, visible rendered focus, native `<details>/<summary>` keyboard disclosure, and the primary selector/apply path. The narrow-admin check uses a `390×900` viewport and requires document/body width containment, no visible plugin-owned element escaping the viewport, no Registration label/select overlap, and reachable controls/technical disclosure.
+
+Security/authorization evidence uses real browser and authenticated HTTP requests. A user without `manage_options` is denied the protected settings and mutation boundaries; a user with `manage_options` but without target-page edit permission fails closed; invalid and missing nonces leave sentinels unchanged and do not present fake success; the authorized keyboard-driven path persists schema-v1 configuration and canonical assignment/readback without rewriting page content or the previously configured page; and keyboard-triggered `بررسی دوباره` is verified read-only.
+
+The diagnostic privacy check injects synthetic student/form values, an upload URL, cookies, credentials/passwords, nonce/session-like material, secrets/tokens, and synthetic user email PII, then proves those markers are absent from the copyable report while bounded technical fields remain present.
+
+The pinned `@axe-core/playwright` scan is scoped to the plugin `.wrap` and is recorded only as a machine-detectable accessibility check. A green scan does **not** establish complete WCAG 2.2 AA conformance or human comprehension.
+
+WU-06 also dispatches and collects the existing WU-01 through WU-05 workflows on the exact tested ref before accepting the bounded result, preventing the new browser qualification from masking earlier work-unit regressions. Exact final-head workflow/run/artifact identity remains focused PR evidence rather than a self-referential identifier in this plan.
+
+WU-06 establishes only the bounded disposable-CI admin/browser qualification. It does not establish WU-07, independent human comprehension, direct production-host behavior, unavailable real Gravity Forms/Orbital/GTB/Vazir integration, complete WCAG 2.2 AA conformance, or `PRODUCTION_QUALIFIED_FOR_SRWF`.
 
 ## WU-07 — E2E / comprehension / release gate
 
