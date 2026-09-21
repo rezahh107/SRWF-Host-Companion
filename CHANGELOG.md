@@ -6,25 +6,58 @@ GitHub Release `v0.1.0` was published on 2026-09-21.
 
 ## [Unreleased]
 
+No changes yet.
+
+## [0.2.0] - 2026-09-21
+
 ### Added
 
 - Owner-approved post-`v0.1.0` Inbox Full Width Host Canvas architecture amendment: one independently selected Inbox Page may reuse the exact existing SRWF Full Width host canvas; no separate Inbox/Operational template or Gravity Flow/GPP ownership is authorized;
 - schema-v2 support for exactly `roles.registration.page_id` and `roles.inbox.page_id`, with valid schema-v1 Registration state normalized read-only in memory and explicit Inbox persistence as the v1→v2 storage-upgrade boundary;
 - independent `صفحه اینباکس` selector and explicit Inbox save/apply operation on the existing `Settings → SRWF Host` screen, reusing the existing canonical template assignment/readback adapter;
 - WU-03 integration coverage for Inbox selector presence, authorization/nonce/target validation, schema-v2 migration, content preservation, previous-Inbox no-rewrite behavior, and two-way Registration/Inbox independence;
-- WU-05 real-browser host-canvas qualification for a synthetic Inbox page on the existing pinned Playwright/Chromium lab at `320`, `390`, `430`, and `1440` CSS px in RTL, while preserving real Gravity Flow Inbox and GPP integration as `NOT_PROVEN`.
+- WU-05 real-browser host-canvas qualification for a synthetic Inbox page on the existing pinned Playwright/Chromium lab at `320`, `390`, `430`, and `1440` CSS px in RTL, while preserving real Gravity Flow Inbox and GPP integration as `NOT_PROVEN`;
+- `v0.2.0` release notes and manifest metadata for the personal GitHub distribution channel.
 
 ### Changed
 
 - Registration-only legacy persistence may remain schema v1 until Inbox is explicitly configured; once schema v2 exists, either role setter preserves the other role;
 - Owner-facing diagnostics wording now makes explicit that the existing diagnostic surface remains Registration-focused and does not diagnose or auto-repair Inbox;
-- repository guidance/current-state documentation now routes the bounded Inbox capability through the explicit amendment without rewriting the frozen Mother Architecture.
+- repository guidance/current-state documentation now routes the bounded Inbox capability through the explicit amendment without rewriting the frozen Mother Architecture;
+- release-contract verification now keeps the historical first-release identity (`v0.1.0`) in policy while taking the current release identity from `.github/release-manifest.json`, preventing later releases from being incorrectly coupled to the initial version.
+
+### Status
+
+```text
+Architecture: APPROVED / FROZEN FOR V0 + OWNER-APPROVED QUALIFICATION/RELEASE/INBOX AMENDMENTS
+Personal GitHub release policy: APPROVED / OWNER_LOCKED
+Release candidate identity: v0.2.0
+License: GPL-2.0-or-later
+Release minimum WordPress/PHP: 7.1 / 8.3
+Inbox Full Width host canvas: IMPLEMENTED / QUALIFIED_ON_PINNED_TARGET_TUPLE
+WU-01: COMPLETE_FOR_WU02
+WU-02: IMPLEMENTED / INTEGRATION_PROVEN
+WU-03 Owner settings workflow: IMPLEMENTED / WORDPRESS_INTEGRATION_PROVEN
+WU-04 diagnostics/drift: IMPLEMENTED / WORDPRESS_INTEGRATION_QUALIFIED_ON_PINNED_TUPLE
+WU-05 Full Width geometry: IMPLEMENTED / FULL_WIDTH_GEOMETRY_AUTOMATED_QUALIFIED_ON_PINNED_TARGET_TUPLE
+WU-06 admin UX/security/RTL/accessibility qualification: IMPLEMENTED / ADMIN_BROWSER_QUALIFICATION_PASS_ON_PINNED_TARGET_TUPLE
+WU-07 mechanical Owner E2E: IMPLEMENTED / WU07_MECHANICAL_OWNER_E2E_PASS_ON_PINNED_TARGET_TUPLE
+Real Gravity Flow Inbox integration: NOT_PROVEN
+GPP integration: NOT_PROVEN
+Human comprehension: NOT_PROVEN
+Production-host confirmation: NOT_PROVEN
+Complete WCAG 2.2 AA conformance: NOT_PROVEN
+Unavailable real dependency regressions: ENVIRONMENT_UNAVAILABLE / NOT_PROVEN
+PRODUCTION_QUALIFIED_FOR_SRWF: NOT_PROVEN
+Personal GitHub release v0.1.0: PUBLISHED
+Personal GitHub release v0.2.0: RELEASE_CANDIDATE_NOT_YET_PUBLISHED
+```
 
 ### Release boundary
 
-- no release/tag/publication is performed by these unreleased changes;
-- `.github/release-manifest.json` and the already-published `v0.1.0` release remain unchanged;
-- real Gravity Flow Inbox integration, GPP integration, human comprehension, production-host confirmation, and `PRODUCTION_QUALIFIED_FOR_SRWF` remain `NOT_PROVEN`.
+- publication occurs only after this release-candidate PR is merged and the existing GitHub Release workflow validates the exact publication commit;
+- the already-published `v0.1.0` release is not modified;
+- real Gravity Flow Inbox integration, GPP integration, human comprehension, production-host confirmation, complete WCAG conformance, and `PRODUCTION_QUALIFIED_FOR_SRWF` remain `NOT_PROVEN`.
 
 ## [0.1.0] - 2026-09-21
 
@@ -54,7 +87,7 @@ GitHub Release `v0.1.0` was published on 2026-09-21.
 - pinned test-only `@axe-core/playwright` scanning for machine-detectable plugin-scope accessibility violations without promoting that evidence to full WCAG conformance;
 - WU-06 same-head regression orchestration that dispatches and collects WU-01 through WU-05 before accepting the bounded WU-06 result;
 - WU-07 real-browser mechanical Owner E2E covering login, Settings → SRWF Host reachability, first-run guidance, Registration selection, explicit save/apply, truthful success, schema-v1/canonical persistence, frontend Registration opening, canonical shell/RTL/basic host integrity, return to settings, and read-only `Check Again`;
-- release-contract consistency qualification that derives version/license/WordPress/PHP expectations from the Personal GitHub Release Policy and fails closed on release metadata, authority-routing, current-state, or license-text drift;
+- release-contract consistency qualification that derives license/WordPress/PHP expectations from the Personal GitHub Release Policy and release identity from the current release manifest, failing closed on release metadata, authority-routing, current-state, or license-text drift;
 - repository hygiene and pull-request foundation.
 
 ### Status
@@ -98,8 +131,8 @@ WU-06 security evidence exercises real browser/HTTP boundaries: a user without `
 
 WU-07 reuses the established Playwright/Chromium browser foundation for the mechanical Owner journey. On the pinned tuple it passes navigation to the real settings surface, first-run guidance visibility, Registration selection, explicit apply, truthful success, persisted schema-v1 configuration/canonical assignment, frontend Registration opening with the canonical host shell and RTL/basic host integrity, return to settings, and a read-only `Check Again`. This is mechanical browser evidence only and does not establish human comprehension.
 
-At the WU-07 release-qualification boundary, `tests/release/verify-release-contract.py` derives the release version, license, and WordPress/PHP minimums from the Owner-approved Personal GitHub Release Policy, verifies the plugin header and GPLv2 license text, requires README/AGENTS authority routing, rejects stale current-state contradictions, and self-falsifies against temporary mismatches before accepting a release-candidate contract PASS.
+At the release-qualification boundary, `tests/release/verify-release-contract.py` keeps the Owner-approved Personal GitHub Release Policy authoritative for license, WordPress/PHP minimums and claim boundaries, while taking the current release identity from `.github/release-manifest.json`; it verifies plugin metadata and GPLv2 license text, requires README/AGENTS authority routing, rejects stale current-state contradictions, and self-falsifies against temporary mismatches before accepting a release-candidate contract PASS.
 
-The Owner-approved Personal GitHub Release Policy permits the personal/project-specific `v0.1.0` GitHub release to use this bounded automated evidence while keeping human comprehension, direct production-host confirmation, complete WCAG 2.2 AA conformance, and unavailable Gravity Forms/Orbital/GTB/approved Vazir-Vazirmatn regressions explicitly unproven. `PRODUCTION_QUALIFIED_FOR_SRWF` remains `NOT_PROVEN`.
+The Owner-approved Personal GitHub Release Policy permits personal/project-specific GitHub releases to use this bounded automated evidence while keeping human comprehension, direct production-host confirmation, complete WCAG 2.2 AA conformance, and unavailable Gravity Forms/Orbital/GTB/approved Vazir-Vazirmatn regressions explicitly unproven. `PRODUCTION_QUALIFIED_FOR_SRWF` remains `NOT_PROVEN`.
 
 Historical work-unit/PR statements that correctly recorded earlier `NOT_RUN` states remain historical evidence and are not retroactively rewritten into PASS.
