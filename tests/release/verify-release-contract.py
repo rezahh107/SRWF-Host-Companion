@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
-"""Verify the repository release contract against the Owner-approved policy.
+"""Verify the repository release contract against Owner-approved policy + current manifest.
 
+The release policy owns durable distribution/license/runtime/claim boundaries.
+The release manifest owns the current release identity after the historical v0.1.0 first release.
 This is qualification-only tooling. It does not participate in plugin runtime.
 """
 
 from __future__ import annotations
 
 import argparse
+import json
 import re
 import shutil
 import subprocess
@@ -16,6 +19,7 @@ from pathlib import Path
 from typing import Callable
 
 POLICY_PATH = Path("docs/architecture/PERSONAL_GITHUB_RELEASE_POLICY.md")
+MANIFEST_PATH = Path(".github/release-manifest.json")
 PLUGIN_PATH = Path("srwf-host-companion.php")
 README_PATH = Path("README.md")
 AGENTS_PATH = Path("AGENTS.md")
@@ -24,6 +28,7 @@ PLAN_PATH = Path("docs/implementation/V0_IMPLEMENTATION_PLAN.md")
 LICENSE_PATH = Path("LICENSE")
 REQUIRED_PATHS = (
     POLICY_PATH,
+    MANIFEST_PATH,
     PLUGIN_PATH,
     README_PATH,
     AGENTS_PATH,
@@ -62,8 +67,8 @@ def first_text_code_block(section: str, label: str) -> str:
 
 
 def parse_policy(policy: str) -> dict[str, str]:
-    version = first_text_code_block(
-        markdown_section(policy, "## 2. Initial release identity"), "release version"
+    initial_version = first_text_code_block(
+        markdown_section(policy, "## 2. Initial release identity"), "initial release version"
     )
     license_id = first_text_code_block(
         markdown_section(policy, "## 3. License"), "license"
@@ -76,11 +81,49 @@ def parse_policy(policy: str) -> dict[str, str]:
     if not wp or not php:
         raise VerificationError("release runtime minimums missing from policy")
     return {
-        "release_version": version,
-        "plugin_version": version.removeprefix("v"),
+        "initial_release_version": initial_version,
         "license": license_id,
         "wordpress": wp.group(1),
         "php": php.group(1),
+    }
+
+
+def parse_manifest(manifest_text: str) -> dict[str, str]:
+    try:
+        manifest = json.loads(manifest_text)
+    except json.JSONDecodeError as exc:
+        raise VerificationError(f"invalid release manifest JSON: {exc}") from exc
+
+    required = ("version", "plugin_version", "release_name", "notes_file", "asset_name")
+    missing = [
+        key
+        for key in required
+        if not isinstance(manifest.get(key), str) or not manifest[key].strip()
+    ]
+    if missing:
+        raise VerificationError(
+            "release manifest missing non-empty string fields: " + ", ".join(missing)
+        )
+
+    version = manifest["version"]
+    plugin_version = manifest["plugin_version"]
+    if not re.fullmatch(r"v\d+\.\d+\.\d+", version):
+        raise VerificationError(f"unsupported release version format: {version!r}")
+    if version != "v" + plugin_version:
+        raise VerificationError("manifest version and plugin_version disagree")
+
+    expected_asset = f"srwf-host-companion-{plugin_version}.zip"
+    if manifest["asset_name"] != expected_asset:
+        raise VerificationError(
+            f"manifest asset_name mismatch: observed={manifest['asset_name']!r} expected={expected_asset!r}"
+        )
+
+    return {
+        "release_version": version,
+        "plugin_version": plugin_version,
+        "release_name": manifest["release_name"],
+        "notes_file": manifest["notes_file"],
+        "asset_name": manifest["asset_name"],
     }
 
 
@@ -107,8 +150,8 @@ def require_equal(errors: list[str], label: str, observed: str, expected: str) -
 def validate(root: Path) -> list[str]:
     errors: list[str] = []
     try:
-        policy_text = read(root, POLICY_PATH)
-        facts = parse_policy(policy_text)
+        policy = parse_policy(read(root, POLICY_PATH))
+        manifest = parse_manifest(read(root, MANIFEST_PATH))
         plugin = parse_plugin_headers(read(root, PLUGIN_PATH))
         readme = read(root, README_PATH)
         agents = read(root, AGENTS_PATH)
@@ -118,22 +161,26 @@ def validate(root: Path) -> list[str]:
     except VerificationError as exc:
         return [str(exc)]
 
-    require_equal(errors, "plugin Version", plugin["Version"], facts["plugin_version"])
+    require_equal(errors, "plugin Version", plugin["Version"], manifest["plugin_version"])
     require_equal(
         errors,
         "plugin Requires at least",
         plugin["Requires at least"],
-        facts["wordpress"],
+        policy["wordpress"],
     )
-    require_equal(errors, "plugin Requires PHP", plugin["Requires PHP"], facts["php"])
-    require_equal(errors, "plugin License", plugin["License"], facts["license"])
+    require_equal(errors, "plugin Requires PHP", plugin["Requires PHP"], policy["php"])
+    require_equal(errors, "plugin License", plugin["License"], policy["license"])
 
-    if facts["license"] in {"GPL-2.0-only", "GPL-2.0-or-later"}:
+    notes_path = root / manifest["notes_file"]
+    if not notes_path.is_file():
+        errors.append(f"release notes file missing: {manifest['notes_file']}")
+
+    if policy["license"] in {"GPL-2.0-only", "GPL-2.0-or-later"}:
         if "GNU GENERAL PUBLIC LICENSE" not in license_text or "Version 2, June 1991" not in license_text:
             errors.append("LICENSE is not recognizable as GNU GPL version 2 text")
     else:
         errors.append(
-            f"release-contract verifier has no LICENSE compatibility rule for policy license {facts['license']!r}"
+            f"release-contract verifier has no LICENSE compatibility rule for policy license {policy['license']!r}"
         )
 
     policy_ref = str(POLICY_PATH)
@@ -155,11 +202,11 @@ def validate(root: Path) -> list[str]:
     if not readme_wp:
         errors.append("README release minimum WordPress is missing")
     else:
-        require_equal(errors, "README release minimum WordPress", readme_wp.group(1), facts["wordpress"])
+        require_equal(errors, "README release minimum WordPress", readme_wp.group(1), policy["wordpress"])
     if not readme_php:
         errors.append("README release minimum PHP is missing")
     else:
-        require_equal(errors, "README release minimum PHP", readme_php.group(1), facts["php"])
+        require_equal(errors, "README release minimum PHP", readme_php.group(1), policy["php"])
 
     obsolete_readme_patterns = {
         "README still says no license is selected": r"license has \*\*not yet been selected\*\*",
@@ -205,7 +252,7 @@ def validate(root: Path) -> list[str]:
     if "PRODUCTION_QUALIFIED_FOR_SRWF: NOT_PROVEN" not in status_section:
         errors.append("CHANGELOG no longer preserves PRODUCTION_QUALIFIED_FOR_SRWF = NOT_PROVEN")
     if "Personal GitHub release v0.1.0: PUBLISHED" not in status_section:
-        errors.append("CHANGELOG no longer records personal GitHub release v0.1.0 = PUBLISHED")
+        errors.append("CHANGELOG no longer records historical personal GitHub release v0.1.0 = PUBLISHED")
 
     try:
         wu07 = markdown_section(plan, "## WU-07 — E2E / comprehension / release gate")
@@ -258,6 +305,18 @@ def self_test(root: Path) -> int:
 
     cases: list[tuple[str, Callable[[Path], None]]] = []
 
+    def version_mismatch(temp: Path) -> None:
+        path = temp / PLUGIN_PATH
+        text = path.read_text(encoding="utf-8")
+        text = re.sub(
+            r"^(\s*\*\s*Version:\s*).*$",
+            r"\g<1>9.9.9",
+            text,
+            count=1,
+            flags=re.MULTILINE,
+        )
+        path.write_text(text, encoding="utf-8")
+
     def license_mismatch(temp: Path) -> None:
         path = temp / PLUGIN_PATH
         text = path.read_text(encoding="utf-8")
@@ -298,6 +357,7 @@ def self_test(root: Path) -> int:
 
     cases.extend(
         (
+            ("manifest/header version mismatch", version_mismatch),
             ("policy/header license mismatch", license_mismatch),
             ("policy/header runtime-minimum mismatch", runtime_mismatch),
             ("missing release-policy authority reference", missing_authority),
@@ -317,7 +377,7 @@ def self_test(root: Path) -> int:
             print(f"FALSIFICATION PASS: {name} rejected with exit {result.returncode}")
 
     print(
-        "Release-contract verifier falsification PASS for license, runtime minimum, authority routing, and stale WU-07 state."
+        "Release-contract verifier falsification PASS for manifest version, license, runtime minimum, authority routing, and stale WU-07 state."
     )
     return 0
 
@@ -339,11 +399,12 @@ def main() -> int:
             print(f"- {error}")
         return 1
 
-    facts = parse_policy(read(root, POLICY_PATH))
+    policy = parse_policy(read(root, POLICY_PATH))
+    manifest = parse_manifest(read(root, MANIFEST_PATH))
     print(
         "RELEASE_CONTRACT_PASS "
-        f"version={facts['release_version']} license={facts['license']} "
-        f"wordpress={facts['wordpress']} php={facts['php']}"
+        f"version={manifest['release_version']} license={policy['license']} "
+        f"wordpress={policy['wordpress']} php={policy['php']}"
     )
     return 0
 
