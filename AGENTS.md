@@ -10,7 +10,7 @@ This file is the operating contract for coding agents and automated contributors
 - **Primary operator:** non-technical Owner / WordPress administrator
 - **Canonical architecture:** `docs/architecture/MOTHER_ARCHITECTURE.md`
 - **Owner-approved qualification amendment:** `docs/architecture/AUTOMATED_QUALIFICATION_LAB.md`
-- **V0 status:** architecture approved and frozen; WU-01 prerequisite complete; WU-02 minimal runtime core, WU-03 Owner settings workflow, and WU-04 diagnostics/drift are implemented on `main`; WU-05 Full Width geometry is implemented in PR #9 and real-browser automated-qualified on the pinned target tuple; WU-06/WU-07 browser/qualification work remains open; Automated Qualification Lab includes the WU-04 integration slice and WU-05 real-browser foundation; production qualification `NOT_PROVEN`
+- **V0 status:** architecture approved and frozen; WU-01 prerequisite complete; WU-02 minimal runtime core, WU-03 Owner settings workflow, WU-04 diagnostics/drift, and WU-05 Full Width geometry are implemented on `main`; WU-06 admin browser RTL/security/accessibility qualification is implemented in PR #10 and automated-qualified on the pinned target tuple; WU-07 browser/E2E/comprehension/release-gate work remains open; Automated Qualification Lab includes WU-04 integration, WU-05 frontend-browser, and WU-06 admin-browser slices; production qualification `NOT_PROVEN`
 
 The plugin exists to make SRWF host configuration deterministic, understandable, explicit, and verifiable.
 
