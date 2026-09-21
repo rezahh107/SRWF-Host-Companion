@@ -156,7 +156,7 @@ BROWSER_EVIDENCE_NOT_RUN
 PRODUCTION_QUALIFICATION_NOT_PROVEN
 ```
 
-Final exact-head evidence for PR #8 is bound to `2ea6e8a67e067047ea2a769ee35e3767d14edfcd`. On that exact head, WU-01 run `35585961455`, WU-02 run `35585961475`, WU-03 run `35585961432`, and WU-04 run `35585961489` all completed successfully. The WU-04 machine-readable artifact is `wu04-diagnostics-drift-35585961489-1` (artifact `10632141277`, digest `sha256:e78774e5ef5b2665540457a14545278e2fd34c825d826f644a9d4f3979209e2c`).
+Exact-head workflow/run/artifact identity is recorded in the focused PR evidence rather than embedded as a self-referential commit identifier in this plan.
 
 On WordPress `7.1.1`, PHP `8.3.33`, and Twenty Twenty-Five `1.5`, the dedicated WU-04 lab exercises deterministic fixtures for:
 
