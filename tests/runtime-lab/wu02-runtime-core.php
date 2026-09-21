@@ -166,6 +166,10 @@ if ( 'active' === $phase ) {
 	srwf_wu02_assert( array( 'page_id' ) === array_keys( $normalized_extra['roles']['registration'] ), 'Unexpected multi-page key leaked into canonical truth.' );
 	srwf_wu02_assert( ! isset( $normalized_extra['unexpected'] ), 'Unexpected top-level key leaked into canonical truth.' );
 
+	srwf_wu02_assert( \SRWF\HostCompanion\Configuration::set_inbox_page_id( 888 ), 'Could not restore a valid schema-v2 Inbox sentinel after malformed-state probes.' );
+	srwf_wu02_assert( 654 === \SRWF\HostCompanion\Configuration::get_registration_page_id(), 'Restoring the Inbox sentinel did not preserve the normalized Registration page.' );
+	srwf_wu02_assert( 888 === \SRWF\HostCompanion\Configuration::get_inbox_page_id(), 'Restored Inbox sentinel did not persist.' );
+
 	\SRWF\HostCompanion\Configuration::get();
 	srwf_wu02_assert( '' === get_page_template_slug( $unrelated_id ), 'Configuration read assigned an unrelated page.' );
 	srwf_wu02_assert( 'legacy-existing-template' === get_post_meta( $legacy_id, '_wp_page_template', true ), 'Configuration read rewrote a legacy page.' );
