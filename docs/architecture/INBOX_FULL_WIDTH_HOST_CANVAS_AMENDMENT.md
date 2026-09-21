@@ -1,10 +1,10 @@
 # SRWF Host Companion — Inbox Full Width Host Canvas Architecture Amendment
 
-**Repository:** `rezahh107/SRWF-Host-Companion`  
-**Date:** `2026-09-21`  
-**Authority:** Owner-approved post-`v0.1.0` architecture amendment  
-**Extends:** `docs/architecture/MOTHER_ARCHITECTURE.md` v0.5  
-**Status:** `APPROVED / BOUNDED`  
+**Repository:** `rezahh107/SRWF-Host-Companion`
+**Date:** `2026-09-21`
+**Authority:** Owner-approved post-`v0.1.0` architecture amendment
+**Extends:** `docs/architecture/MOTHER_ARCHITECTURE.md` v0.5
+**Status:** `APPROVED / BOUNDED`
 **Runtime dependency:** None
 
 ---
