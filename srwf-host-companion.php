@@ -16,5 +16,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 require_once __DIR__ . '/src/Configuration.php';
 require_once __DIR__ . '/src/TemplateRegistrar.php';
 require_once __DIR__ . '/src/PageTemplateAssignment.php';
+require_once __DIR__ . '/src/AdminSettings.php';
 
 \SRWF\HostCompanion\TemplateRegistrar::boot();
+\SRWF\HostCompanion\AdminSettings::boot();
