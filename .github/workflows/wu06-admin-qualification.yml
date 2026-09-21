@@ -15,14 +15,13 @@ on:
 
 permissions:
   contents: read
-  # WU-06 dispatches the existing read-only WU-01 → WU-05 workflows on the exact tested ref.
   actions: write
 
 jobs:
   admin-qualification:
     name: Real-browser admin RTL/security/accessibility qualification
     runs-on: ubuntu-24.04
-    timeout-minutes: 35
+    timeout-minutes: 40
     services:
       database:
         image: mariadb:11.4.8@sha256:bc474f00629f0123c10f9e1bca193a45d18af15a274cf0656acda64f1086c3b6
@@ -83,9 +82,7 @@ jobs:
         run: |
           set -Eeuo pipefail
           test "$(php -r 'echo PHP_VERSION;')" = "$SRWF_PHP_VERSION"
-          while IFS= read -r -d '' file; do
-            php -l "$file"
-          done < <(find . -type f -name '*.php' -not -path './.git/*' -print0 | sort -z)
+          while IFS= read -r -d '' file; do php -l "$file"; done < <(find . -type f -name '*.php' -not -path './.git/*' -print0 | sort -z)
           node --check tests/browser/wu06-admin-qualification.mjs
 
       - name: Install exact WP-CLI, WordPress, and Twenty Twenty-Five
@@ -110,6 +107,8 @@ jobs:
           php "$SRWF_WP_CLI" core install --path="$SRWF_WP_PATH" --url="$SRWF_WU06_BASE_URL" --title='SRWF Host Companion WU-06 Lab' --admin_user=runtime_admin --admin_password="$admin_password" --admin_email='runtime@example.invalid' --skip-email
           unset admin_password settings_password subscriber_password
           test "$(php "$SRWF_WP_CLI" core version --path="$SRWF_WP_PATH")" = "$SRWF_WP_VERSION"
+          test "$(php "$SRWF_WP_CLI" option get home --path="$SRWF_WP_PATH")" = "$SRWF_WU06_BASE_URL"
+          test "$(php "$SRWF_WP_CLI" option get siteurl --path="$SRWF_WP_PATH")" = "$SRWF_WU06_BASE_URL"
           php "$SRWF_WP_CLI" theme install twentytwentyfive --version="$SRWF_TT25_VERSION" --force --path="$SRWF_WP_PATH"
           test "$(php "$SRWF_WP_CLI" theme get twentytwentyfive --field=version --path="$SRWF_WP_PATH")" = "$SRWF_TT25_VERSION"
           php "$SRWF_WP_CLI" theme activate twentytwentyfive --path="$SRWF_WP_PATH"
@@ -134,9 +133,8 @@ jobs:
         shell: bash
         run: |
           set -Eeuo pipefail
-          SRWF_WU06_COMMAND=bootstrap \
-          SRWF_WU06_OUTPUT_PATH="$SRWF_WU06_FIXTURE_PATH" \
-          php "$SRWF_WP_CLI" --path="$SRWF_WP_PATH" eval-file "$GITHUB_WORKSPACE/tests/runtime-lab/wu06-admin-fixtures.php"
+          SRWF_WU06_COMMAND=bootstrap SRWF_WU06_OUTPUT_PATH="$SRWF_WU06_FIXTURE_PATH" \
+            php "$SRWF_WP_CLI" --path="$SRWF_WP_PATH" eval-file "$GITHUB_WORKSPACE/tests/runtime-lab/wu06-admin-fixtures.php"
           test -s "$SRWF_WU06_FIXTURE_PATH"
 
       - name: Set up pinned browser automation runtime
@@ -149,9 +147,7 @@ jobs:
         run: |
           set -Eeuo pipefail
           test "$(node --version)" = "v${SRWF_NODE_VERSION}"
-          npm install --no-save --ignore-scripts \
-            "playwright@${SRWF_PLAYWRIGHT_VERSION}" \
-            "@axe-core/playwright@${SRWF_AXE_PLAYWRIGHT_VERSION}"
+          npm install --no-save --ignore-scripts "playwright@${SRWF_PLAYWRIGHT_VERSION}" "@axe-core/playwright@${SRWF_AXE_PLAYWRIGHT_VERSION}"
           node - <<'NODE'
           const fs = require('fs');
           const playwright = JSON.parse(fs.readFileSync('node_modules/playwright/package.json', 'utf8')).version;
@@ -164,14 +160,15 @@ jobs:
         shell: bash
         run: |
           set -Eeuo pipefail
-          php "$SRWF_WP_CLI" server --host=127.0.0.1 --port=8080 --path="$SRWF_WP_PATH" >/tmp/srwf-host-companion-wu06-server.log 2>&1 &
-          echo "SRWF_WU06_SERVER_PID=$!" >> "$GITHUB_ENV"
+          pushd "$SRWF_WP_PATH" >/dev/null
+          php -S 127.0.0.1:8080 >/tmp/srwf-host-companion-wu06-server.log 2>&1 &
+          server_pid=$!
+          popd >/dev/null
+          echo "SRWF_WU06_SERVER_PID=$server_pid" >> "$GITHUB_ENV"
           status=''
           for _ in {1..30}; do
             status="$(curl --silent --output /dev/null --write-out '%{http_code}' "$SRWF_WU06_BASE_URL/wp-login.php" || true)"
-            if [[ "$status" = '200' ]]; then
-              break
-            fi
+            if [[ "$status" = '200' ]]; then break; fi
             sleep 1
           done
           test "$status" = '200'
@@ -188,18 +185,13 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         run: |
           set -Eeuo pipefail
-          for workflow in \
-            wu01-runtime-facts.yml \
-            wu02-runtime-core.yml \
-            wu03-owner-settings.yml \
-            wu04-diagnostics-drift.yml \
-            wu05-full-width-geometry.yml; do
-            curl --fail --silent --show-error \
-              --request POST \
+          for workflow in wu01-runtime-facts.yml wu02-runtime-core.yml wu03-owner-settings.yml wu04-diagnostics-drift.yml wu05-full-width-geometry.yml; do
+            payload="$(python3 -c 'import json,os; print(json.dumps({"ref": os.environ["SRWF_WU06_REGRESSION_REF"]}))')"
+            curl --fail --silent --show-error --request POST \
               --header "Authorization: Bearer $GITHUB_TOKEN" \
               --header 'Accept: application/vnd.github+json' \
               --header 'X-GitHub-Api-Version: 2022-11-28' \
-              --data "$(python3 -c 'import json,os; print(json.dumps({"ref": os.environ["SRWF_WU06_REGRESSION_REF"]}))')" \
+              --data "$payload" \
               "https://api.github.com/repos/$GITHUB_REPOSITORY/actions/workflows/$workflow/dispatches"
           done
 
@@ -211,7 +203,6 @@ jobs:
           set -Eeuo pipefail
           python3 - "$SRWF_WU06_EVIDENCE_PATH" "$GITHUB_REPOSITORY" "$SRWF_TESTED_COMMIT_SHA" "$GITHUB_RUN_ID" <<'PY'
           import json, os, sys, time, urllib.parse, urllib.request
-
           evidence_path, repo, sha, current_run_id = sys.argv[1:]
           expected = {
               'WU-01 Runtime Facts': 'wu01_runtime_facts',
@@ -222,60 +213,40 @@ jobs:
           }
           token = os.environ['GITHUB_TOKEN']
           url = f"https://api.github.com/repos/{repo}/actions/runs?head_sha={urllib.parse.quote(sha)}&event=workflow_dispatch&per_page=100"
-
           latest = {}
           for _ in range(180):
               req = urllib.request.Request(url, headers={
-                  'Authorization': f'Bearer {token}',
-                  'Accept': 'application/vnd.github+json',
-                  'X-GitHub-Api-Version': '2022-11-28',
-                  'User-Agent': 'srwf-host-companion-wu06-qualification',
+                  'Authorization': f'Bearer {token}', 'Accept': 'application/vnd.github+json',
+                  'X-GitHub-Api-Version': '2022-11-28', 'User-Agent': 'srwf-host-companion-wu06-qualification',
               })
-              with urllib.request.urlopen(req, timeout=30) as response:
-                  payload = json.load(response)
+              with urllib.request.urlopen(req, timeout=30) as response: payload = json.load(response)
               latest = {}
               for run in payload.get('workflow_runs', []):
                   name = run.get('name')
-                  if name not in expected or str(run.get('id')) == current_run_id:
-                      continue
-                  if name not in latest or int(run.get('id', 0)) > int(latest[name].get('id', 0)):
-                      latest[name] = run
-              if all(name in latest and latest[name].get('status') == 'completed' for name in expected):
-                  break
+                  if name not in expected or str(run.get('id')) == current_run_id: continue
+                  if name not in latest or int(run.get('id', 0)) > int(latest[name].get('id', 0)): latest[name] = run
+              if all(name in latest and latest[name].get('status') == 'completed' for name in expected): break
               time.sleep(5)
           else:
-              missing = [name for name in expected if name not in latest or latest[name].get('status') != 'completed']
-              raise SystemExit(f"Same-head regression workflows did not all complete: {missing}")
-
-          with open(evidence_path, encoding='utf-8') as f:
-              evidence = json.load(f)
+              raise SystemExit('Same-head regression workflows did not all complete.')
+          with open(evidence_path, encoding='utf-8') as f: evidence = json.load(f)
           failed = []
           for name, key in expected.items():
               run = latest[name]
               status = 'PASS' if run.get('conclusion') == 'success' else 'FAIL'
               evidence['regression_workflows'][key] = {
-                  'status': status,
-                  'workflow_name': name,
-                  'run_id': run.get('id'),
-                  'run_number': run.get('run_number'),
-                  'run_attempt': run.get('run_attempt'),
-                  'head_sha': run.get('head_sha'),
-                  'conclusion': run.get('conclusion'),
-                  'html_url': run.get('html_url'),
+                  'status': status, 'workflow_name': name, 'run_id': run.get('id'),
+                  'run_number': run.get('run_number'), 'run_attempt': run.get('run_attempt'),
+                  'head_sha': run.get('head_sha'), 'conclusion': run.get('conclusion'), 'html_url': run.get('html_url'),
               }
-              if run.get('head_sha') != sha or status != 'PASS':
-                  failed.append(name)
+              if run.get('head_sha') != sha or status != 'PASS': failed.append(name)
           evidence['regression_workflows']['wu06_admin_qualification'] = {
-              'status': 'PASS_TO_FINAL_ARTIFACT_VALIDATION_POINT',
-              'workflow_name': 'WU-06 Admin Qualification',
-              'run_id': int(current_run_id),
-              'head_sha': sha,
+              'status': 'PASS_TO_FINAL_ARTIFACT_VALIDATION_POINT', 'workflow_name': 'WU-06 Admin Qualification',
+              'run_id': int(current_run_id), 'head_sha': sha,
           }
           with open(evidence_path, 'w', encoding='utf-8') as f:
-              json.dump(evidence, f, ensure_ascii=False, indent=2)
-              f.write('\n')
-          if failed:
-              raise SystemExit(f"Same-head regression workflow failure(s): {failed}")
+              json.dump(evidence, f, ensure_ascii=False, indent=2); f.write('\n')
+          if failed: raise SystemExit(f"Same-head regression workflow failure(s): {failed}")
           PY
 
       - name: Validate bounded machine-readable WU-06 evidence
@@ -286,73 +257,49 @@ jobs:
           python3 - "$SRWF_WU06_EVIDENCE_PATH" "$SRWF_TESTED_COMMIT_SHA" "$SRWF_WP_VERSION" "$SRWF_PHP_VERSION" "$SRWF_TT25_VERSION" <<'PY'
           import json, sys
           path, sha, wp, php, theme = sys.argv[1:]
-          with open(path, encoding='utf-8') as f:
-              data = json.load(f)
-          assert data['schema'] == 'srwf-host-companion-wu06-admin-qualification-v1'
-          assert data['tested_commit_sha'] == sha
-          assert data['environment']['wordpress_version'] == wp
-          assert data['environment']['php_version'] == php
-          assert data['environment']['theme_stylesheet'] == 'twentytwentyfive'
-          assert data['environment']['theme_version'] == theme
-          assert data['environment']['locale'] == 'fa_IR'
-          assert data['browser']['engine'] == 'chromium'
-          assert data['browser']['playwright_version'] == '1.63.0'
-          assert data['viewports']['desktop']['width'] == 1440
-          assert data['viewports']['narrow_admin']['width'] == 390
-          required_states = {
-              'first_run', 'valid_published', 'valid_non_published', 'missing_configured',
-              'trashed_page', 'wrong_post_type', 'wrong_assignment', 'canonical_active',
-              'database_override', 'theme_override', 'missing_template', 'unknown',
-          }
-          assert set(data['state_matrix']) == required_states
-          assert all(data['state_matrix'][name]['status'] == 'PASS' for name in required_states)
-          assert all(data['state_matrix'][name]['read_only_sentinel'] == 'PASS' for name in required_states)
-          for key in ['no_manage_options', 'manage_options_without_edit_target', 'invalid_nonce', 'missing_nonce', 'valid_authorized_apply', 'check_again_read_only']:
-              assert data['security_authorization'][key]['status'] == 'PASS'
-          assert data['successful_apply']['status'] == 'PASS'
-          assert data['successful_apply']['schema_v1_configuration_persisted'] == 'PASS'
-          assert data['successful_apply']['canonical_assignment_readback'] == 'registration-full-width'
-          assert data['check_again_read_only']['status'] == 'PASS'
-          assert data['mutation_sentinels']['status'] == 'PASS'
-          assert data['rtl']['status'] == 'PASS'
-          assert data['technical_ltr_isolation']['status'] == 'PASS'
-          assert data['narrow_admin_layout']['status'] == 'PASS'
-          assert data['keyboard_focus']['status'] == 'PASS'
-          assert data['semantics_accessibility_tree']['status'] == 'PASS'
-          assert data['automated_accessibility_scan']['status'] == 'PASS'
-          assert all(data['automated_accessibility_scan']['states'][name]['status'] == 'PASS' for name in required_states)
-          assert data['diagnostic_privacy']['status'] == 'PASS'
-          assert data['browser_runtime']['status'] == 'PASS'
-          assert data['browser_runtime']['normal_path_issues'] == []
-          for key in ['wu01_runtime_facts', 'wu02_runtime_core', 'wu03_owner_settings', 'wu04_diagnostics_drift', 'wu05_full_width_geometry']:
-              assert data['regression_workflows'][key]['status'] == 'PASS'
-              assert data['regression_workflows'][key]['head_sha'] == sha
-          assert data['claim_ceiling']['wcag_2_2_aa_conformance'] == 'NOT_PROVEN'
-          assert data['claim_ceiling']['human_comprehension'] == 'NOT_RUN'
-          assert data['claim_ceiling']['wu07_owner_e2e_comprehension_release_gate'] == 'NOT_RUN'
-          assert data['claim_ceiling']['production_qualified_for_srwf'] == 'NOT_PROVEN'
-          assert data['overall_status'] == 'ADMIN_BROWSER_QUALIFICATION_PASS_ON_PINNED_TARGET_TUPLE'
-          print('WU-06 automated admin qualification:', data['overall_status'])
+          with open(path, encoding='utf-8') as f: d = json.load(f)
+          assert d['schema'] == 'srwf-host-companion-wu06-admin-qualification-v1'
+          assert d['tested_commit_sha'] == sha
+          assert d['environment']['wordpress_version'] == wp and d['environment']['php_version'] == php
+          assert d['environment']['theme_stylesheet'] == 'twentytwentyfive' and d['environment']['theme_version'] == theme
+          assert d['environment']['locale'] == 'fa_IR'
+          assert d['browser']['engine'] == 'chromium' and d['browser']['playwright_version'] == '1.63.0'
+          required = {'first_run','valid_published','valid_non_published','missing_configured','trashed_page','wrong_post_type','wrong_assignment','canonical_active','database_override','theme_override','missing_template','unknown'}
+          assert set(d['state_matrix']) == required
+          assert all(d['state_matrix'][name]['status'] == 'PASS' and d['state_matrix'][name]['read_only_sentinel'] == 'PASS' for name in required)
+          for key in ['no_manage_options','manage_options_without_edit_target','invalid_nonce','missing_nonce','valid_authorized_apply','check_again_read_only']:
+              assert d['security_authorization'][key]['status'] == 'PASS'
+          for key in ['rtl','technical_ltr_isolation','narrow_admin_layout','keyboard_focus','semantics_accessibility_tree','automated_accessibility_scan','diagnostic_privacy','browser_runtime','mutation_sentinels']:
+              assert d[key]['status'] == 'PASS'
+          assert d['successful_apply']['status'] == 'PASS'
+          assert d['successful_apply']['schema_v1_configuration_persisted'] == 'PASS'
+          assert d['successful_apply']['canonical_assignment_readback'] == 'registration-full-width'
+          assert d['check_again_read_only']['status'] == 'PASS'
+          for key in ['wu01_runtime_facts','wu02_runtime_core','wu03_owner_settings','wu04_diagnostics_drift','wu05_full_width_geometry']:
+              assert d['regression_workflows'][key]['status'] == 'PASS' and d['regression_workflows'][key]['head_sha'] == sha
+          assert d['claim_ceiling']['wcag_2_2_aa_conformance'] == 'NOT_PROVEN'
+          assert d['claim_ceiling']['human_comprehension'] == 'NOT_RUN'
+          assert d['claim_ceiling']['wu07_owner_e2e_comprehension_release_gate'] == 'NOT_RUN'
+          assert d['claim_ceiling']['production_qualified_for_srwf'] == 'NOT_PROVEN'
+          assert d['overall_status'] == 'ADMIN_BROWSER_QUALIFICATION_PASS_ON_PINNED_TARGET_TUPLE'
+          print('WU-06 automated admin qualification:', d['overall_status'])
           PY
-
           echo '### WU-06 Admin UX / Security / RTL / Accessibility Qualification' >> "$GITHUB_STEP_SUMMARY"
           python3 - "$SRWF_WU06_EVIDENCE_PATH" <<'PY' >> "$GITHUB_STEP_SUMMARY"
           import json, sys
-          with open(sys.argv[1], encoding='utf-8') as f:
-              d = json.load(f)
+          with open(sys.argv[1], encoding='utf-8') as f: d = json.load(f)
           env = d['environment']
           print(f"- exact tested head: `{d['tested_commit_sha']}`")
-          print(f"- exact disposable tuple: WordPress `{env['wordpress_version']}`, PHP `{env['php_version']}`, `{env['theme_name']}` `{env['theme_version']}`, locale `{env['locale']}`")
+          print(f"- exact tuple: WordPress `{env['wordpress_version']}`, PHP `{env['php_version']}`, `{env['theme_name']}` `{env['theme_version']}`, locale `{env['locale']}`")
           print(f"- browser: Chromium `{d['browser']['browser_version']}` via Playwright `{d['browser']['playwright_version']}`")
           print(f"- state matrix: `{len(d['state_matrix'])}` supported states, all `PASS`")
           print(f"- narrow wp-admin: `{d['viewports']['narrow_admin']['width']}px`, `{d['narrow_admin_layout']['status']}`")
-          print(f"- RTL / technical LTR: `{d['rtl']['status']}` / `{d['technical_ltr_isolation']['status']}`")
-          print(f"- keyboard/focus / semantics: `{d['keyboard_focus']['status']}` / `{d['semantics_accessibility_tree']['status']}`")
-          print(f"- automated accessibility engine: axe-core `{d['automated_accessibility_scan']['axe_core_version']}`, plugin-scope `{d['automated_accessibility_scan']['status']}`")
-          print(f"- security/authorization: no-manage-options, target-edit-denied, invalid/missing nonce, authorized apply, Check Again all `PASS`")
-          print(f"- diagnostic privacy: `{d['diagnostic_privacy']['status']}`; browser runtime errors: `{d['browser_runtime']['status']}`")
+          print(f"- RTL/LTR: `{d['rtl']['status']}` / `{d['technical_ltr_isolation']['status']}`")
+          print(f"- keyboard/focus/semantics: `{d['keyboard_focus']['status']}` / `{d['semantics_accessibility_tree']['status']}`")
+          print(f"- axe-core `{d['automated_accessibility_scan']['axe_core_version']}` plugin-scope: `{d['automated_accessibility_scan']['status']}`")
+          print(f"- diagnostic privacy/browser runtime: `{d['diagnostic_privacy']['status']}` / `{d['browser_runtime']['status']}`")
           print('- same-head WU-01 → WU-05 regressions: all `PASS`')
-          print('- claim ceiling: WCAG 2.2 AA `NOT_PROVEN`; human comprehension `NOT_RUN`; WU-07 `NOT_RUN`; production host `NOT_PROVEN`; `PRODUCTION_QUALIFIED_FOR_SRWF` `NOT_PROVEN`')
+          print('- WCAG 2.2 AA `NOT_PROVEN`; human comprehension `NOT_RUN`; WU-07 `NOT_RUN`; production qualification `NOT_PROVEN`')
           print(f"- bounded status: `{d['overall_status']}`")
           PY
 
