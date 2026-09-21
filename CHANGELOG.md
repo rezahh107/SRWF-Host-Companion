@@ -27,6 +27,9 @@ The project has not published a production release.
 - dedicated WU-04 exact-target workflow on WordPress `7.1.1`, PHP `8.3.33`, and Twenty Twenty-Five `1.5`;
 - WU-05 native Full Width Registration host canvas using template-local block-layout primitives without global TT25 layout mutation, page-builder dependency, frontend JavaScript, generic form styling, or viewport-breakout hacks;
 - WU-05 reusable real-browser Automated Qualification Lab foundation using pinned Playwright/Chromium, Persian RTL synthetic fixtures, direct geometry/overflow/header/footer/navigation measurements at `320`, `390`, `430`, and `1440` CSS px, and bounded machine-readable evidence;
+- WU-06 real wp-admin qualification reusing the WU-05 Playwright/Chromium foundation, with deterministic first-run/page/drift fixtures, Persian RTL and technical LTR assertions, keyboard/focus and native disclosure checks, `390×900` narrow-admin overflow measurements, authorization/nonce/target-edit failure paths, successful keyboard-driven apply, read-only `بررسی دوباره`, diagnostic privacy, and bounded machine-readable evidence;
+- pinned test-only `@axe-core/playwright` scanning for machine-detectable plugin-scope accessibility violations without promoting that evidence to full WCAG conformance;
+- WU-06 same-head regression orchestration that dispatches and collects WU-01 through WU-05 before accepting the bounded WU-06 result;
 - repository hygiene and pull-request foundation.
 
 ### Status
@@ -37,10 +40,10 @@ WU-01: COMPLETE_FOR_WU02
 WU-02: IMPLEMENTED_ON_MAIN
 WU-03 Owner settings workflow: IMPLEMENTED_ON_MAIN / WORDPRESS_INTEGRATION_PROVEN
 WU-04 diagnostics/drift: IMPLEMENTED_ON_MAIN / WORDPRESS_INTEGRATION_QUALIFIED_ON_PINNED_TUPLE
-WU-05 Full Width geometry: IMPLEMENTED_IN_PR_9 / FULL_WIDTH_GEOMETRY_AUTOMATED_QUALIFIED_ON_PINNED_TARGET_TUPLE
-WU-06 admin UX/security/RTL/accessibility qualification: NOT_RUN
+WU-05 Full Width geometry: IMPLEMENTED_ON_MAIN / FULL_WIDTH_GEOMETRY_AUTOMATED_QUALIFIED_ON_PINNED_TARGET_TUPLE
+WU-06 admin UX/security/RTL/accessibility qualification: IMPLEMENTED_IN_PR_10 / ADMIN_BROWSER_QUALIFICATION_PASS_ON_PINNED_TARGET_TUPLE
 WU-07 browser/E2E/release gate: NOT_RUN
-Automated Qualification Lab: WU04_INTEGRATION + WU05_REAL_BROWSER_FOUNDATION
+Automated Qualification Lab: WU04_INTEGRATION + WU05_FRONTEND_BROWSER + WU06_ADMIN_BROWSER
 Production qualification: NOT_PROVEN
 Production release: NOT_PUBLISHED
 ```
@@ -57,4 +60,10 @@ WU-05 establishes the first real-browser qualification slice. On the pinned Word
 
 An initial 320px failure was preserved as a diagnostic artifact and traced to an unbreakable synthetic fixture marker, not the host canvas. After correcting the fixture data, H1 passed without adding a CSS fallback. This keeps the production frontend zero-JavaScript and avoids custom shell CSS.
 
-Gravity Forms, Orbital, GTB, and approved Vazir/Vazirmatn were not lawfully/reliably present in the disposable WU-05 environment; their regression claims remain `ENVIRONMENT_UNAVAILABLE / NOT_PROVEN`. WU-06 browser/admin RTL/accessibility/security qualification, WU-07 mechanical Owner browser E2E plus human comprehension, production-host confirmation, complete WCAG 2.2 AA conformance, and Production Qualification remain outside this claim.
+WU-06 extends the same browser lab into wp-admin. On the pinned WordPress `7.1.1` / PHP `8.3.33` / Twenty Twenty-Five `1.5` tuple, all exercised first-run, page-validity, assignment/provider/drift, missing-template, and `UNKNOWN` states pass truthful Persian Owner-facing rendering, RTL direction, technical LTR isolation, native semantic controls, read-only sentinels, and the bounded axe scan. The real browser also passes logical Tab/Shift+Tab progression, visible focus, native `<details>/<summary>` keyboard disclosure, and a `390×900` narrow-admin layout with no plugin-owned horizontal escape or label/control overlap.
+
+WU-06 security evidence exercises real browser/HTTP boundaries: a user without `manage_options` is blocked from the protected screen and mutation endpoint; a `manage_options` user without target-page edit permission fails closed without state change; invalid and missing nonces do not mutate state or produce fake success; an authorized keyboard-driven apply persists schema-v1 configuration and canonical assignment/readback; and keyboard-triggered `بررسی دوباره` remains read-only. The diagnostic report excludes the exercised synthetic student/form values, upload URL, cookies, credentials/passwords, session/nonce material, secrets/tokens, and synthetic email PII while retaining bounded useful technical fields.
+
+The WU-06 accessibility scan is explicitly a machine-detectable automated check scoped to the plugin `.wrap`; zero plugin-scope violations in the exercised states does not establish complete WCAG 2.2 AA conformance. WU-07 human comprehension/Owner release-gate work, production-host confirmation, and unavailable Gravity Forms/Orbital/GTB/approved Vazir-Vazirmatn regressions remain outside the WU-06 claim ceiling.
+
+Gravity Forms, Orbital, GTB, and approved Vazir/Vazirmatn were not lawfully/reliably present in the disposable WU-05/WU-06 environment; their regression claims remain `ENVIRONMENT_UNAVAILABLE / NOT_PROVEN`. WU-07 mechanical Owner browser E2E plus human comprehension, production-host confirmation, complete WCAG 2.2 AA conformance, and Production Qualification remain outside the current claim.
