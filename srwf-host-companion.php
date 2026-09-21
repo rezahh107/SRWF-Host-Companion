@@ -3,7 +3,7 @@
  * Plugin Name:       SRWF Host Companion
  * Plugin URI:        https://github.com/rezahh107/SRWF-Host-Companion
  * Description:       Project-specific WordPress host integration layer for SRWF.
- * Version:           0.1.0
+ * Version:           0.2.0
  * Author:            Reza Hashemi Hosseini
  * Requires at least: 7.1
  * Requires PHP:      8.3
@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 if ( ! defined( 'SRWF_HOST_COMPANION_VERSION' ) ) {
-	define( 'SRWF_HOST_COMPANION_VERSION', '0.1.0' );
+	define( 'SRWF_HOST_COMPANION_VERSION', '0.2.0' );
 }
 
 require_once __DIR__ . '/src/Configuration.php';
