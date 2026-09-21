@@ -1,0 +1,240 @@
+name: WU-07 Owner E2E
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'srwf-host-companion.php'
+      - 'src/**'
+      - 'templates/**'
+      - 'tests/runtime-lab/wu06-admin-fixtures.php'
+      - 'tests/runtime-lab/fixture-plugin/srwf-host-companion-wu06-fixture.php'
+      - 'tests/browser/wu07-owner-e2e.mjs'
+      - '.github/workflows/wu07-owner-e2e.yml'
+      - 'docs/architecture/PERSONAL_GITHUB_RELEASE_POLICY.md'
+      - 'README.md'
+      - 'CHANGELOG.md'
+      - 'AGENTS.md'
+      - 'docs/implementation/V0_IMPLEMENTATION_PLAN.md'
+
+permissions:
+  contents: read
+
+jobs:
+  owner-e2e:
+    name: Real-browser mechanical Owner journey
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    services:
+      database:
+        image: mariadb:11.4.8@sha256:bc474f00629f0123c10f9e1bca193a45d18af15a274cf0656acda64f1086c3b6
+        env:
+          MARIADB_ALLOW_EMPTY_ROOT_PASSWORD: '1'
+          MARIADB_DATABASE: wordpress
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mariadb-admin ping -h 127.0.0.1 -uroot --silent"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+
+    env:
+      SRWF_WP_PATH: /tmp/srwf-host-companion-wordpress
+      SRWF_ARTIFACT_DIR: /tmp/srwf-host-companion-artifacts
+      SRWF_WU07_SCRATCH_DIR: /tmp/srwf-host-companion-wu07-scratch
+      SRWF_WU07_EVIDENCE_PATH: /tmp/srwf-host-companion-artifacts/wu07-owner-e2e.json
+      SRWF_WU06_FIXTURE_PATH: /tmp/srwf-host-companion-artifacts/wu06-fixture.json
+      SRWF_WU07_BASE_URL: http://127.0.0.1:8080
+      SRWF_WP_VERSION: '7.1.1'
+      SRWF_PHP_VERSION: '8.3.33'
+      SRWF_TT25_VERSION: '1.5'
+      SRWF_WP_CLI: /tmp/wp-cli.phar
+      SRWF_WP_CLI_VERSION: '2.12.0'
+      SRWF_WP_CLI_SHA256: ce34ddd838f7351d6759068d09793f26755463b4a4610a5a5c0a97b68220d85c
+      SRWF_PLAYWRIGHT_VERSION: '1.63.0'
+      SRWF_NODE_VERSION: '22.19.0'
+      SRWF_TESTED_COMMIT_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+
+    steps:
+      - name: Checkout exact target
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ env.SRWF_TESTED_COMMIT_SHA }}
+          fetch-depth: 1
+
+      - name: Assert repository and checkout identity
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$GITHUB_REPOSITORY" = 'rezahh107/SRWF-Host-Companion'
+          test "$(git rev-parse HEAD)" = "$SRWF_TESTED_COMMIT_SHA"
+          mkdir -p "$SRWF_ARTIFACT_DIR" "$SRWF_WU07_SCRATCH_DIR" "$SRWF_WP_PATH"
+
+      - name: Set up exact PHP runtime
+        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240
+        with:
+          php-version: '8.3.33'
+          coverage: none
+          extensions: mysqli
+
+      - name: Validate PHP and browser-test syntax
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$(php -r 'echo PHP_VERSION;')" = "$SRWF_PHP_VERSION"
+          while IFS= read -r -d '' file; do php -l "$file"; done < <(find . -type f -name '*.php' -not -path './.git/*' -print0 | sort -z)
+          node --check tests/browser/wu07-owner-e2e.mjs
+
+      - name: Install exact WP-CLI, WordPress, and Twenty Twenty-Five
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          curl -L --fail --retry 3 -o "$SRWF_WP_CLI" "https://github.com/wp-cli/wp-cli/releases/download/v${SRWF_WP_CLI_VERSION}/wp-cli-${SRWF_WP_CLI_VERSION}.phar"
+          printf '%s  %s\n' "$SRWF_WP_CLI_SHA256" "$SRWF_WP_CLI" | sha256sum -c -
+          php "$SRWF_WP_CLI" core download --path="$SRWF_WP_PATH" --version="$SRWF_WP_VERSION" --force
+          php "$SRWF_WP_CLI" config create --path="$SRWF_WP_PATH" --dbname=wordpress --dbuser=root --dbpass='' --dbhost=127.0.0.1:3306 --skip-check
+
+          admin_password="$(openssl rand -hex 24)"
+          settings_password="$(openssl rand -hex 24)"
+          subscriber_password="$(openssl rand -hex 24)"
+          echo "::add-mask::$admin_password"
+          echo "::add-mask::$settings_password"
+          echo "::add-mask::$subscriber_password"
+          printf 'SRWF_WU07_ADMIN_PASSWORD=%s\n' "$admin_password" >> "$GITHUB_ENV"
+          printf 'SRWF_WU06_SETTINGS_PASSWORD=%s\n' "$settings_password" >> "$GITHUB_ENV"
+          printf 'SRWF_WU06_SUBSCRIBER_PASSWORD=%s\n' "$subscriber_password" >> "$GITHUB_ENV"
+
+          php "$SRWF_WP_CLI" core install --path="$SRWF_WP_PATH" --url="$SRWF_WU07_BASE_URL" --title='SRWF Host Companion WU-07 Lab' --admin_user=runtime_admin --admin_password="$admin_password" --admin_email='runtime@example.invalid' --skip-email
+          unset admin_password settings_password subscriber_password
+          test "$(php "$SRWF_WP_CLI" core version --path="$SRWF_WP_PATH")" = "$SRWF_WP_VERSION"
+
+          php "$SRWF_WP_CLI" option update home "$SRWF_WU07_BASE_URL" --path="$SRWF_WP_PATH" >/dev/null
+          php "$SRWF_WP_CLI" option update siteurl "$SRWF_WU07_BASE_URL" --path="$SRWF_WP_PATH" >/dev/null
+          php "$SRWF_WP_CLI" theme install twentytwentyfive --version="$SRWF_TT25_VERSION" --force --path="$SRWF_WP_PATH"
+          test "$(php "$SRWF_WP_CLI" theme get twentytwentyfive --field=version --path="$SRWF_WP_PATH")" = "$SRWF_TT25_VERSION"
+          php "$SRWF_WP_CLI" theme activate twentytwentyfive --path="$SRWF_WP_PATH"
+          php "$SRWF_WP_CLI" language core install fa_IR --path="$SRWF_WP_PATH"
+          php "$SRWF_WP_CLI" site switch-language fa_IR --path="$SRWF_WP_PATH"
+          test "$(php "$SRWF_WP_CLI" option get WPLANG --path="$SRWF_WP_PATH")" = 'fa_IR'
+
+      - name: Install exact product head and qualification-only fixture hooks
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          plugin_dir="$SRWF_WP_PATH/wp-content/plugins/srwf-host-companion"
+          mu_plugin_dir="$SRWF_WP_PATH/wp-content/mu-plugins"
+          mkdir -p "$plugin_dir" "$mu_plugin_dir"
+          cp srwf-host-companion.php "$plugin_dir/"
+          cp -R src templates "$plugin_dir/"
+          cp tests/runtime-lab/fixture-plugin/srwf-host-companion-wu06-fixture.php "$mu_plugin_dir/"
+          php "$SRWF_WP_CLI" plugin activate srwf-host-companion --path="$SRWF_WP_PATH"
+          test "$(php "$SRWF_WP_CLI" plugin get srwf-host-companion --field=status --path="$SRWF_WP_PATH")" = 'active'
+          test "$(php "$SRWF_WP_CLI" plugin get srwf-host-companion --field=version --path="$SRWF_WP_PATH")" = '0.1.0'
+
+      - name: Create deterministic synthetic Owner-journey fixtures
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          SRWF_WU06_COMMAND=bootstrap SRWF_WU06_OUTPUT_PATH="$SRWF_WU06_FIXTURE_PATH" \
+            php "$SRWF_WP_CLI" --path="$SRWF_WP_PATH" eval-file "$GITHUB_WORKSPACE/tests/runtime-lab/wu06-admin-fixtures.php"
+          test -s "$SRWF_WU06_FIXTURE_PATH"
+
+      - name: Set up pinned browser automation runtime
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22.19.0'
+
+      - name: Install pinned Playwright and Chromium
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$(node --version)" = "v${SRWF_NODE_VERSION}"
+          npm install --no-save --ignore-scripts "playwright@${SRWF_PLAYWRIGHT_VERSION}"
+          node - <<'NODE'
+          const fs = require('fs');
+          const observed = JSON.parse(fs.readFileSync('node_modules/playwright/package.json', 'utf8')).version;
+          if (observed !== process.env.SRWF_PLAYWRIGHT_VERSION) process.exit(1);
+          NODE
+          npx playwright install --with-deps chromium
+
+      - name: Start exact WordPress runtime
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          pushd "$SRWF_WP_PATH" >/dev/null
+          php -S 127.0.0.1:8080 >/tmp/srwf-host-companion-wu07-server.log 2>&1 &
+          server_pid=$!
+          popd >/dev/null
+          echo "SRWF_WU07_SERVER_PID=$server_pid" >> "$GITHUB_ENV"
+          status=''
+          for _ in {1..30}; do
+            status="$(curl --silent --output /dev/null --write-out '%{http_code}' "$SRWF_WU07_BASE_URL/wp-login.php" || true)"
+            if [[ "$status" = '200' ]]; then break; fi
+            sleep 1
+          done
+          test "$status" = '200'
+
+      - name: Exercise mechanical Owner E2E in real browser
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node tests/browser/wu07-owner-e2e.mjs
+
+      - name: Validate bounded machine-readable WU-07 evidence
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test -s "$SRWF_WU07_EVIDENCE_PATH"
+          python3 - "$SRWF_WU07_EVIDENCE_PATH" "$SRWF_TESTED_COMMIT_SHA" "$SRWF_WP_VERSION" "$SRWF_PHP_VERSION" "$SRWF_TT25_VERSION" <<'PY'
+          import json, sys
+          path, sha, wp, php, theme = sys.argv[1:]
+          with open(path, encoding='utf-8') as f:
+              data = json.load(f)
+          assert data['tested_commit_sha'] == sha
+          assert data['environment']['wordpress_version'] == wp
+          assert data['environment']['php_version'] == php
+          assert data['environment']['theme_version'] == theme
+          assert data['overall_status'] == 'WU07_MECHANICAL_OWNER_E2E_PASS_ON_PINNED_TARGET_TUPLE'
+          required = [
+              'login', 'settings_menu_reachability', 'first_run_guidance_visible',
+              'registration_selector_visible', 'explicit_apply_action_visible',
+              'select_registration_page', 'explicit_save_apply', 'truthful_success_result',
+              'frontend_registration_opened', 'return_to_settings', 'check_again',
+          ]
+          assert all(data['owner_journey'].get(k) == 'PASS' for k in required)
+          assert data['persistent_state']['status'] == 'PASS'
+          assert data['frontend']['status'] == 'PASS'
+          assert data['check_again']['status'] == 'PASS'
+          assert data['runtime_issues'] == []
+          assert data['claim_ceiling']['human_comprehension'] == 'NOT_PROVEN'
+          assert data['claim_ceiling']['production_host_confirmation'] == 'NOT_PROVEN'
+          assert data['claim_ceiling']['production_qualified_for_srwf'] == 'NOT_PROVEN'
+          print('WU-07 bounded evidence validation PASS.')
+          PY
+
+      - name: Preserve server log on failure
+        if: failure()
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          if [[ -f /tmp/srwf-host-companion-wu07-server.log ]]; then
+            cp /tmp/srwf-host-companion-wu07-server.log "$SRWF_ARTIFACT_DIR/wu07-server.log"
+          fi
+
+      - name: Upload WU-07 evidence and useful failure diagnostics
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: wu07-owner-e2e-${{ github.run_id }}-${{ github.run_attempt }}
+          path: /tmp/srwf-host-companion-artifacts/
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Stop disposable runtime
+        if: always()
+        shell: bash
+        run: |
+          set +e
+          if [[ -n "${SRWF_WU07_SERVER_PID:-}" ]]; then kill "$SRWF_WU07_SERVER_PID" 2>/dev/null; fi
