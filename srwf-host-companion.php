@@ -4,6 +4,7 @@
  * Plugin URI:        https://github.com/rezahh107/SRWF-Host-Companion
  * Description:       Project-specific WordPress host integration layer for SRWF.
  * Version:           0.1.0
+ * Author:            Reza Hashemi Hosseini
  * Requires at least: 7.1
  * Requires PHP:      8.3
  * License:           GPL-2.0-or-later
