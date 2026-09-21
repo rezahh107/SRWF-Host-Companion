@@ -1,0 +1,213 @@
+name: WU-05 Full Width Geometry
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'srwf-host-companion.php'
+      - 'src/**'
+      - 'templates/**'
+      - 'assets/**'
+      - 'tests/runtime-lab/wu05-full-width-fixture.php'
+      - 'tests/browser/wu05-full-width.cjs'
+      - '.github/workflows/wu05-full-width-geometry.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  full-width-geometry:
+    name: Browser geometry on pinned WordPress + TT25
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    services:
+      database:
+        image: mariadb:11.4.8@sha256:bc474f00629f0123c10f9e1bca193a45d18af15a274cf0656acda64f1086c3b6
+        env:
+          MARIADB_ALLOW_EMPTY_ROOT_PASSWORD: '1'
+          MARIADB_DATABASE: wordpress
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mariadb-admin ping -h 127.0.0.1 -uroot --silent"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+
+    env:
+      SRWF_WP_PATH: /tmp/srwf-host-companion-wordpress
+      SRWF_ARTIFACT_DIR: /tmp/srwf-host-companion-artifacts
+      SRWF_BROWSER_PATH: /tmp/srwf-host-companion-browser
+      SRWF_WU05_FIXTURE_EVIDENCE_PATH: /tmp/srwf-host-companion-artifacts/wu05-fixture.json
+      SRWF_WU05_EVIDENCE_PATH: /tmp/srwf-host-companion-artifacts/wu05-full-width.json
+      SRWF_WP_VERSION: '7.1.1'
+      SRWF_PHP_VERSION: '8.3.33'
+      SRWF_TT25_VERSION: '1.5'
+      SRWF_NODE_VERSION: '24.8.0'
+      SRWF_PLAYWRIGHT_VERSION: '1.63.0'
+      SRWF_WP_CLI: /tmp/wp-cli.phar
+      SRWF_WP_CLI_VERSION: '2.12.0'
+      SRWF_WP_CLI_SHA256: ce34ddd838f7351d6759068d09793f26755463b4a4610a5a5c0a97b68220d85c
+      SRWF_TESTED_COMMIT_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+      SRWF_WU05_MODE: diagnostic
+
+    steps:
+      - name: Checkout exact target
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ env.SRWF_TESTED_COMMIT_SHA }}
+          fetch-depth: 1
+
+      - name: Assert repository and checkout identity
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$GITHUB_REPOSITORY" = 'rezahh107/SRWF-Host-Companion'
+          test "$(git rev-parse HEAD)" = "$SRWF_TESTED_COMMIT_SHA"
+          mkdir -p "$SRWF_ARTIFACT_DIR" "$SRWF_WP_PATH" "$SRWF_BROWSER_PATH"
+
+      - name: Set up exact PHP runtime
+        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240
+        with:
+          php-version: '8.3.33'
+          coverage: none
+          extensions: mysqli
+
+      - name: Set up browser runtime
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: '24.8.0'
+          package-manager-cache: false
+
+      - name: Validate source syntax and runtime identities
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$(php -r 'echo PHP_VERSION;')" = "$SRWF_PHP_VERSION"
+          test "$(node --version)" = "v$SRWF_NODE_VERSION"
+          while IFS= read -r -d '' file; do
+            php -l "$file"
+          done < <(find . -type f -name '*.php' -not -path './.git/*' -print0 | sort -z)
+          node --check tests/browser/wu05-full-width.cjs
+
+      - name: Install exact WordPress and TT25 runtime
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          curl -L --fail --retry 3 -o "$SRWF_WP_CLI" "https://github.com/wp-cli/wp-cli/releases/download/v${SRWF_WP_CLI_VERSION}/wp-cli-${SRWF_WP_CLI_VERSION}.phar"
+          printf '%s  %s\n' "$SRWF_WP_CLI_SHA256" "$SRWF_WP_CLI" | sha256sum -c -
+          php "$SRWF_WP_CLI" core download --path="$SRWF_WP_PATH" --version="$SRWF_WP_VERSION" --force
+          php "$SRWF_WP_CLI" config create --path="$SRWF_WP_PATH" --dbname=wordpress --dbuser=root --dbpass='' --dbhost=127.0.0.1:3306 --skip-check
+          admin_password="$(openssl rand -hex 24)"
+          php "$SRWF_WP_CLI" core install --path="$SRWF_WP_PATH" --url=http://127.0.0.1:8080 --title='SRWF Host Companion WU-05 Lab' --admin_user=runtime_admin --admin_password="$admin_password" --admin_email='runtime@example.invalid' --skip-email
+          unset admin_password
+          test "$(php "$SRWF_WP_CLI" core version --path="$SRWF_WP_PATH")" = "$SRWF_WP_VERSION"
+          php "$SRWF_WP_CLI" theme install twentytwentyfive --version="$SRWF_TT25_VERSION" --force --path="$SRWF_WP_PATH"
+          test "$(php "$SRWF_WP_CLI" theme get twentytwentyfive --field=version --path="$SRWF_WP_PATH")" = "$SRWF_TT25_VERSION"
+          php "$SRWF_WP_CLI" theme activate twentytwentyfive --path="$SRWF_WP_PATH"
+          test "$(php "$SRWF_WP_CLI" theme get twentytwentyfive --field=status --path="$SRWF_WP_PATH")" = 'active'
+          php "$SRWF_WP_CLI" language core install fa_IR --path="$SRWF_WP_PATH"
+          php "$SRWF_WP_CLI" site switch-language fa_IR --path="$SRWF_WP_PATH"
+          test "$(php "$SRWF_WP_CLI" option get WPLANG --path="$SRWF_WP_PATH")" = 'fa_IR'
+
+      - name: Install exact product head and create synthetic Registration fixture
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          plugin_dir="$SRWF_WP_PATH/wp-content/plugins/srwf-host-companion"
+          mkdir -p "$plugin_dir"
+          cp srwf-host-companion.php "$plugin_dir/"
+          cp -R src templates "$plugin_dir/"
+          if [[ -d assets ]]; then cp -R assets "$plugin_dir/"; fi
+          php "$SRWF_WP_CLI" plugin activate srwf-host-companion --path="$SRWF_WP_PATH"
+          test "$(php "$SRWF_WP_CLI" plugin get srwf-host-companion --field=status --path="$SRWF_WP_PATH")" = 'active'
+          fixture_url="$(php "$SRWF_WP_CLI" --path="$SRWF_WP_PATH" eval-file "$GITHUB_WORKSPACE/tests/runtime-lab/wu05-full-width-fixture.php" | tail -n 1)"
+          [[ "$fixture_url" == http://127.0.0.1:8080/* ]]
+          echo "SRWF_WU05_FIXTURE_URL=$fixture_url" >> "$GITHUB_ENV"
+          test -s "$SRWF_WU05_FIXTURE_EVIDENCE_PATH"
+
+      - name: Install pinned Playwright Chromium
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          npm --prefix "$SRWF_BROWSER_PATH" init -y >/dev/null
+          npm --prefix "$SRWF_BROWSER_PATH" install --no-audit --no-fund --save-exact "playwright@$SRWF_PLAYWRIGHT_VERSION"
+          "$SRWF_BROWSER_PATH/node_modules/.bin/playwright" install --with-deps chromium
+          test "$(node -p "require('$SRWF_BROWSER_PATH/node_modules/playwright/package.json').version")" = "$SRWF_PLAYWRIGHT_VERSION"
+
+      - name: Observe real RTL browser geometry
+        shell: bash
+        env:
+          NODE_PATH: /tmp/srwf-host-companion-browser/node_modules
+        run: |
+          set -Eeuo pipefail
+          php "$SRWF_WP_CLI" server --host=127.0.0.1 --port=8080 --path="$SRWF_WP_PATH" >"$SRWF_ARTIFACT_DIR/server.log" 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          for _ in {1..30}; do
+            if curl --fail --silent --output /dev/null "$SRWF_WU05_FIXTURE_URL"; then
+              break
+            fi
+            sleep 1
+          done
+          curl --fail --silent --output /dev/null "$SRWF_WU05_FIXTURE_URL"
+          node tests/browser/wu05-full-width.cjs
+          test -s "$SRWF_WU05_EVIDENCE_PATH"
+          kill "$server_pid" 2>/dev/null || true
+          wait "$server_pid" 2>/dev/null || true
+          trap - EXIT
+
+      - name: Validate bounded WU-05 evidence
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          python3 - "$SRWF_WU05_EVIDENCE_PATH" "$SRWF_TESTED_COMMIT_SHA" "$SRWF_WP_VERSION" "$SRWF_PHP_VERSION" "$SRWF_TT25_VERSION" <<'PY'
+          import json, sys
+          path, sha, wp, php, theme = sys.argv[1:]
+          with open(path, encoding='utf-8') as f:
+              data = json.load(f)
+          assert data['schema'] == 'srwf-host-companion-wu05-full-width-v1'
+          assert data['tested_commit_sha'] == sha
+          assert data['environment']['wordpress_version'] == wp
+          assert data['environment']['php_version'] == php
+          assert data['environment']['theme_stylesheet'] == 'twentytwentyfive'
+          assert data['environment']['theme_version'] == theme
+          assert data['environment']['language'] == 'fa_IR'
+          assert data['environment']['is_rtl'] is True
+          assert data['fixture']['contract_status'] == 'PASS'
+          assert data['fixture']['assignment_readback'] == 'registration-full-width'
+          assert sorted(int(key) for key in data['viewport_status']) == [320, 390, 430, 1440]
+          assert data['claims']['gravity_forms_orbital_gtb'] == 'NOT_PROVEN'
+          assert data['claims']['approved_frontend_typography'] == 'NOT_PROVEN'
+          assert data['claim_ceiling']['wu06_admin_rtl_accessibility_security'] == 'NOT_RUN'
+          assert data['claim_ceiling']['wu07_owner_browser_e2e_comprehension'] == 'NOT_RUN'
+          assert data['claim_ceiling']['production_qualified_for_srwf'] == 'NOT_PROVEN'
+          print('WU-05 browser evidence captured:', data['overall_wu05_automated_qualification'])
+          PY
+
+          echo '### WU-05 Full Width host canvas — browser evidence' >> "$GITHUB_STEP_SUMMARY"
+          python3 - "$SRWF_WU05_EVIDENCE_PATH" <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import json, sys
+          with open(sys.argv[1], encoding='utf-8') as f:
+              d = json.load(f)
+          env = d['environment']
+          print(f"- mode: `{d['mode']}`")
+          print(f"- exact tested head: `{d['tested_commit_sha']}`")
+          print(f"- exact disposable tuple: WordPress `{env['wordpress_version']}`, PHP `{env['php_version']}`, Twenty Twenty-Five `{env['theme_version']}`")
+          print(f"- RTL locale: `{env['language']}` / `{env['is_rtl']}`")
+          print(f"- viewport status: `{d['viewport_status']}`")
+          print(f"- WU-05 automated geometry status: `{d['overall_wu05_automated_qualification']}`")
+          print('- Gravity Forms / Orbital / GTB: `NOT_PROVEN` (`ENVIRONMENT_UNAVAILABLE`)')
+          print('- approved Vazir/Vazirmatn frontend typography: `NOT_PROVEN` (`ENVIRONMENT_UNAVAILABLE`)')
+          print('- WU-06: `NOT_RUN`; WU-07: `NOT_RUN`; Production Qualification: `NOT_PROVEN`')
+          PY
+
+      - name: Upload WU-05 machine-readable and diagnostic evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: wu05-full-width-${{ github.run_id }}-${{ github.run_attempt }}
+          path: /tmp/srwf-host-companion-artifacts/
+          if-no-files-found: error
+          retention-days: 30
