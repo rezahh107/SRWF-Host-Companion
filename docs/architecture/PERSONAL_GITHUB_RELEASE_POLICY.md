@@ -1,10 +1,10 @@
 # SRWF Host Companion — Personal GitHub Release Policy
 
-**Repository:** `rezahh107/SRWF-Host-Companion`  
-**Document:** `docs/architecture/PERSONAL_GITHUB_RELEASE_POLICY.md`  
-**Date:** `2026-09-21`  
-**Authority:** Owner-approved release-policy amendment  
-**Status:** `APPROVED / OWNER_LOCKED`  
+**Repository:** `rezahh107/SRWF-Host-Companion`
+**Document:** `docs/architecture/PERSONAL_GITHUB_RELEASE_POLICY.md`
+**Date:** `2026-09-21`
+**Authority:** Owner-approved release-policy amendment
+**Status:** `APPROVED / OWNER_LOCKED`
 **Applies to:** V0 / `v0.1.0` and later personal GitHub releases unless superseded by the Owner
 
 ---
